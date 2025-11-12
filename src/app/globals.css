@@ -44,72 +44,97 @@
 }
 
 :root {
+  /* Light – nền be, chữ đen */
   --radius: 0.625rem;
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+
+  --background: #f5f5dc; /* beige */
+  --foreground: #111111; /* near-black */
+
+  --card: #ffffe6;
+  --card-foreground: #111111;
+
+  --popover: #9b986f;
+  --popover-foreground: #111111;
+
+  --primary: #e8e2c8; /* beige dùng cho nút/primary */
+  --primary-foreground: #111111;
+
+  --secondary: #f2efcc; /* be nhạt cho surface phụ */
+  --secondary-foreground: #1a1a1a;
+
+  --muted: #f1f0e6;
+  --muted-foreground: #555555;
+
+  --accent: #6bb036b7;
+  --accent-foreground: #4b762a7a;
+
+  --destructive: #b3261e; /* đỏ chuẩn */
+  --border: #e5e5e0;
+  --input: #e5e5e0;
+  --ring: #c8c8be;
+
+  /* Chart giữ trung tính, dễ đọc trên nền sáng */
+  --chart-1: #4a90e2;
+  --chart-2: #7ed321;
+  --chart-3: #f5a623;
+  --chart-4: #bd10e0;
+  --chart-5: #50e3c2;
+
+  /* Sidebar sáng tối giản */
+  --sidebar: #ffffff;
+  --sidebar-foreground: #111111;
+  --sidebar-primary: #e8e2c8;
+  --sidebar-primary-foreground: #111111;
+  --sidebar-accent: #efebd9;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: #e5e5e0;
+  --sidebar-ring: #c8c8be;
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  /* Dark – xám kiểu GitHub, chữ trắng */
+  --background: #0d1117;
+  --foreground: #ffffff;
+
+  --card: #161b22;
+  --card-foreground: #ffffff;
+
+  --popover: #161b22;
+  --popover-foreground: #ffffff;
+
+  --primary: #2b3137; /* xám primary theo yêu cầu */
+  --primary-foreground: #ffffff;
+
+  --secondary: #21262d; /* surface phụ */
+  --secondary-foreground: #e6e6e6;
+
+  --muted: #21262d;
+  --muted-foreground: #9ba3b0;
+
+  --accent: #3ceef5;
+  --accent-foreground: #02f7ff;
+
+  --destructive: #f85149; /* đỏ GitHub */
+  --border: #30363d;
+  --input: #30363d;
+  --ring: #3d444d;
+
+  /* Chart tối, độ tương phản cao trên nền #0D1117 */
+  --chart-1: #2f81f7; /* xanh GitHub */
+  --chart-2: #3fb950; /* xanh lá GitHub */
+  --chart-3: #d29922; /* vàng GitHub */
+  --chart-4: #a371f7; /* tím GitHub */
+  --chart-5: #ff7b72; /* cam-đỏ GitHub */
+
+  /* Sidebar dark đồng bộ */
+  --sidebar: #161b22;
+  --sidebar-foreground: #ffffff;
+  --sidebar-primary: #2b3137;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #21262d;
+  --sidebar-accent-foreground: #e6e6e6;
+  --sidebar-border: #30363d;
+  --sidebar-ring: #3d444d;
 }
 
 @layer base {
@@ -118,5 +143,77 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* ===== Themed vertical scrollbar (light/dark) ===== */
+:root {
+  --sb-track: var(--secondary);
+  --sb-thumb: color-mix(in oklab, var(--accent) 60%, #000 10%);
+  --sb-thumb-hover: color-mix(in oklab, var(--accent) 75%, #000 5%);
+  --sb-corner: var(--card);
+}
+
+.dark {
+  --sb-track: var(--secondary);
+  --sb-thumb: color-mix(in oklab, var(--accent) 70%, #fff 10%);
+  --sb-thumb-hover: color-mix(in oklab, var(--accent) 85%, #fff 5%);
+  --sb-corner: var(--card);
+}
+
+/* Smooth + stable layout */
+html {
+  scroll-behavior: smooth;
+  scrollbar-gutter: stable;
+}
+
+/* WebKit (Chrome/Edge/Safari) */
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--sb-track);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--sb-thumb);
+  border: 3px solid var(--sb-track);
+  border-radius: 999px;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--sb-thumb-hover);
+}
+*::-webkit-scrollbar-corner {
+  background: var(--sb-corner);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--sb-thumb) var(--sb-track);
+}
+
+/* Utilities (tùy chọn) */
+@layer utilities {
+  .scrollbar-none::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-none {
+    scrollbar-width: none;
+  }
+  .snap-y {
+    scroll-snap-type: y proximity;
+  }
+  .snap-section {
+    scroll-snap-align: start;
+  }
+}
+
+@keyframes marquee {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
   }
 }
