@@ -44,97 +44,97 @@
 }
 
 :root {
-  /* Light – nền be, chữ đen */
-  --radius: 0.625rem;
+  /* Light – Clean & Modern Adventure Theme */
+  --radius: 0.5rem;
 
-  --background: #f5f5dc; /* beige */
-  --foreground: #111111; /* near-black */
+  --background: #ffffff; /* white clean */
+  --foreground: #0f172a; /* slate-900 */
 
-  --card: #ffffe6;
-  --card-foreground: #111111;
+  --card: #ffffff;
+  --card-foreground: #0f172a;
 
-  --popover: #9b986f;
-  --popover-foreground: #111111;
+  --popover: #ffffff;
+  --popover-foreground: #0f172a;
 
-  --primary: #e8e2c8; /* beige dùng cho nút/primary */
-  --primary-foreground: #111111;
+  --primary: #2563eb; /* blue-600 - adventure blue */
+  --primary-foreground: #ffffff;
 
-  --secondary: #f2efcc; /* be nhạt cho surface phụ */
-  --secondary-foreground: #1a1a1a;
+  --secondary: #f1f5f9; /* slate-100 */
+  --secondary-foreground: #0f172a;
 
-  --muted: #f1f0e6;
-  --muted-foreground: #555555;
+  --muted: #f8fafc;
+  --muted-foreground: #64748b; /* slate-500 */
 
-  --accent: #6bb036b7;
-  --accent-foreground: #4b762a7a;
+  --accent: #10b981; /* emerald-500 - nature green */
+  --accent-foreground: #ffffff;
 
-  --destructive: #b3261e; /* đỏ chuẩn */
-  --border: #e5e5e0;
-  --input: #e5e5e0;
-  --ring: #c8c8be;
+  --destructive: #ef4444; /* red-500 */
+  --border: #e2e8f0; /* slate-200 */
+  --input: #e2e8f0;
+  --ring: #2563eb;
 
-  /* Chart giữ trung tính, dễ đọc trên nền sáng */
-  --chart-1: #4a90e2;
-  --chart-2: #7ed321;
-  --chart-3: #f5a623;
-  --chart-4: #bd10e0;
-  --chart-5: #50e3c2;
+  /* Chart colors - vibrant & clear */
+  --chart-1: #3b82f6; /* blue */
+  --chart-2: #10b981; /* green */
+  --chart-3: #f59e0b; /* amber */
+  --chart-4: #8b5cf6; /* purple */
+  --chart-5: #ec4899; /* pink */
 
-  /* Sidebar sáng tối giản */
+  /* Sidebar clean */
   --sidebar: #ffffff;
-  --sidebar-foreground: #111111;
-  --sidebar-primary: #e8e2c8;
-  --sidebar-primary-foreground: #111111;
-  --sidebar-accent: #efebd9;
-  --sidebar-accent-foreground: #1a1a1a;
-  --sidebar-border: #e5e5e0;
-  --sidebar-ring: #c8c8be;
+  --sidebar-foreground: #0f172a;
+  --sidebar-primary: #2563eb;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f1f5f9;
+  --sidebar-accent-foreground: #0f172a;
+  --sidebar-border: #e2e8f0;
+  --sidebar-ring: #2563eb;
 }
 
 .dark {
-  /* Dark – xám kiểu GitHub, chữ trắng */
-  --background: #0d1117;
-  --foreground: #ffffff;
+  /* Dark – Professional Dark Theme */
+  --background: #0f172a; /* slate-900 */
+  --foreground: #f8fafc; /* slate-50 */
 
-  --card: #161b22;
-  --card-foreground: #ffffff;
+  --card: #1e293b; /* slate-800 */
+  --card-foreground: #f8fafc;
 
-  --popover: #161b22;
-  --popover-foreground: #ffffff;
+  --popover: #1e293b;
+  --popover-foreground: #f8fafc;
 
-  --primary: #2b3137; /* xám primary theo yêu cầu */
+  --primary: #3b82f6; /* blue-500 */
   --primary-foreground: #ffffff;
 
-  --secondary: #21262d; /* surface phụ */
-  --secondary-foreground: #e6e6e6;
+  --secondary: #334155; /* slate-700 */
+  --secondary-foreground: #f8fafc;
 
-  --muted: #21262d;
-  --muted-foreground: #9ba3b0;
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8; /* slate-400 */
 
-  --accent: #3ceef5;
-  --accent-foreground: #02f7ff;
+  --accent: #10b981; /* emerald-500 */
+  --accent-foreground: #ffffff;
 
-  --destructive: #f85149; /* đỏ GitHub */
-  --border: #30363d;
-  --input: #30363d;
-  --ring: #3d444d;
+  --destructive: #ef4444; /* red-500 */
+  --border: #334155; /* slate-700 */
+  --input: #334155;
+  --ring: #3b82f6;
 
-  /* Chart tối, độ tương phản cao trên nền #0D1117 */
-  --chart-1: #2f81f7; /* xanh GitHub */
-  --chart-2: #3fb950; /* xanh lá GitHub */
-  --chart-3: #d29922; /* vàng GitHub */
-  --chart-4: #a371f7; /* tím GitHub */
-  --chart-5: #ff7b72; /* cam-đỏ GitHub */
+  /* Chart colors - dark optimized */
+  --chart-1: #60a5fa; /* blue-400 */
+  --chart-2: #34d399; /* green-400 */
+  --chart-3: #fbbf24; /* amber-400 */
+  --chart-4: #a78bfa; /* purple-400 */
+  --chart-5: #f472b6; /* pink-400 */
 
-  /* Sidebar dark đồng bộ */
-  --sidebar: #161b22;
-  --sidebar-foreground: #ffffff;
-  --sidebar-primary: #2b3137;
+  /* Sidebar dark */
+  --sidebar: #1e293b;
+  --sidebar-foreground: #f8fafc;
+  --sidebar-primary: #3b82f6;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #21262d;
-  --sidebar-accent-foreground: #e6e6e6;
-  --sidebar-border: #30363d;
-  --sidebar-ring: #3d444d;
+  --sidebar-accent: #334155;
+  --sidebar-accent-foreground: #f8fafc;
+  --sidebar-border: #334155;
+  --sidebar-ring: #3b82f6;
 }
 
 @layer base {
@@ -206,14 +206,5 @@ html {
   }
   .snap-section {
     scroll-snap-align: start;
-  }
-}
-
-@keyframes marquee {
-  0% {
-    transform: translateX(0);
-  }
-  100% {
-    transform: translateX(-50%);
   }
 }
