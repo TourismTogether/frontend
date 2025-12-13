@@ -17,7 +17,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { WeatherMap } from "../../components/Map/WeatherMap";
 import { CreateRouteModal } from "../Routes/CreateRouteModal";
 import { CreateTripModal } from "../Trips/CreateTripModal";
-import { CreateGroupModal } from "../Groups/CreateGroupModal";
 import { CreatePostModal } from "../Forum/CreatePostModal";
 
 export const Dashboard: React.FC = () => {
@@ -364,7 +363,7 @@ export const Dashboard: React.FC = () => {
         />
       )}
 
-      {showCreateGroup && (
+      {/* {showCreateGroup && (
         <CreateGroupModal
           onClose={() => setShowCreateGroup(false)}
           onGroupCreated={() => {
@@ -372,7 +371,7 @@ export const Dashboard: React.FC = () => {
             setShowCreateGroup(false);
           }}
         />
-      )}
+      )} */}
 
       {showCreatePost && (
         <CreatePostModal
