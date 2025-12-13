@@ -1,3 +1,4 @@
+// src/components/Trips.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -5,15 +6,80 @@ import Link from "next/link";
 import { Plus, Calendar, DollarSign, MapPin } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
+import { FormNewTrip } from "./FormNewTrip";
+
+// --- MOCK DATA ---
+const MOCK_TRIPS = [
+  {
+    id: "mock_trip_1",
+    uuid: "mock_trip_1",
+    title: "Khám phá Vịnh Hạ Long",
+    description:
+      "Chuyến đi 3 ngày 2 đêm khám phá kỳ quan thiên nhiên thế giới, bao gồm chèo thuyền kayak và ngủ đêm trên du thuyền.",
+    departure: "Hà Nội",
+    destination: "Vịnh Hạ Long",
+    start_date: new Date(2025, 0, 15).toISOString(), // 15/01/2025
+    end_date: new Date(2025, 0, 17).toISOString(), // 17/01/2025
+    difficult: 2,
+    total_budget: 15000000,
+    spent_amount: 8500000,
+    status: "ongoing",
+    currency: "VND",
+    created_at: new Date(2024, 11, 1).toISOString(),
+    routes: null,
+  },
+  {
+    id: "mock_trip_2",
+    uuid: "mock_trip_2",
+    title: "Trekking Fansipan",
+    description:
+      "Thử thách chinh phục nóc nhà Đông Dương trong 4 ngày. Cần chuẩn bị thể lực tốt.",
+    departure: "Sapa",
+    destination: "Fansipan Peak",
+    start_date: new Date(2025, 5, 10).toISOString(),
+    end_date: new Date(2025, 5, 13).toISOString(),
+    difficult: 5,
+    total_budget: 8000000,
+    spent_amount: 0,
+    status: "planning",
+    currency: "VND",
+    created_at: new Date(2024, 11, 5).toISOString(),
+    routes: null,
+  },
+  {
+    id: "mock_trip_3",
+    uuid: "mock_trip_3",
+    title: "Đà Lạt Chill",
+    description:
+      "Nghỉ dưỡng nhẹ nhàng tại thành phố ngàn hoa, thăm quan các vườn dâu và cà phê.",
+    departure: "TP. Hồ Chí Minh",
+    destination: "Đà Lạt",
+    start_date: new Date(2024, 9, 20).toISOString(),
+    end_date: new Date(2024, 9, 24).toISOString(),
+    difficult: 1,
+    total_budget: 6000000,
+    spent_amount: 6300000,
+    status: "completed",
+    currency: "VND",
+    created_at: new Date(2024, 9, 1).toISOString(),
+    routes: null,
+  },
+];
+// --- KẾT THÚC MOCK DATA ---
 
 export const Trips: React.FC = () => {
   const { user } = useAuth();
   const [trips, setTrips] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false); // Trạng thái Modal
 
   useEffect(() => {
     if (user) {
       fetchTrips();
+    } else {
+      // Nếu không có user (chưa đăng nhập hoặc context lỗi), vẫn hiển thị mock
+      setTrips(MOCK_TRIPS);
+      setLoading(false);
     }
   }, [user]);
 
@@ -27,6 +93,8 @@ export const Trips: React.FC = () => {
         .maybeSingle();
 
       if (!accountData?.id_user) {
+        // Nếu không tìm thấy user id trong DB
+        setTrips(MOCK_TRIPS);
         setLoading(false);
         return;
       }
@@ -42,7 +110,8 @@ export const Trips: React.FC = () => {
       const tripIds = joinTrips?.map((j) => j.id_trip) || [];
 
       if (tripIds.length === 0) {
-        setTrips([]);
+        // KHÔNG CÓ CHUYẾN ĐI NÀO ĐƯỢC JOIN => LOAD MOCK TRIP
+        setTrips(MOCK_TRIPS);
         setLoading(false);
         return;
       }
@@ -61,7 +130,7 @@ export const Trips: React.FC = () => {
         ...trip,
         id: trip.uuid,
         currency: "VND", // Default currency
-        routes: null, // Routes are separate, can be fetched if needed
+        routes: null,
       }));
 
       setTrips(transformedTrips);
@@ -70,6 +139,13 @@ export const Trips: React.FC = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleOpenModal = () => setIsModalOpen(true);
+  const handleCloseModal = () => setIsModalOpen(false);
+
+  const handleTripCreated = () => {
+    fetchTrips(); // Tải lại danh sách chuyến đi sau khi tạo thành công
   };
 
   const getStatusColor = (status: string) => {
@@ -105,19 +181,22 @@ export const Trips: React.FC = () => {
               Manage your travel plans and budgets
             </p>
           </div>
-          <Link
-            href="/trips/new"
+
+          {/* Thay Link bằng Button gọi Modal */}
+          <button
+            onClick={handleOpenModal}
             className="flex items-center space-x-2 bg-trip hover:bg-trip/90 text-white px-4 py-2 rounded-lg transition-colors"
           >
             <Plus className="w-5 h-5" />
             <span>Plan New Trip</span>
-          </Link>
+          </button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {trips.map((trip) => (
             <Link
               key={trip.id}
+              // Nếu là mock trip, có thể dẫn đến một mock page, hoặc đơn giản là dùng id thật
               href={`/trips/${trip.id}`}
               className="bg-card rounded-lg shadow-md p-6 hover:shadow-lg transition-shadow"
             >
@@ -150,7 +229,9 @@ export const Trips: React.FC = () => {
                 )}
                 <div className="flex items-center text-sm text-muted-foreground">
                   <DollarSign className="w-4 h-4 mr-2" />
-                  {trip.spent_amount} / {trip.total_budget} {trip.currency}
+                  {/* Định dạng tiền tệ cho dễ đọc (ví dụ: dùng Intl.NumberFormat nếu cần) */}
+                  {trip.spent_amount.toLocaleString("vi-VN")} /{" "}
+                  {trip.total_budget.toLocaleString("vi-VN")} {trip.currency}
                 </div>
                 {trip.departure && trip.destination && (
                   <div className="flex items-center text-sm text-muted-foreground">
@@ -193,6 +274,13 @@ export const Trips: React.FC = () => {
           </div>
         )}
       </div>
+
+      {/* RENDER MODAL */}
+      <FormNewTrip
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        onTripCreated={handleTripCreated}
+      />
     </div>
   );
 };

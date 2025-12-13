@@ -1,12 +1,15 @@
+// src/components/FormNewTripModal.tsx (Tên component gốc của bạn có thể là FormNewTrip)
 "use client";
 
 import React, { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, X } from "lucide-react";
 import { supabase } from "../../lib/supabase";
 import { useAuth } from "../../contexts/AuthContext";
+// Giả định đường dẫn chính xác đến interface của bạn
 import { IDestination, ITrip } from "@/lib/type/interface";
 
+// --- Interface và Mock Data cho Destination ---
 interface INewTripFormState
   extends Omit<ITrip, "id" | "spent_amount" | "created_at" | "updated_at"> {}
 
@@ -57,15 +60,27 @@ const MOCK_DESTINATIONS: IDestination[] = [
     updated_at: new Date(),
   },
 ];
+// --- Kết thúc Mock Data ---
 
-export const FormNewTrip: React.FC = () => {
+interface FormNewTripProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onTripCreated: () => void;
+}
+
+export const FormNewTrip: React.FC<FormNewTripProps> = ({
+  isOpen,
+  onClose,
+  onTripCreated,
+}) => {
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [destinations, setDestinations] =
-    useState<IDestination[]>(MOCK_DESTINATIONS); // Giữ lại mock để dễ demo
+    useState<IDestination[]>(MOCK_DESTINATIONS);
 
+  // Khởi tạo state ngày tháng bằng đối tượng Date()
   const initialFormState: INewTripFormState = {
     destination_id: "",
     title: "",
@@ -74,12 +89,15 @@ export const FormNewTrip: React.FC = () => {
     distance: 0,
     start_date: new Date(),
     end_date: new Date(),
-    difficult: 1, // Mức độ khó: 1 (dễ) - 5 (rất khó)
+    difficult: 1,
     total_budget: 0,
-    status: "planning", // Mặc định là 'planning'
+    status: "planning",
   };
 
   const [form, setForm] = useState<INewTripFormState>(initialFormState);
+
+  // Nếu Modal đóng, không render gì
+  if (!isOpen) return null;
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -116,14 +134,16 @@ export const FormNewTrip: React.FC = () => {
         throw new Error("Không tìm thấy thông tin người dùng trong hệ thống.");
       }
 
+      // Format Date object thành chuỗi ngày (YYYY-MM-DD)
       const tripData = {
         ...form,
         start_date: form.start_date.toISOString().split("T")[0],
         end_date: form.end_date.toISOString().split("T")[0],
-        spent_amount: 0, // Khởi tạo bằng 0
+        spent_amount: 0,
         total_budget: form.total_budget,
       };
 
+      // 2. Insert Trip
       const { data: newTrip, error: tripError } = await supabase
         .from("trip")
         .insert(tripData)
@@ -134,13 +154,17 @@ export const FormNewTrip: React.FC = () => {
 
       const newTripId = newTrip.uuid;
 
-      const { error: joinError } = await supabase.from("join_trip").insert([
-        { id_user: user_id, id_trip: newTripId, role: "owner" }, // Người tạo là 'owner'
-      ]);
+      // 3. Insert join_trip
+      const { error: joinError } = await supabase
+        .from("join_trip")
+        .insert([{ id_user: user_id, id_trip: newTripId, role: "owner" }]);
 
       if (joinError) throw joinError;
 
-      router.push(`/trips/${newTripId}`);
+      // Thành công
+      onTripCreated();
+      onClose();
+      router.push(`/trips/${newTripId}`); // Chuyển hướng đến trang chi tiết
     } catch (err: any) {
       console.error("Lỗi khi tạo chuyến đi:", err);
       setError(
@@ -151,18 +175,30 @@ export const FormNewTrip: React.FC = () => {
     }
   };
 
+  // Hàm chuyển Date object thành chuỗi date input (YYYY-MM-DD)
   const formatDate = (date: Date) => date.toISOString().split("T")[0];
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold text-foreground mb-6">
-          ✨ Plan New Trip
-        </h1>
-        <form
-          onSubmit={handleSubmit}
-          className="bg-card p-8 rounded-xl shadow-2xl space-y-6"
-        >
+    // Modal Overlay
+    <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+      {/* Modal Content */}
+      <div
+        className="bg-background rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto transform transition-all duration-300 scale-100 opacity-100"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex justify-between items-center p-6 border-b border-border sticky top-0 bg-background z-10">
+          <h2 className="text-2xl font-bold text-foreground">
+            ✨ Lập Kế Hoạch Chuyến Đi Mới
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-muted-foreground hover:text-foreground transition-colors p-1 rounded-full hover:bg-muted"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="p-8 space-y-6">
           {error && (
             <div className="bg-destructive/10 text-destructive border border-destructive/30 p-3 rounded-lg">
               {error}

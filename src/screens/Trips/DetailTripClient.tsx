@@ -1,12 +1,11 @@
 "use client";
 
-import { Trips } from "@/screens/Trips/Trips";
-import { Navbar } from "@/components/Layout/Navbar";
 import { useAuth } from "@/contexts/AuthContext";
+import { DetailTrip } from "@/screens/Trips/DetailTrip";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 
-export default function TripsPage() {
+export default function DetailTripsClient({ tripId }: { tripId: string }) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
@@ -24,14 +23,7 @@ export default function TripsPage() {
     );
   }
 
-  if (!user) {
-    return null;
-  }
+  if (!user) return null;
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <Navbar />
-      <Trips />
-    </div>
-  );
+  return <DetailTrip params={{ id: tripId }} />;
 }
