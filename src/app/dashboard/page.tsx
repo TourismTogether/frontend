@@ -10,23 +10,23 @@ export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  // useEffect(() => {
-  //   if (!loading && !user) {
-  //     router.push('/auth');
-  //   }
-  // }, [user, loading, router]);
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/auth');
+    }
+  }, [user, loading, router]);
 
-  // if (loading) {
-  //   return (
-  //     <div className="flex justify-center items-center h-screen">
-  //       <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
-  //     </div>
-  //   );
-  // }
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      </div>
+    );
+  }
 
-  // if (!user) {
-  //   return null;
-  // }
+  if (!user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">

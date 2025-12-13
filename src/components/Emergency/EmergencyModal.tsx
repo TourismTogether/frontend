@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { 
-  X, 
-  AlertTriangle, 
-  Phone, 
-  MapPin, 
-  Shield, 
-  User, 
+import {
+  X,
+  AlertTriangle,
+  Phone,
+  MapPin,
+  Shield,
+  User,
   CheckCircle,
   Loader2,
   PhoneCall,
@@ -68,7 +68,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
   const fetchSupportTeam = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch support team members
       const { data: supportData, error: supportError } = await supabase
         .from('support_sos_team')
@@ -123,19 +123,19 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
 
   const handleSOS = async () => {
     setSosActivated(true);
-    
+
     // Update user's safety status
-    if (profile?.id_user) {
+    if (profile?.user_id) {
       try {
         await supabase
           .from('traveller')
-          .update({ 
+          .update({
             is_safe: false,
             latitude: userLocation?.lat,
             longitude: userLocation?.lng,
             is_shared_location: true,
           })
-          .eq('id_user', profile.id_user);
+          .eq('id_user', profile.user_id);
       } catch (error) {
         console.error('Error updating safety status:', error);
       }
@@ -160,14 +160,14 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
   const cancelSOS = async () => {
     setSosActivated(false);
     setSelectedSupport(null);
-    
+
     // Update user's safety status
-    if (profile?.id_user) {
+    if (profile?.user_id) {
       try {
         await supabase
           .from('traveller')
           .update({ is_safe: true })
-          .eq('id_user', profile.id_user);
+          .eq('id_user', profile.user_id);
       } catch (error) {
         console.error('Error updating safety status:', error);
       }
@@ -276,11 +276,10 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
                 {supportTeam.map((support) => (
                   <div
                     key={support.uuid}
-                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                      selectedSupport?.uuid === support.uuid
+                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${selectedSupport?.uuid === support.uuid
                         ? 'border-traveller bg-traveller/5'
                         : 'border-border hover:border-traveller/50 hover:bg-muted/30'
-                    }`}
+                      }`}
                     onClick={() => sosActivated && handleSelectSupport(support)}
                   >
                     <div className="flex items-center justify-between">
