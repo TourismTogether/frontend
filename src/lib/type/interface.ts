@@ -30,3 +30,17 @@ export interface ITrip {
   created_at: Date;
   updated_at: Date;
 }
+
+export interface IRoute {
+  id?: string;
+  index: number;
+  trip_id: string;
+  title: string;
+  description: string;
+  lngStart: number; // Kinh độ điểm bắt đầu
+  latStart: number; // Vĩ độ điểm bắt đầu
+  lngEnd: number; // Kinh độ điểm kết thúc
+  latEnd: number; // Vĩ độ điểm kết thúc
+  created_at: Date;
+  updated_at: Date;
+}
