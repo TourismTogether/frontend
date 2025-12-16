@@ -76,15 +76,14 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
         );
       }
 
-      // Giả định API trả về: { status: 200, message: 'Success', data: { ...destination fields... } }
       const apiResponse: { data: IDestinationDetail } = await response.json();
 
-      // *** SỬA LỖI Ở ĐÂY: Lấy dữ liệu điểm đến từ khóa 'data' ***
       const destinationData = apiResponse.data;
 
       const finalDestination: IDestinationDetail = {
         ...destinationData,
-        id_destination: destinationData.id_destination || destinationData.id,
+        id_destination:
+          destinationData.id_destination || destinationData.id || "",
       };
 
       setDestination(finalDestination);
