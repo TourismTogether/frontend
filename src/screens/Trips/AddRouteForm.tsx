@@ -1,42 +1,40 @@
 import React, { useState } from "react";
-import { X, Save, MapPin, Clock } from "lucide-react";
+import { X, Save, MapPin } from "lucide-react"; // Bỏ Clock vì index không còn dùng select
 
 // Định nghĩa kiểu dữ liệu cho state Form
 interface RouteFormValues {
-  index: number; // Thay thế cho day
   title: string;
-  description: string; // Mới
+  description: string;
   lngStart: number;
   latStart: number;
   lngEnd: number;
   latEnd: number;
-  details: string; // Tạm thời dùng string (multi-line), sau đó split thành string[]
+  details: string; // Tạm thời dùng string (multi-line)
 }
 
-// Định nghĩa Props cho Component
+// Định nghĩa Props cho Component (ĐÃ SỬA: Loại bỏ index và currentMaxIndex)
 interface AddRouteFormProps {
   onClose: () => void;
+  // onSubmit chỉ gửi dữ liệu cơ bản, KHÔNG GỬI INDEX (để component cha tự tính)
   onSubmit: (route: {
-    index: number; // Đã sửa
     title: string;
-    description: string; // Đã thêm
+    description: string;
     lngStart: number;
     latStart: number;
     lngEnd: number;
     latEnd: number;
     details: string[];
   }) => void;
-  currentMaxIndex: number; // Đã sửa
+  // Bỏ currentMaxIndex vì nó được tính ở component cha
 }
 
 export const AddRouteForm: React.FC<AddRouteFormProps> = ({
   onClose,
   onSubmit,
-  currentMaxIndex,
+  // Bỏ currentMaxIndex
 }) => {
-  // State khởi tạo giá trị cho form
+  // State khởi tạo giá trị cho form (ĐÃ SỬA: Bỏ index)
   const [formData, setFormData] = useState<RouteFormValues>({
-    index: currentMaxIndex + 1, // Mặc định là index tiếp theo
     title: "",
     description: "",
     lngStart: 0,
@@ -53,13 +51,11 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
   ) => {
     const { name, value } = e.target;
 
-    // Chuyển đổi các trường tọa độ và index sang kiểu số
+    // Chuyển đổi các trường tọa độ sang kiểu số (ĐÃ SỬA: Bỏ kiểm tra name === "index")
     setFormData((prev) => ({
       ...prev,
       [name]:
-        name.includes("lng") || name.includes("lat") || name === "index"
-          ? Number(value)
-          : value,
+        name.includes("lng") || name.includes("lat") ? Number(value) : value,
     }));
   };
 
@@ -77,11 +73,10 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
       return;
     }
 
-    // Gửi dữ liệu đã format qua prop onSubmit
+    // Gửi dữ liệu đã format qua prop onSubmit (ĐÃ SỬA: Bỏ index)
     onSubmit({
-      index: formData.index,
       title: formData.title,
-      description: formData.description, // Truyền description
+      description: formData.description,
       lngStart: formData.lngStart,
       latStart: formData.latStart,
       lngEnd: formData.lngEnd,
@@ -89,9 +84,6 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
       details: detailsArray,
     });
   };
-
-  // Tạo mảng Index cho Select
-  const indexOptions = [...Array(currentMaxIndex + 3)].map((_, i) => i + 1);
 
   return (
     // Khung Modal/Form chính
@@ -107,23 +99,9 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Index (Chặng) */}
-        <div>
-          <label className="text-sm font-medium flex items-center mb-1">
-            <Clock className="w-4 h-4 mr-1 text-traveller" /> Index Chặng:
-          </label>
-          <select
-            name="index"
-            value={formData.index}
-            onChange={handleChange}
-            className="w-full p-2 border rounded-md bg-input text-foreground"
-          >
-            {indexOptions.map((indexNumber: number) => (
-              <option key={indexNumber} value={indexNumber}>
-                Chặng {indexNumber}
-              </option>
-            ))}
-          </select>
+        {/* Index (Chặng) - ĐÃ BỎ SELECT VÌ INDEX ĐƯỢC TÍNH Ở COMPONENT CHA */}
+        <div className="p-2 border border-dashed rounded-md bg-gray-50 text-sm text-gray-600">
+          *Lưu ý: Số chặng sẽ được tự động tính toán tiếp theo.
         </div>
 
         {/* Tiêu đề */}

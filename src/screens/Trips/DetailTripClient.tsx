@@ -1,9 +1,9 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
-import { DetailTrip } from "@/screens/Trips/DetailTrip";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
+import DetailTrip from "./DetailTrip";
 
 export default function DetailTripsClient({ tripId }: { tripId: string }) {
   const { user, loading } = useAuth();
