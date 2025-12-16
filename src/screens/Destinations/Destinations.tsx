@@ -1,21 +1,47 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { Search, Filter, Star, MapPin, Plus } from 'lucide-react';
-import { supabase } from '../../lib/supabase';
-import { useAuth } from '../../contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { CreateDestinationModal } from './CreateDestinationModal';
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { Search, Filter, Star, MapPin } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import { useRouter } from "next/navigation";
+
+// Định nghĩa Interface IDestination theo yêu cầu của bạn
+export interface IDestination {
+  id?: string;
+  region_id: string;
+  name: string;
+  country: string;
+  description: string;
+  latitude: number;
+  longitude: number;
+  category: string;
+  best_season: string;
+  rating: number; // Đổi từ average_rating sang rating (theo interface bạn cung cấp)
+  images: Array<string | { url: string; caption?: string }> | null; // Cho phép null
+  created_at: Date | string;
+  updated_at: Date | string;
+  // Thêm các trường có thể có trong data fetch từ API (ví dụ: total_reviews, region_name)
+  average_rating?: number;
+  total_reviews?: number;
+  region_name?: string;
+  id_destination?: string;
+}
+
+// Định nghĩa interface cho cấu trúc phản hồi API
+interface ApiResponse {
+  data: IDestination[];
+  // Có thể thêm các thuộc tính khác như metadata, pagination...
+  [key: string]: any;
+}
 
 export const Destinations: React.FC = () => {
   const { user } = useAuth();
   const router = useRouter();
-  const [destinations, setDestinations] = useState<any[]>([]);
+  const [destinations, setDestinations] = useState<IDestination[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterCategory, setFilterCategory] = useState('all');
-  const [showCreateDestination, setShowCreateDestination] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterCategory, setFilterCategory] = useState("all");
 
   useEffect(() => {
     fetchDestinations();
@@ -24,35 +50,63 @@ export const Destinations: React.FC = () => {
   const fetchDestinations = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('destination')
-        .select('*')
-        .order('average_rating', { ascending: false });
-
-      if (error) {
-        console.error('Destinations query error:', error);
-        throw error;
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl) {
+        console.error(
+          "NEXT_PUBLIC_API_URL is not defined in environment variables."
+        );
+        setLoading(false);
+        return;
       }
 
-      setDestinations(data || []);
+      const response = await fetch(`${apiUrl}/destinations`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error(
+          "API fetch error:",
+          errorData.message || response.statusText
+        );
+        throw new Error(errorData.message || "Failed to fetch destinations");
+      }
+
+      // **ĐIỂM SỬA LỖI QUAN TRỌNG:**
+      // Phản hồi API là đối tượng { data: [...] }
+      const result: ApiResponse = await response.json();
+
+      // Lấy mảng destinations từ thuộc tính 'data'
+      const fetchedDestinations = result.data || [];
+
+      setDestinations(fetchedDestinations);
     } catch (error) {
-      console.error('Error fetching destinations:', error);
+      console.error("Error fetching destinations:", error);
+      setDestinations([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Đã sửa lỗi: destinations là một mảng, nên .filter() hoạt động bình thường ở đây.
   const filteredDestinations = destinations.filter((dest) => {
     const matchesSearch =
       dest.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       dest.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       dest.region_name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCategory = filterCategory === 'all' || dest.category === filterCategory;
+
+    const matchesCategory =
+      filterCategory === "all" || dest.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
 
   // Get unique categories from destinations
-  const categories = [...new Set(destinations.map((d) => d.category).filter(Boolean))];
+  const categories = [
+    ...new Set(destinations.map((d) => d.category).filter(Boolean)),
+  ];
 
   if (loading) {
     return (
@@ -68,24 +122,14 @@ export const Destinations: React.FC = () => {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-foreground">Explore Destinations</h1>
+            <h1 className="text-3xl font-bold text-foreground">
+              Explore Destinations
+            </h1>
             <p className="text-muted-foreground mt-2">
-              Discover amazing places around the world ({destinations.length} destinations)
+              Discover amazing places around the world ({destinations.length}{" "}
+              destinations)
             </p>
           </div>
-          <button
-            onClick={() => {
-              if (!user) {
-                router.push('/auth');
-                return;
-              }
-              setShowCreateDestination(true);
-            }}
-            className="flex items-center space-x-2 px-4 py-2 bg-destination hover:bg-destination/90 text-white rounded-lg transition-colors shadow-md"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Create Destination</span>
-          </button>
         </div>
 
         {/* Search & Filter */}
@@ -122,15 +166,24 @@ export const Destinations: React.FC = () => {
         {/* Destinations Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filteredDestinations.map((dest) => {
-            // Get first image (format: [{url, caption}])
             const images = dest.images || [];
-            const firstImageObj = Array.isArray(images) && images.length > 0 ? images[0] : null;
-            const firstImage = firstImageObj?.url || (typeof firstImageObj === 'string' ? firstImageObj : null);
+            const firstImageObj =
+              Array.isArray(images) && images.length > 0 ? images[0] : null;
+
+            const firstImage =
+              (typeof firstImageObj === "string"
+                ? firstImageObj
+                : (firstImageObj as { url: string; caption?: string })?.url) ||
+              null;
+
+            const destinationId = dest.id_destination || dest.id;
+
+            if (!destinationId) return null;
 
             return (
               <Link
-                key={dest.id_destination}
-                href={`/destinations/${dest.id_destination}`}
+                key={destinationId}
+                href={`/destinations/${destinationId}`}
                 className="bg-card rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
               >
                 {/* Image */}
@@ -138,11 +191,16 @@ export const Destinations: React.FC = () => {
                   {firstImage ? (
                     <img
                       src={firstImage}
-                      alt={firstImageObj?.caption || dest.name}
+                      alt={
+                        (firstImageObj && typeof firstImageObj !== "string"
+                          ? firstImageObj.caption
+                          : dest.name) || dest.name
+                      }
                       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
-                        e.currentTarget.style.display = 'none';
-                        e.currentTarget.parentElement!.className += ' bg-gradient-to-br from-destination to-destination/60';
+                        e.currentTarget.style.display = "none";
+                        e.currentTarget.parentElement!.className +=
+                          " bg-gradient-to-br from-destination to-destination/60";
                       }}
                     />
                   ) : (
@@ -150,7 +208,7 @@ export const Destinations: React.FC = () => {
                       <MapPin className="w-16 h-16 text-white/50" />
                     </div>
                   )}
-                  
+
                   {/* Category Badge */}
                   {dest.category && (
                     <div className="absolute top-3 right-3 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-medium text-destination shadow-md">
@@ -158,12 +216,12 @@ export const Destinations: React.FC = () => {
                     </div>
                   )}
 
-                  {/* Rating Badge */}
-                  {dest.average_rating > 0 && (
+                  {/* Rating Badge - sử dụng average_rating hoặc rating */}
+                  {(dest.average_rating || dest.rating) > 0 && (
                     <div className="absolute top-3 left-3 bg-black/60 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1">
                       <Star className="w-3 h-3 text-yellow-400 fill-current" />
                       <span className="text-white text-xs font-bold">
-                        {Number(dest.average_rating).toFixed(1)}
+                        {Number(dest.average_rating || dest.rating).toFixed(1)}
                       </span>
                     </div>
                   )}
@@ -174,20 +232,25 @@ export const Destinations: React.FC = () => {
                   <h3 className="text-lg font-bold text-foreground mb-1 line-clamp-1 group-hover:text-destination transition-colors">
                     {dest.name}
                   </h3>
-                  
+
                   <div className="flex items-center text-sm text-muted-foreground mb-3">
                     <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
                     <span className="truncate">
-                      {dest.region_name ? `${dest.region_name}, ` : ''}{dest.country || 'Unknown'}
+                      {dest.region_name ? `${dest.region_name}, ` : ""}
+                      {dest.country || "Unknown"}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
                       <Star className="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" />
+                      {/* Rating */}
                       <span className="ml-1 text-sm font-medium text-foreground">
-                        {Number(dest.average_rating || 0).toFixed(1)}
+                        {Number(
+                          dest.average_rating || dest.rating || 0
+                        ).toFixed(1)}
                       </span>
+                      {/* Reviews */}
                       <span className="ml-1 text-xs text-muted-foreground">
                         ({dest.total_reviews || 0} reviews)
                       </span>
@@ -208,35 +271,17 @@ export const Destinations: React.FC = () => {
         {filteredDestinations.length === 0 && (
           <div className="text-center py-16">
             <MapPin className="w-20 h-20 text-muted-foreground mx-auto mb-4" />
-            <h3 className="text-xl font-medium text-foreground mb-2">No destinations found</h3>
+            <h3 className="text-xl font-medium text-foreground mb-2">
+              No destinations found
+            </h3>
             <p className="text-muted-foreground mb-6">
-              {searchTerm || filterCategory !== 'all'
-                ? 'Try adjusting your search or filters'
-                : 'Be the first to add a destination!'}
+              {searchTerm || filterCategory !== "all"
+                ? "Try adjusting your search or filters"
+                : "There are no destinations available at the moment."}
             </p>
-            {user && (
-              <button
-                onClick={() => setShowCreateDestination(true)}
-                className="px-6 py-3 bg-destination hover:bg-destination/90 text-white rounded-lg transition-colors"
-              >
-                <Plus className="w-4 h-4 inline mr-2" />
-                Create First Destination
-              </button>
-            )}
           </div>
         )}
       </div>
-
-      {/* Create Destination Modal */}
-      {showCreateDestination && (
-        <CreateDestinationModal
-          onClose={() => setShowCreateDestination(false)}
-          onDestinationCreated={() => {
-            fetchDestinations();
-            setShowCreateDestination(false);
-          }}
-        />
-      )}
     </div>
   );
 };

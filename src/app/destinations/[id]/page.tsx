@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { DestinationDetail } from '@/screens/Destinations/DestinationDetail';
-import { Navbar } from '@/components/Layout/Navbar';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter, useParams } from 'next/navigation';
-import { useEffect } from 'react';
+import { DestinationDetail } from "@/screens/Destinations/DestinationDetail";
+import { Navbar } from "@/components/Layout/Navbar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter, useParams } from "next/navigation";
+import { useEffect } from "react";
 
 export default function DestinationDetailPage() {
   const { user, loading } = useAuth();
@@ -12,9 +12,11 @@ export default function DestinationDetailPage() {
   const params = useParams();
   const destinationId = params?.id as string;
 
+  // console.log(destinationId);
+
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/auth');
+      router.push("/auth");
     }
   }, [user, loading, router]);
 
@@ -34,9 +36,11 @@ export default function DestinationDetailPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-foreground mb-4">Invalid destination ID</h2>
+          <h2 className="text-2xl font-bold text-foreground mb-4">
+            Invalid destination ID
+          </h2>
           <button
-            onClick={() => router.push('/destinations')}
+            onClick={() => router.push("/destinations")}
             className="text-destination hover:text-destination/80"
           >
             Go back to destinations
@@ -53,4 +57,3 @@ export default function DestinationDetailPage() {
     </div>
   );
 }
-
