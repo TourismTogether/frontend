@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 import CreateDiary from "@/screens/Diaries/CreateDiary";
+import TestCreateDiary from "@/screens/Diaries/TestCreateDiary";
 
 
 export default function DiaryPage() {
