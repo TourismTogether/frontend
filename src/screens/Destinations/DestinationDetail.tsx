@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import React, { useEffect, useState, useCallback } from "react";
+import { useRouter, usePathname } from "next/navigation";
 import {
   ArrowLeft,
   MapPin,
@@ -45,6 +45,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
   destinationId,
 }) => {
   const router = useRouter();
+  const pathname = usePathname();
   const { user } = useAuth();
   const [destination, setDestination] = useState<IDestinationDetail | null>(
     null
@@ -57,13 +58,80 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
     totalReviews: number;
   } | null>(null);
 
+  // Define fetchAssessmentStats before using it in useEffect
+  const fetchAssessmentStats = useCallback(async () => {
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl || !destinationId) return;
+
+      const response = await fetch(
+        `${apiUrl}/api/assess-destination/destination/${destinationId}`
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+        const assessments = result.data || [];
+
+        if (assessments.length > 0) {
+          const totalRating = assessments.reduce(
+            (sum: number, a: any) => sum + (a.rating_star || 0),
+            0
+          );
+          const averageRating = totalRating / assessments.length;
+          setAssessmentStats({
+            averageRating: Math.round(averageRating * 10) / 10,
+            totalReviews: assessments.length,
+          });
+        } else {
+          setAssessmentStats({
+            averageRating: 0,
+            totalReviews: 0,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching assessment stats:", error);
+    }
+  }, [destinationId]);
+
   // Fetch Destination Detail and Assessment Stats
   useEffect(() => {
     if (destinationId) {
       fetchDestinationDetail();
       fetchAssessmentStats();
     }
-  }, [destinationId]);
+  }, [destinationId, fetchAssessmentStats]);
+
+  // Refresh assessment stats when pathname changes (e.g., when returning from reviews page)
+  useEffect(() => {
+    if (pathname && pathname.includes(`/destinations/${destinationId}`) && !pathname.includes('/reviews')) {
+      // Only refresh if we're on the detail page (not reviews page)
+      fetchAssessmentStats();
+    }
+  }, [pathname, destinationId, fetchAssessmentStats]);
+
+  // Refresh assessment stats when page becomes visible (e.g., when returning from reviews page)
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && destinationId) {
+        fetchAssessmentStats();
+      }
+    };
+
+    const handleFocus = () => {
+      if (destinationId) {
+        fetchAssessmentStats();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, [destinationId, fetchAssessmentStats]);
 
   const fetchDestinationDetail = async () => {
     try {
@@ -100,41 +168,6 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
       setDestination(null);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchAssessmentStats = async () => {
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!apiUrl) return;
-
-      const response = await fetch(
-        `${apiUrl}/api/assess-destination/destination/${destinationId}`
-      );
-
-      if (response.ok) {
-        const result = await response.json();
-        const assessments = result.data || [];
-
-        if (assessments.length > 0) {
-          const totalRating = assessments.reduce(
-            (sum: number, a: any) => sum + (a.rating_star || 0),
-            0
-          );
-          const averageRating = totalRating / assessments.length;
-          setAssessmentStats({
-            averageRating: Math.round(averageRating * 10) / 10,
-            totalReviews: assessments.length,
-          });
-        } else {
-          setAssessmentStats({
-            averageRating: 0,
-            totalReviews: 0,
-          });
-        }
-      }
-    } catch (error) {
-      console.error("Error fetching assessment stats:", error);
     }
   };
 
