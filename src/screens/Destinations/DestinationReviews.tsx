@@ -8,6 +8,8 @@ import {
   User,
   Calendar,
   Loader2,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,6 +38,7 @@ export default function DestinationReviews({ destinationId }: Props) {
   const router = useRouter();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [destinationName, setDestinationName] = useState<string>("");
@@ -156,8 +159,49 @@ export default function DestinationReviews({ destinationId }: Props) {
     return formatDate(dateString);
   };
 
+  const handleEditReview = (review: Review) => {
+    setEditingReview(review);
+  };
+
+  const handleDeleteReview = async (review: Review) => {
+    if (!user?.id || review.traveller_id !== user.id) {
+      alert("Bạn không có quyền xóa đánh giá này");
+      return;
+    }
+
+    if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/assess-destination`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          traveller_id: review.traveller_id,
+          destination_id: review.destination_id,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || result.error) {
+        throw new Error(result.message || "Xóa đánh giá thất bại");
+      }
+
+      // Refresh reviews
+      fetchReviews();
+      fetchDestinationInfo();
+    } catch (err: any) {
+      console.error("deleteReview error:", err);
+      alert(err.message || "Có lỗi xảy ra khi xóa đánh giá");
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -184,7 +228,7 @@ export default function DestinationReviews({ destinationId }: Props) {
             {user && (
               <button
                 onClick={() => setOpen(true)}
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                className="flex items-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
               >
                 <MessageSquare className="w-5 h-5" />
                 <span>Viết đánh giá</span>
@@ -194,7 +238,7 @@ export default function DestinationReviews({ destinationId }: Props) {
 
           {/* Stats Card */}
           {stats.totalReviews > 0 && (
-            <div className="mt-6 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-6 border-2 border-yellow-200 dark:border-yellow-800">
+            <div className="mt-6 bg-linear-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-6 border-2 border-yellow-200 dark:border-yellow-800">
               <div className="flex items-center gap-6">
                 <div className="flex items-center justify-center w-16 h-16 bg-yellow-400 dark:bg-yellow-500 rounded-full">
                   <Star className="w-8 h-8 text-white fill-white" />
@@ -235,7 +279,7 @@ export default function DestinationReviews({ destinationId }: Props) {
             {user && (
               <button
                 onClick={() => setOpen(true)}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
+                className="inline-flex items-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
               >
                 <MessageSquare className="w-5 h-5" />
                 <span>Viết đánh giá đầu tiên</span>
@@ -253,7 +297,7 @@ export default function DestinationReviews({ destinationId }: Props) {
                   {/* Review Header */}
                   <div className="flex items-start gap-4 mb-4">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md border-2 border-white dark:border-gray-800">
+                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md border-2 border-white dark:border-gray-800">
                       {review.user?.avatar_url ? (
                         <img
                           src={review.user.avatar_url}
@@ -290,12 +334,35 @@ export default function DestinationReviews({ destinationId }: Props) {
                             </span>
                           </div>
                         </div>
-                        {review.created_at && (
-                          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
-                            <Calendar className="w-4 h-4" />
-                            <span>{formatTimeAgo(review.created_at)}</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3">
+                          {review.created_at && (
+                            <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 shrink-0">
+                              <Calendar className="w-4 h-4" />
+                              <span>{formatTimeAgo(review.created_at)}</span>
+                            </div>
+                          )}
+                          {/* Edit and Delete buttons - only show if user owns the review */}
+                          {user && review.traveller_id === user.id && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleEditReview(review)}
+                                className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                title="Chỉnh sửa đánh giá"
+                                aria-label="Chỉnh sửa đánh giá"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReview(review)}
+                                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                title="Xóa đánh giá"
+                                aria-label="Xóa đánh giá"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -317,8 +384,8 @@ export default function DestinationReviews({ destinationId }: Props) {
         )}
       </div>
 
-      {/* Review Modal */}
-      {open && (
+      {/* Create Review Modal */}
+      {open && !editingReview && (
         <CreateReviewModal
           destinationId={destinationId}
           onClose={() => setOpen(false)}
@@ -327,6 +394,24 @@ export default function DestinationReviews({ destinationId }: Props) {
             fetchReviews();
             fetchDestinationInfo();
           }}
+        />
+      )}
+
+      {/* Edit Review Modal */}
+      {editingReview && (
+        <CreateReviewModal
+          destinationId={destinationId}
+          onClose={() => setEditingReview(null)}
+          onSuccess={() => {
+            setEditingReview(null);
+            fetchReviews();
+            fetchDestinationInfo();
+          }}
+          initialData={{
+            rating_star: editingReview.rating_star,
+            comment: editingReview.comment,
+          }}
+          isEdit={true}
         />
       )}
     </div>

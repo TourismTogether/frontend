@@ -82,7 +82,56 @@ export const Destinations: React.FC = () => {
       // Lấy mảng destinations từ thuộc tính 'data'
       const fetchedDestinations = result.data || [];
 
-      setDestinations(fetchedDestinations);
+      // Fetch assessment stats for each destination
+      const destinationsWithStats = await Promise.all(
+        fetchedDestinations.map(async (dest) => {
+          const destinationId = dest.id_destination || dest.id;
+          if (!destinationId) return dest;
+
+          try {
+            const assessmentResponse = await fetch(
+              `${apiUrl}/api/assess-destination/destination/${destinationId}`
+            );
+
+            if (assessmentResponse.ok) {
+              const assessmentResult = await assessmentResponse.json();
+              const assessments = assessmentResult.data || [];
+
+              if (assessments.length > 0) {
+                const totalRating = assessments.reduce(
+                  (sum: number, a: any) => sum + (a.rating_star || 0),
+                  0
+                );
+                const averageRating = totalRating / assessments.length;
+                return {
+                  ...dest,
+                  average_rating: Math.round(averageRating * 10) / 10,
+                  total_reviews: assessments.length,
+                };
+              } else {
+                return {
+                  ...dest,
+                  average_rating: 0,
+                  total_reviews: 0,
+                };
+              }
+            }
+          } catch (err) {
+            console.error(
+              `Error fetching assessment stats for destination ${destinationId}:`,
+              err
+            );
+          }
+
+          return {
+            ...dest,
+            average_rating: dest.average_rating || dest.rating || 0,
+            total_reviews: dest.total_reviews || 0,
+          };
+        })
+      );
+
+      setDestinations(destinationsWithStats);
     } catch (error) {
       console.error("Error fetching destinations:", error);
       setDestinations([]);
@@ -204,7 +253,7 @@ export const Destinations: React.FC = () => {
                       }}
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-destination to-destination/60 flex items-center justify-center">
+                    <div className="w-full h-full bg-linear-to-br from-destination to-destination/60 flex items-center justify-center">
                       <MapPin className="w-16 h-16 text-white/50" />
                     </div>
                   )}
@@ -234,7 +283,7 @@ export const Destinations: React.FC = () => {
                   </h3>
 
                   <div className="flex items-center text-sm text-muted-foreground mb-3">
-                    <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                    <MapPin className="w-4 h-4 mr-1 shrink-0" />
                     <span className="truncate">
                       {dest.region_name ? `${dest.region_name}, ` : ""}
                       {dest.country || "Unknown"}
@@ -243,7 +292,7 @@ export const Destinations: React.FC = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" />
+                      <Star className="w-4 h-4 text-yellow-500 fill-current shrink-0" />
                       {/* Rating */}
                       <span className="ml-1 text-sm font-medium text-foreground">
                         {Number(

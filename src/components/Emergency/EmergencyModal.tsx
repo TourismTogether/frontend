@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from "react";
 import {
   X,
   AlertTriangle,
@@ -40,8 +40,13 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
   const [supportTeam, setSupportTeam] = useState<SupportMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [sosActivated, setSosActivated] = useState(false);
-  const [selectedSupport, setSelectedSupport] = useState<SupportMember | null>(null);
-  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedSupport, setSelectedSupport] = useState<SupportMember | null>(
+    null
+  );
+  const [userLocation, setUserLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
   const [sendingLocation, setSendingLocation] = useState(false);
 
   useEffect(() => {
@@ -201,7 +206,9 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
               </div>
               <div>
                 <h2 className="text-xl font-bold text-white">Emergency</h2>
-                <p className="text-white/80 text-sm">Get help when you need it</p>
+                <p className="text-white/80 text-sm">
+                  Get help when you need it
+                </p>
               </div>
             </div>
             <button
@@ -217,15 +224,14 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
           {/* SOS Button */}
           {!sosActivated ? (
             <div className="text-center mb-8">
-              <button
-                onClick={handleSOS}
-                className="relative group"
-              >
+              <button onClick={handleSOS} className="relative group">
                 <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-25"></div>
                 <div className="relative w-32 h-32 mx-auto bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group-hover:from-red-600 group-hover:to-red-700">
                   <div className="text-center">
                     <AlertTriangle className="w-12 h-12 text-white mx-auto mb-1" />
-                    <span className="text-2xl font-black text-white tracking-wider">SOS</span>
+                    <span className="text-2xl font-black text-white tracking-wider">
+                      SOS
+                    </span>
                   </div>
                 </div>
               </button>
@@ -238,7 +244,9 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
               <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4 animate-pulse">
                 <AlertTriangle className="w-10 h-10 text-red-600" />
               </div>
-              <h3 className="text-lg font-bold text-red-600 mb-2">SOS Activated!</h3>
+              <h3 className="text-lg font-bold text-red-600 mb-2">
+                SOS Activated!
+              </h3>
               <p className="text-muted-foreground text-sm mb-4">
                 Your location has been shared. Select a support member below.
               </p>
@@ -256,7 +264,9 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
             <div className="bg-muted/50 rounded-lg p-3 mb-6 flex items-center space-x-3">
               <MapPin className="w-5 h-5 text-destination flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">Your Location</p>
+                <p className="text-sm font-medium text-foreground">
+                  Your Location
+                </p>
                 <p className="text-xs text-muted-foreground truncate">
                   {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}
                 </p>
@@ -279,7 +289,9 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
             ) : supportTeam.length === 0 ? (
               <div className="text-center py-8 bg-muted/30 rounded-lg">
                 <User className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">No support members available</p>
+                <p className="text-muted-foreground">
+                  No support members available
+                </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   Try again later or call emergency services
                 </p>
@@ -363,10 +375,12 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
 
           {/* Emergency Numbers */}
           <div className="mt-6 pt-6 border-t border-border">
-            <h4 className="text-sm font-semibold text-foreground mb-3">Emergency Numbers</h4>
+            <h4 className="text-sm font-semibold text-foreground mb-3">
+              Emergency Numbers
+            </h4>
             <div className="grid grid-cols-2 gap-3">
               <button
-                onClick={() => handleCall('113')}
+                onClick={() => handleCall("113")}
                 className="flex items-center space-x-2 p-3 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
               >
                 <Phone className="w-5 h-5 text-red-600" />
@@ -376,7 +390,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
                 </div>
               </button>
               <button
-                onClick={() => handleCall('114')}
+                onClick={() => handleCall("114")}
                 className="flex items-center space-x-2 p-3 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
               >
                 <Phone className="w-5 h-5 text-orange-600" />
@@ -386,7 +400,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
                 </div>
               </button>
               <button
-                onClick={() => handleCall('115')}
+                onClick={() => handleCall("115")}
                 className="flex items-center space-x-2 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
               >
                 <Phone className="w-5 h-5 text-blue-600" />
@@ -396,7 +410,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
                 </div>
               </button>
               <button
-                onClick={() => handleCall('1900599920')}
+                onClick={() => handleCall("1900599920")}
                 className="flex items-center space-x-2 p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
               >
                 <Phone className="w-5 h-5 text-green-600" />
@@ -412,4 +426,3 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     </div>
   );
 };
-

@@ -9,6 +9,11 @@ import {
   Trash2,
   X,
   Check,
+  AlertCircle,
+  Edit,
+  Pencil,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { ICost, IRoute } from "@/lib/type/interface";
 
@@ -27,13 +32,23 @@ interface AddCostFormProps {
   onSubmit: (
     newCost: Omit<ICost, "id" | "created_at" | "updated_at" | "route_id">
   ) => void;
+  initialData?: ICost;
 }
 
-const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("other");
-  const [amount, setAmount] = useState<number>(0);
+const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit, initialData }) => {
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [description, setDescription] = useState(initialData?.description || "");
+  const [category, setCategory] = useState(initialData?.category || "other");
+  const [amount, setAmount] = useState<number>(initialData?.amount || 0);
+
+  React.useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title || "");
+      setDescription(initialData.description || "");
+      setCategory(initialData.category || "other");
+      setAmount(initialData.amount || 0);
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,7 +69,9 @@ const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit }) => {
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-inner border border-gray-100 mt-2">
-      <h4 className="text-sm font-bold mb-3 text-trip">Thêm Chi Phí</h4>
+      <h4 className="text-sm font-bold mb-3 text-trip">
+        {initialData ? "Sửa Chi Phí" : "Thêm Chi Phí"}
+      </h4>
       <form onSubmit={handleSubmit} className="space-y-2">
         <input
           type="text"
@@ -100,7 +117,7 @@ const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit }) => {
             disabled={!title.trim() || !amount || amount <= 0}
           >
             <Check className="w-4 h-4 mr-1" />
-            <span>Thêm</span>
+            <span>{initialData ? "Cập nhật" : "Thêm"}</span>
           </button>
           <button
             type="button"
@@ -123,14 +140,23 @@ interface RouteCardProps {
     newCost: Omit<ICost, "id" | "created_at" | "updated_at" | "route_id">
   ) => void;
   onDeleteCost: (routeId: string, costId: string) => void;
+  onDeleteRoute?: (routeId: string) => void;
+  onEditRoute?: (route: IRoute) => void;
+  onEditCost?: (routeId: string, cost: ICost) => void;
 }
 
 export const RouteCard: React.FC<RouteCardProps> = ({
   route,
   onAddCost,
   onDeleteCost,
+  onDeleteRoute,
+  onEditRoute,
+  onEditCost,
 }) => {
   const [isAddingCost, setIsAddingCost] = useState(false);
+  const [editingCostId, setEditingCostId] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isCardOpen, setIsCardOpen] = useState(false); // Default is closed
   const totalRouteCost = route.costs.reduce(
     (sum, cost) => sum + cost.amount,
     0
@@ -145,46 +171,131 @@ export const RouteCard: React.FC<RouteCardProps> = ({
     setIsAddingCost(false);
   };
 
+  const handleDeleteClick = () => {
+    if (!route.id) return;
+    
+    if (showDeleteConfirm) {
+      // Confirm deletion
+      if (onDeleteRoute) {
+        onDeleteRoute(route.id);
+      }
+      setShowDeleteConfirm(false);
+    } else {
+      // Show confirmation
+      setShowDeleteConfirm(true);
+      // Auto-hide confirmation after 3 seconds
+      setTimeout(() => setShowDeleteConfirm(false), 3000);
+    }
+  };
+
   return (
-    <div className="bg-card p-5 rounded-xl shadow-md border border-border transition-shadow hover:shadow-lg">
+    <div className="bg-card p-5 rounded-xl shadow-md border border-border transition-shadow hover:shadow-lg relative">
+      {/* Delete Confirmation Overlay */}
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 bg-red-50 border-2 border-red-300 rounded-xl flex items-center justify-center z-20 backdrop-blur-sm">
+          <div className="text-center p-4">
+            <AlertCircle className="h-8 w-8 text-red-600 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-red-900 mb-1">
+              Delete this route?
+            </p>
+            <p className="text-xs text-red-700 mb-3">
+              This will also delete all associated costs.
+            </p>
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={handleDeleteClick}
+                className="px-4 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Confirm Delete
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-1.5 bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header và Title */}
       <div className="flex justify-between items-start mb-2 border-b pb-2 border-dashed">
-        <h3 className="text-xl font-bold text-foreground">
-          <Route className="inline w-5 h-5 mr-2 text-traveller" />
-          {route.title}
-        </h3>
-        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-trip/10 text-trip">
-          Stop {(route.index ?? 0) + 1}
-        </span>
+        <div className="flex-1 flex items-center gap-2">
+          <button
+            onClick={() => setIsCardOpen(!isCardOpen)}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            title={isCardOpen ? "Thu gọn" : "Mở rộng"}
+            aria-label={isCardOpen ? "Thu gọn" : "Mở rộng"}
+          >
+            {isCardOpen ? (
+              <ChevronUp className="w-4 h-4 text-gray-500" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-500" />
+            )}
+          </button>
+          <h3 className="text-xl font-bold text-foreground">
+            <Route className="inline w-5 h-5 mr-2 text-traveller" />
+            {route.title}
+          </h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-trip/10 text-trip">
+            Stop {(route.index ?? 0) + 1}
+          </span>
+          {onEditRoute && route.id && (
+            <button
+              onClick={() => onEditRoute(route)}
+              className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Edit route"
+              aria-label="Edit route"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+          )}
+          {onDeleteRoute && route.id && (
+            <button
+              onClick={handleDeleteClick}
+              className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete route"
+              aria-label="Delete route"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-3">{route.description}</p>
+      {/* Collapsible Content */}
+      {isCardOpen && (
+        <>
+          <p className="text-sm text-muted-foreground mb-3">{route.description}</p>
 
-      {/* Tọa độ */}
-      <div className="text-sm text-muted-foreground mb-3 p-3 bg-muted rounded-md border border-border">
-        <h4 className="font-semibold text-foreground mb-1 flex items-center">
-          <Navigation className="w-4 h-4 mr-1" /> Tọa độ:
-        </h4>
-        <p>
-          Bắt đầu: Lat: {route.latStart}, Lng: {route.lngStart}
-        </p>
-        <p>
-          Kết thúc: Lat: {route.latEnd}, Lng: {route.lngEnd}
-        </p>
-      </div>
+          {/* Tọa độ */}
+          <div className="text-sm text-muted-foreground mb-3 p-3 bg-muted rounded-md border border-border">
+            <h4 className="font-semibold text-foreground mb-1 flex items-center">
+              <Navigation className="w-4 h-4 mr-1" /> Tọa độ:
+            </h4>
+            <p>
+              Bắt đầu: Lat: {route.latStart}, Lng: {route.lngStart}
+            </p>
+            <p>
+              Kết thúc: Lat: {route.latEnd}, Lng: {route.lngEnd}
+            </p>
+          </div>
 
-      {/* Hoạt động */}
-      <h4 className="font-semibold text-sm text-foreground/80 mb-1">
-        Hoạt động:
-      </h4>
-      <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 ml-4 mb-4">
-        {route.details.map((detail: string, i: number) => (
-          <li key={i}>{detail}</li>
-        ))}
-      </ul>
+          {/* Hoạt động */}
+          <h4 className="font-semibold text-sm text-foreground/80 mb-1">
+            Hoạt động:
+          </h4>
+          <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 ml-4 mb-4">
+            {route.details.map((detail: string, i: number) => (
+              <li key={i}>{detail}</li>
+            ))}
+          </ul>
 
-      {/* Chi phí (Cost Management) */}
-      <div className="border-t pt-4 mt-4">
+          {/* Chi phí (Cost Management) */}
+          <div className="border-t pt-4 mt-4">
         <div className="flex justify-between items-center mb-3">
           <h4 className="font-bold text-base text-foreground flex items-center">
             <DollarSign className="w-4 h-4 mr-1 text-red-500" /> Tổng Chi phí
@@ -202,11 +313,35 @@ export const RouteCard: React.FC<RouteCardProps> = ({
           </button>
         </div>
 
-        {isAddingCost && (
+        {(isAddingCost || editingCostId) && (
           <div className="mb-4">
             <AddCostForm
-              onClose={() => setIsAddingCost(false)}
-              onSubmit={handleAddCostSubmit}
+              onClose={() => {
+                setIsAddingCost(false);
+                setEditingCostId(null);
+              }}
+              onSubmit={(newCost) => {
+                if (editingCostId && onEditCost && route.id) {
+                  // Edit existing cost
+                  const existingCost = route.costs.find(c => c.id === editingCostId);
+                  if (existingCost) {
+                    onEditCost(route.id, {
+                      ...existingCost,
+                      ...newCost,
+                    });
+                  }
+                  setEditingCostId(null);
+                } else if (route.id) {
+                  // Add new cost
+                  onAddCost(route.id, newCost);
+                  setIsAddingCost(false);
+                }
+              }}
+              initialData={
+                editingCostId
+                  ? route.costs.find((c) => c.id === editingCostId) || undefined
+                  : undefined
+              }
             />
           </div>
         )}
@@ -219,15 +354,16 @@ export const RouteCard: React.FC<RouteCardProps> = ({
             </p>
           ) : (
             <div className="text-xs border rounded-lg overflow-hidden">
-              <div className="grid grid-cols-4 font-semibold bg-gray-100 p-2 text-foreground/80 border-b">
+              <div className="grid grid-cols-5 font-semibold bg-gray-100 p-2 text-foreground/80 border-b">
                 <span className="col-span-2">Mô tả</span>
                 <span className="text-right">Số tiền</span>
+                <span className="text-center">Sửa</span>
                 <span className="text-center">Xóa</span>
               </div>
               {route.costs.map((cost) => (
                 <div
                   key={cost.id}
-                  className="grid grid-cols-4 items-center p-2 hover:bg-gray-50 border-b last:border-b-0"
+                  className="grid grid-cols-5 items-center p-2 hover:bg-gray-50 border-b last:border-b-0"
                 >
                   <span className="col-span-2 truncate">
                     {cost.description}
@@ -235,6 +371,20 @@ export const RouteCard: React.FC<RouteCardProps> = ({
                   <span className="text-right font-medium text-destructive">
                     {formatCurrencyLocal(cost.amount)}
                   </span>
+                  <div className="flex justify-center">
+                    {onEditCost && cost.id && (
+                      <button
+                        onClick={() => {
+                          setEditingCostId(cost.id || null);
+                          setIsAddingCost(false);
+                        }}
+                        className="text-blue-400 hover:text-blue-600 transition-colors"
+                        aria-label={`Sửa chi phí ${cost.description}`}
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                   <div className="flex justify-center">
                     <button
                       onClick={() =>
@@ -252,6 +402,8 @@ export const RouteCard: React.FC<RouteCardProps> = ({
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

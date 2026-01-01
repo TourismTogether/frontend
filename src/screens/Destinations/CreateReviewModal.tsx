@@ -108,7 +108,7 @@
 // }
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { X, Star, Send, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -116,6 +116,11 @@ interface Props {
   destinationId: string;
   onClose: () => void;
   onSuccess: () => void;
+  initialData?: {
+    rating_star: number;
+    comment?: string;
+  };
+  isEdit?: boolean;
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
@@ -132,12 +137,22 @@ export default function CreateReviewModal({
   destinationId,
   onClose,
   onSuccess,
+  initialData,
+  isEdit = false,
 }: Props) {
   const { user } = useAuth();
-  const [rating, setRating] = useState(5);
-  const [comment, setComment] = useState("");
+  const [rating, setRating] = useState(initialData?.rating_star || 5);
+  const [comment, setComment] = useState(initialData?.comment || "");
   const [loading, setLoading] = useState(false);
   const [hoveredRating, setHoveredRating] = useState<number | null>(null);
+
+  // Update state when initialData changes
+  useEffect(() => {
+    if (initialData) {
+      setRating(initialData.rating_star || 5);
+      setComment(initialData.comment || "");
+    }
+  }, [initialData]);
 
   const submitReview = async () => {
     if (!user?.id) {
@@ -153,8 +168,11 @@ export default function CreateReviewModal({
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/api/assess-destination`, {
-        method: "POST",
+      const url = `${API_URL}/api/assess-destination`;
+      const method = isEdit ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -169,12 +187,17 @@ export default function CreateReviewModal({
       const result = await res.json();
 
       if (!res.ok || result.error) {
-        throw new Error(result.message || "Gửi đánh giá thất bại");
+        throw new Error(
+          result.message ||
+            (isEdit ? "Cập nhật đánh giá thất bại" : "Gửi đánh giá thất bại")
+        );
       }
 
       // Reset form
-      setRating(5);
-      setComment("");
+      if (!isEdit) {
+        setRating(5);
+        setComment("");
+      }
       onSuccess();
     } catch (err: any) {
       console.error("submitReview error:", err);
@@ -187,20 +210,20 @@ export default function CreateReviewModal({
   const displayRating = hoveredRating || rating;
 
   return (
-    <div 
+    <div
       className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
       onClick={onClose}
     >
-      <div 
+      <div
         className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-lg relative transform transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            Đánh giá địa điểm
+            {isEdit ? "Chỉnh sửa đánh giá" : "Đánh giá địa điểm"}
           </h2>
-          <button 
+          <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             disabled={loading}
@@ -217,7 +240,7 @@ export default function CreateReviewModal({
               Đánh giá của bạn
             </label>
             <div className="flex flex-col items-center space-y-3">
-              <div 
+              <div
                 className="flex gap-2"
                 onMouseLeave={() => setHoveredRating(null)}
               >
@@ -249,7 +272,8 @@ export default function CreateReviewModal({
           {/* Comment Section */}
           <div>
             <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              Chia sẻ cảm nhận của bạn <span className="text-gray-400">(Tùy chọn)</span>
+              Chia sẻ cảm nhận của bạn{" "}
+              <span className="text-gray-400">(Tùy chọn)</span>
             </label>
             <textarea
               className="w-full border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all dark:bg-gray-700 dark:text-white"
@@ -283,7 +307,7 @@ export default function CreateReviewModal({
           <button
             onClick={submitReview}
             disabled={loading || !rating}
-            className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
@@ -293,7 +317,7 @@ export default function CreateReviewModal({
             ) : (
               <>
                 <Send className="w-5 h-5" />
-                <span>Gửi đánh giá</span>
+                <span>{isEdit ? "Cập nhật đánh giá" : "Gửi đánh giá"}</span>
               </>
             )}
           </button>
