@@ -258,52 +258,62 @@ export const Dashboard: React.FC = () => {
       const validRoutes = flattenedRoutes.filter(isValidRoute);
       setAllRoutes(validRoutes);
 
-      // Find the newest route - sort by created_at descending
-      const sortedRoutes = [...validRoutes].sort((a, b) => {
-        const dateA =
-          a.created_at instanceof Date
-            ? a.created_at.getTime()
-            : new Date(a.created_at).getTime();
-        const dateB =
-          b.created_at instanceof Date
-            ? b.created_at.getTime()
-            : new Date(b.created_at).getTime();
-        return dateB - dateA; // Descending order (newest first)
-      });
+      // Find the nearest trip (newest trip by start_date, or upcoming trip)
+      if (tripsData.length > 0) {
+        const now = new Date().getTime();
+        
+        // Sort trips: upcoming trips first, then by start_date descending
+        const sortedTrips = [...tripsData].sort((a, b) => {
+          const startA = new Date(a.start_date).getTime();
+          const startB = new Date(b.start_date).getTime();
+          const endA = new Date(a.end_date).getTime();
+          const endB = new Date(b.end_date).getTime();
+          
+          // Prioritize upcoming trips
+          const aIsUpcoming = startA > now;
+          const bIsUpcoming = startB > now;
+          
+          if (aIsUpcoming && !bIsUpcoming) return -1;
+          if (!aIsUpcoming && bIsUpcoming) return 1;
+          
+          // If both upcoming or both past, sort by start_date descending (newest first)
+          return startB - startA;
+        });
 
-      // Get the newest route
-      if (sortedRoutes.length > 0) {
-        const newestRoute = sortedRoutes[0];
-        setCurrentRoute(newestRoute);
+        const nearestTrip = sortedTrips[0];
+        setNewestTrip(nearestTrip);
 
-        // Find the trip for this route
-        const routeTrip = tripsData.find((t) => t.id === newestRoute.trip_id);
-        if (routeTrip) {
-          setNewestTrip(routeTrip);
+        // Get all routes for the nearest trip
+        const tripRoutes = validRoutes
+          .filter((route) => route.trip_id === nearestTrip.id)
+          .sort((a, b) => (a.index || 0) - (b.index || 0));
+
+        if (tripRoutes.length > 0) {
+          setNewestTripRoutes(tripRoutes);
+          setCurrentRoute(tripRoutes[0]); // Set first route as current for display
+          setRecentRoutes([
+            {
+              id: tripRoutes[0].id,
+              title: tripRoutes[0].title,
+              description: tripRoutes[0].description,
+              difficulty: nearestTrip.difficult
+                ? `${nearestTrip.difficult}/5`
+                : "N/A",
+              duration_days: Math.ceil(
+                (new Date(nearestTrip.end_date).getTime() -
+                  new Date(nearestTrip.start_date).getTime()) /
+                  (1000 * 60 * 60 * 24)
+              ),
+              distance_km: nearestTrip.distance || 0,
+              view_count: 0,
+              trip_id: nearestTrip.id,
+            },
+          ]);
+        } else {
+          setNewestTripRoutes([]);
+          setCurrentRoute(null);
+          setRecentRoutes([]);
         }
-
-        // Set only the newest route
-        setNewestTripRoutes([newestRoute]);
-        setRecentRoutes([
-          {
-            id: newestRoute.id,
-            title: newestRoute.title,
-            description: newestRoute.description,
-            difficulty: routeTrip?.difficult
-              ? `${routeTrip.difficult}/5`
-              : "N/A",
-            duration_days: routeTrip
-              ? Math.ceil(
-                  (new Date(routeTrip.end_date).getTime() -
-                    new Date(routeTrip.start_date).getTime()) /
-                    (1000 * 60 * 60 * 24)
-                )
-              : 0,
-            distance_km: routeTrip?.distance || 0,
-            view_count: 0,
-            trip_id: newestRoute.trip_id,
-          },
-        ]);
       } else {
         setNewestTrip(null);
         setNewestTripRoutes([]);
@@ -420,22 +430,27 @@ export const Dashboard: React.FC = () => {
 
         {/* Main Content: Routes & Quick Assess (Thay thế Quick Actions) */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-          {/* Newest Route Section (Bên trái) */}
+          {/* Nearest Trip Section (Bên trái) */}
           <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
             <div className="flex justify-between items-center mb-6">
               <div>
                 <h2 className="text-xl font-bold text-gray-700">
-                  Newest Route
+                  Nearest Trip
                 </h2>
-                {newestTrip && currentRoute && (
+                {newestTrip && (
                   <p className="text-sm text-gray-500 mt-1">
-                    From trip: {newestTrip.title}
+                    {newestTrip.title || "Untitled Trip"}
+                    {newestTripRoutes.length > 0 && (
+                      <span className="ml-2 text-xs">
+                        ({newestTripRoutes.length} route{newestTripRoutes.length > 1 ? "s" : ""})
+                      </span>
+                    )}
                   </p>
                 )}
               </div>
-              {currentRoute?.trip_id && (
+              {newestTrip?.id && (
                 <Link
-                  href={`/trips/${currentRoute.trip_id}`}
+                  href={`/trips/${newestTrip.id}`}
                   className="text-blue-500 hover:text-blue-700 text-sm font-medium"
                 >
                   View Trip Details
@@ -443,45 +458,47 @@ export const Dashboard: React.FC = () => {
               )}
             </div>
 
-            {currentRoute ? (
-              <div className="grid grid-cols-1 gap-4">
-                <Link
-                  href={
-                    currentRoute.trip_id
-                      ? `/trips/${currentRoute.trip_id}`
-                      : "#"
-                  }
-                  className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-gray-50/50"
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <h3 className="font-semibold text-gray-800 line-clamp-1">
-                      {currentRoute.title ||
-                        `Route ${(currentRoute.index ?? 0) + 1}`}
-                    </h3>
-                    <span className="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700">
-                      Newest
-                    </span>
-                  </div>
-                  <p className="text-sm text-gray-500 mb-3 line-clamp-2">
-                    {currentRoute.description || "No description available"}
+            {newestTrip && newestTripRoutes.length > 0 ? (
+              <div className="grid grid-cols-1 gap-3">
+                {newestTripRoutes.slice(0, 3).map((route, idx) => (
+                  <Link
+                    key={route.id || idx}
+                    href={
+                      newestTrip.id
+                        ? `/trips/${newestTrip.id}`
+                        : "#"
+                    }
+                    className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-gray-50/50"
+                  >
+                    <div className="flex items-start justify-between mb-2">
+                      <h3 className="font-semibold text-gray-800 line-clamp-1">
+                        {route.title ||
+                          `Route ${(route.index ?? 0) + 1}`}
+                      </h3>
+                      <span className="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700">
+                        #{route.index !== undefined ? route.index + 1 : idx + 1}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-500 mb-2 line-clamp-2">
+                      {route.description || "No description available"}
+                    </p>
+                    <div className="flex items-center gap-4 text-xs text-gray-400">
+                      <span className="flex items-center">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        Start: {route.latStart?.toFixed(4) || "N/A"}
+                      </span>
+                      <span className="flex items-center">
+                        <MapPin className="w-3 h-3 mr-1" />
+                        End: {route.latEnd?.toFixed(4) || "N/A"}
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+                {newestTripRoutes.length > 3 && (
+                  <p className="text-sm text-gray-500 text-center pt-2">
+                    +{newestTripRoutes.length - 3} more route{newestTripRoutes.length - 3 > 1 ? "s" : ""}
                   </p>
-                  <div className="flex items-center justify-between text-xs text-gray-400 mt-2">
-                    <span className="flex items-center">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      Start: {currentRoute.latStart?.toFixed(4) || "N/A"},{" "}
-                      {currentRoute.lngStart?.toFixed(4) || "N/A"}
-                    </span>
-                    <span className="flex items-center">
-                      <MapPin className="w-3 h-3 mr-1" />
-                      End: {currentRoute.latEnd?.toFixed(4) || "N/A"},{" "}
-                      {currentRoute.lngEnd?.toFixed(4) || "N/A"}
-                    </span>
-                    <span className="flex items-center">
-                      <Map className="w-3 h-3 mr-1" />
-                      Route #{(currentRoute.index ?? 0) + 1}
-                    </span>
-                  </div>
-                </Link>
+                )}
               </div>
             ) : (
               <div className="text-center py-8">
@@ -544,19 +561,33 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Newest Route Map Section */}
-        {currentRoute && (
+        {/* Nearest Trip Map Section */}
+        {newestTrip && newestTripRoutes.length > 0 && (
           <div className="mb-8 bg-white rounded-xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-700 mb-4 flex items-center">
-              <MapPin className="mr-2 h-5 w-5 text-indigo-500" /> Newest Route
-              Map
-            </h2>
-            {currentRoute.title && (
-              <p className="text-sm text-gray-600 mb-4">{currentRoute.title}</p>
-            )}
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-gray-700 flex items-center">
+                  <MapPin className="mr-2 h-5 w-5 text-indigo-500" />
+                  Nearest Trip Map
+                </h2>
+                {newestTrip.title && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    {newestTrip.title}
+                  </p>
+                )}
+              </div>
+              {newestTrip.id && (
+                <Link
+                  href={`/trips/${newestTrip.id}`}
+                  className="text-blue-500 hover:text-blue-700 text-sm font-medium"
+                >
+                  View Trip Details →
+                </Link>
+              )}
+            </div>
             <RouteMap
-              routes={[currentRoute]}
-              height="400px"
+              routes={newestTripRoutes}
+              height="500px"
               showAllRoutes={true}
             />
           </div>

@@ -12,6 +12,8 @@ import {
   AlertCircle,
   Edit,
   Pencil,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { ICost, IRoute } from "@/lib/type/interface";
 
@@ -154,6 +156,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
   const [isAddingCost, setIsAddingCost] = useState(false);
   const [editingCostId, setEditingCostId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [isCardOpen, setIsCardOpen] = useState(false); // Default is closed
   const totalRouteCost = route.costs.reduce(
     (sum, cost) => sum + cost.amount,
     0
@@ -218,7 +221,19 @@ export const RouteCard: React.FC<RouteCardProps> = ({
 
       {/* Header và Title */}
       <div className="flex justify-between items-start mb-2 border-b pb-2 border-dashed">
-        <div className="flex-1">
+        <div className="flex-1 flex items-center gap-2">
+          <button
+            onClick={() => setIsCardOpen(!isCardOpen)}
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            title={isCardOpen ? "Thu gọn" : "Mở rộng"}
+            aria-label={isCardOpen ? "Thu gọn" : "Mở rộng"}
+          >
+            {isCardOpen ? (
+              <ChevronUp className="w-4 h-4 text-gray-500" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-500" />
+            )}
+          </button>
           <h3 className="text-xl font-bold text-foreground">
             <Route className="inline w-5 h-5 mr-2 text-traveller" />
             {route.title}
@@ -251,33 +266,36 @@ export const RouteCard: React.FC<RouteCardProps> = ({
         </div>
       </div>
 
-      <p className="text-sm text-muted-foreground mb-3">{route.description}</p>
+      {/* Collapsible Content */}
+      {isCardOpen && (
+        <>
+          <p className="text-sm text-muted-foreground mb-3">{route.description}</p>
 
-      {/* Tọa độ */}
-      <div className="text-sm text-muted-foreground mb-3 p-3 bg-muted rounded-md border border-border">
-        <h4 className="font-semibold text-foreground mb-1 flex items-center">
-          <Navigation className="w-4 h-4 mr-1" /> Tọa độ:
-        </h4>
-        <p>
-          Bắt đầu: Lat: {route.latStart}, Lng: {route.lngStart}
-        </p>
-        <p>
-          Kết thúc: Lat: {route.latEnd}, Lng: {route.lngEnd}
-        </p>
-      </div>
+          {/* Tọa độ */}
+          <div className="text-sm text-muted-foreground mb-3 p-3 bg-muted rounded-md border border-border">
+            <h4 className="font-semibold text-foreground mb-1 flex items-center">
+              <Navigation className="w-4 h-4 mr-1" /> Tọa độ:
+            </h4>
+            <p>
+              Bắt đầu: Lat: {route.latStart}, Lng: {route.lngStart}
+            </p>
+            <p>
+              Kết thúc: Lat: {route.latEnd}, Lng: {route.lngEnd}
+            </p>
+          </div>
 
-      {/* Hoạt động */}
-      <h4 className="font-semibold text-sm text-foreground/80 mb-1">
-        Hoạt động:
-      </h4>
-      <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 ml-4 mb-4">
-        {route.details.map((detail: string, i: number) => (
-          <li key={i}>{detail}</li>
-        ))}
-      </ul>
+          {/* Hoạt động */}
+          <h4 className="font-semibold text-sm text-foreground/80 mb-1">
+            Hoạt động:
+          </h4>
+          <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 ml-4 mb-4">
+            {route.details.map((detail: string, i: number) => (
+              <li key={i}>{detail}</li>
+            ))}
+          </ul>
 
-      {/* Chi phí (Cost Management) */}
-      <div className="border-t pt-4 mt-4">
+          {/* Chi phí (Cost Management) */}
+          <div className="border-t pt-4 mt-4">
         <div className="flex justify-between items-center mb-3">
           <h4 className="font-bold text-base text-foreground flex items-center">
             <DollarSign className="w-4 h-4 mr-1 text-red-500" /> Tổng Chi phí
@@ -384,6 +402,8 @@ export const RouteCard: React.FC<RouteCardProps> = ({
           )}
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };

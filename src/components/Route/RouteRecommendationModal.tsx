@@ -76,9 +76,9 @@ export const RouteRecommendationModal: React.FC<
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 via-pink-50 to-indigo-50">
+        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-linear-to-r from-purple-50 via-pink-50 to-indigo-50">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-purple-100 to-pink-100 rounded-lg">
+            <div className="p-2 bg-linear-to-br from-purple-100 to-pink-100 rounded-lg">
               <Wand2 className="h-6 w-6 text-purple-600" />
             </div>
             <div>
@@ -95,7 +95,7 @@ export const RouteRecommendationModal: React.FC<
             {aiGeneratedRoutes.length > 0 && onSelectAllRoutes && (
               <button
                 onClick={handleSelectAll}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg"
+                className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg"
               >
                 <CheckCircle className="h-4 w-4" />
                 <span>Thêm Tất Cả ({aiGeneratedRoutes.length})</span>
@@ -139,7 +139,7 @@ export const RouteRecommendationModal: React.FC<
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="mb-4 p-4 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
+              <div className="mb-4 p-4 bg-linear-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
                 <p className="text-sm text-gray-700">
                   <span className="font-semibold">
                     ✨ AI đã tạo ra {aiGeneratedRoutes.length} chặng
@@ -170,7 +170,7 @@ export const RouteRecommendationModal: React.FC<
                             className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
                               isSelected
                                 ? "bg-purple-600 text-white"
-                                : "bg-gradient-to-br from-purple-100 to-pink-100 text-purple-700"
+                                : "bg-linear-to-br from-purple-100 to-pink-100 text-purple-700"
                             }`}
                           >
                             {index + 1}
@@ -247,7 +247,7 @@ export const RouteRecommendationModal: React.FC<
                       {!isSelected && (
                         <button
                           onClick={() => handleSelectRoute(route, index)}
-                          className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 flex-shrink-0"
+                          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 shrink-0"
                         >
                           <Plus className="h-4 w-4" />
                           <span>Thêm</span>

@@ -137,7 +137,7 @@ export const Trips: React.FC = () => {
 
       const result = await response.json();
       let tripsData: ITrip[] = [];
-      
+
       // Handle different response formats
       if (Array.isArray(result)) {
         tripsData = result;
@@ -238,13 +238,19 @@ export const Trips: React.FC = () => {
           }
         );
 
-        if (!deleteJoinTripResponse.ok && deleteJoinTripResponse.status !== 404) {
+        if (
+          !deleteJoinTripResponse.ok &&
+          deleteJoinTripResponse.status !== 404
+        ) {
           console.warn(
             `Could not remove user from trip (Status: ${deleteJoinTripResponse.status}). Proceeding to delete trip.`
           );
         }
       } catch (joinError) {
-        console.warn("Error removing user from trip (non-critical):", joinError);
+        console.warn(
+          "Error removing user from trip (non-critical):",
+          joinError
+        );
         // Continue with trip deletion even if this fails
       }
 
@@ -276,7 +282,8 @@ export const Trips: React.FC = () => {
       handleTripActionSuccess();
     } catch (error) {
       console.error("Error deleting trip:", error);
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       alert(`Error deleting trip: ${errorMessage}`);
     } finally {
       setLoading(false);
@@ -286,13 +293,15 @@ export const Trips: React.FC = () => {
   // --- Render Logic (Enhanced loading state) ---
   if (loading || !user?.id) {
     return (
-      <div className="flex flex-col justify-center items-center h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="flex flex-col justify-center items-center h-screen bg-linear-to-br from-gray-50 via-white to-gray-50">
         {!user ? (
           <div className="text-center">
             <p className="text-xl font-semibold text-gray-900 mb-2">
               Please log in to view your trips.
             </p>
-            <p className="text-gray-600">You need to be authenticated to access this page.</p>
+            <p className="text-gray-600">
+              You need to be authenticated to access this page.
+            </p>
           </div>
         ) : (
           <div className="text-center">
@@ -305,7 +314,7 @@ export const Trips: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* HEADER - Enhanced with better styling */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-10 sm:mb-12">
@@ -319,7 +328,7 @@ export const Trips: React.FC = () => {
             </p>
             {trips.length > 0 && (
               <p className="text-sm text-gray-500 mt-1">
-                {trips.length} {trips.length === 1 ? 'trip' : 'trips'} planned
+                {trips.length} {trips.length === 1 ? "trip" : "trips"} planned
               </p>
             )}
           </div>
@@ -327,7 +336,7 @@ export const Trips: React.FC = () => {
           {/* Nút Plan New Trip - Enhanced styling */}
           <button
             onClick={handleOpenAddModal}
-            className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
           >
             <Plus className="w-5 h-5" />
             <span>Plan New Trip</span>
@@ -353,18 +362,19 @@ export const Trips: React.FC = () => {
             // Enhanced Empty State
             <div className="col-span-1 sm:col-span-2 lg:col-span-3 xl:col-span-4">
               <div className="text-center py-16 sm:py-20 bg-white rounded-2xl shadow-lg border-2 border-dashed border-gray-200">
-                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-indigo-100 mb-6">
+                <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-linear-to-br from-blue-100 to-indigo-100 mb-6">
                   <MapPin className="w-10 h-10 text-blue-600" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-3">
                   No trips yet
                 </h3>
                 <p className="text-gray-600 mb-6 max-w-md mx-auto">
-                  Start planning your next adventure! Create your first trip to begin organizing your travel plans.
+                  Start planning your next adventure! Create your first trip to
+                  begin organizing your travel plans.
                 </p>
                 <button
                   onClick={handleOpenAddModal}
-                  className="inline-flex items-center justify-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                  className="inline-flex items-center justify-center space-x-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
                 >
                   <Plus className="w-5 h-5" />
                   <span>Create Your First Trip</span>

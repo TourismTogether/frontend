@@ -516,10 +516,6 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
   const handleDeleteRoute = async (routeId: string) => {
     if (!trip || !API_URL || !routeId) return;
 
-    if (!confirm("Are you sure you want to delete this route? This will also delete all associated costs.")) {
-      return;
-    }
-
     try {
       const response = await fetch(`${API_URL}/routes/${routeId}`, {
         method: "DELETE",

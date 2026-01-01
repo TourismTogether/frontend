@@ -10,6 +10,7 @@ import {
   useMap,
   CircleMarker,
 } from "react-leaflet";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import L from "leaflet";
 import { IRoute } from "@/lib/type/interface";
 
@@ -279,6 +280,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
     new Map()
   );
   const [loadingPaths, setLoadingPaths] = useState(false);
+  const [isLegendOpen, setIsLegendOpen] = useState(true);
 
   // Filter out routes with invalid coordinates
   const validRoutes = useMemo(() => {
@@ -414,7 +416,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
 
   return (
     <div
-      className="w-full rounded-lg overflow-hidden border-2 border-gray-200 shadow-lg"
+      className="w-full rounded-lg overflow-hidden border-2 border-gray-200 shadow-lg relative"
       style={{ height }}
     >
       <MapContainer
@@ -632,43 +634,60 @@ export const RouteMap: React.FC<RouteMapProps> = ({
 
       {/* Route Legend */}
       {validRoutes.length > 0 && (
-        <div className="absolute bottom-4 left-4 bg-white rounded-lg shadow-lg border border-gray-200 p-3 z-[1000] max-w-xs">
-          <p className="text-xs font-bold text-gray-700 mb-2 uppercase tracking-wide">
-            Route Legend
-          </p>
-          <div className="space-y-1.5 max-h-48 overflow-y-auto">
-            {validRoutes.map((route, index) => {
-              const routeNumber = (route.index || 0) + 1;
-              const color = routeColors[index % routeColors.length];
-              return (
-                <div
-                  key={route.id || index}
-                  className="flex items-center gap-2 text-xs"
-                >
-                  <div
-                    className="w-3 h-3 rounded-full flex-shrink-0"
-                    style={{ backgroundColor: color }}
-                  ></div>
-                  <span className="font-semibold text-gray-700">
-                    Route {routeNumber}:
-                  </span>
-                  <span className="text-gray-600 truncate">
-                    {route.title || "Untitled"}
-                  </span>
-                </div>
-              );
-            })}
+        <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-[1000] max-w-xs pointer-events-auto overflow-hidden">
+          {/* Legend Header with Toggle Button */}
+          <div
+            className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={() => setIsLegendOpen(!isLegendOpen)}
+          >
+            <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+              Route Legend ({validRoutes.length})
+            </p>
+            {isLegendOpen ? (
+              <ChevronUp className="w-4 h-4 text-gray-500 shrink-0" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />
+            )}
           </div>
-          {validRoutes.length > 0 && (
-            <div className="mt-2 pt-2 border-t border-gray-200">
-              <div className="flex items-center gap-2 text-xs">
-                <div className="w-3 h-3 rounded-full bg-green-500 flex-shrink-0"></div>
-                <span className="text-gray-600">Start Point</span>
+
+          {/* Legend Content - Collapsible */}
+          {isLegendOpen && (
+            <div className="px-3 pb-3 border-t border-gray-100">
+              <div className="space-y-1.5 max-h-48 overflow-y-auto mt-2">
+                {validRoutes.map((route, index) => {
+                  const routeNumber = (route.index || 0) + 1;
+                  const color = routeColors[index % routeColors.length];
+                  return (
+                    <div
+                      key={route.id || index}
+                      className="flex items-center gap-2 text-xs"
+                    >
+                      <div
+                        className="w-3 h-3 rounded-full shrink-0"
+                        style={{ backgroundColor: color }}
+                      ></div>
+                      <span className="font-semibold text-gray-700">
+                        Route {routeNumber}:
+                      </span>
+                      <span className="text-gray-600 truncate">
+                        {route.title || "Untitled"}
+                      </span>
+                    </div>
+                  );
+                })}
               </div>
-              <div className="flex items-center gap-2 text-xs mt-1">
-                <div className="w-3 h-3 rounded-full bg-red-500 flex-shrink-0"></div>
-                <span className="text-gray-600">End Point</span>
-              </div>
+              {validRoutes.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-200">
+                  <div className="flex items-center gap-2 text-xs">
+                    <div className="w-3 h-3 rounded-full bg-green-500 shrink-0"></div>
+                    <span className="text-gray-600">Start Point</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs mt-1">
+                    <div className="w-3 h-3 rounded-full bg-red-500 shrink-0"></div>
+                    <span className="text-gray-600">End Point</span>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
