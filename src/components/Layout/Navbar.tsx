@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -20,12 +20,38 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { EmergencyModal } from "../Emergency/EmergencyModal";
+import { SOSNotification } from "../Emergency/SOSNotification";
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
   const { user, profile, account, signOut } = useAuth(); // Lấy user, profile, account, signOut từ useAuth
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State cho Mobile Menu
   const [showEmergency, setShowEmergency] = useState(false); // State cho Emergency Modal
+  const [isSupporter, setIsSupporter] = useState(false); // State cho Supporter check
+
+  const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  // Check if current user is a supporter
+  useEffect(() => {
+    const checkSupporter = async () => {
+      if (!user?.id) {
+        setIsSupporter(false);
+        return;
+      }
+
+      try {
+        const res = await fetch(`${API_URL}/supporters/${user.id}`, {
+          credentials: "include",
+        });
+        const result = await res.json();
+        setIsSupporter(result.status === 200 && result.data !== null);
+      } catch {
+        setIsSupporter(false);
+      }
+    };
+
+    checkSupporter();
+  }, [user?.id]);
 
   const isActive = (path: string) => pathname === path;
 
@@ -107,6 +133,14 @@ export const Navbar: React.FC = () => {
             >
               <Cloud className="w-5 h-5" />
             </Link>
+
+            {/* SOS Notification for Supporters */}
+            {isSupporter && (
+              <SOSNotification
+                currentUserId={user?.id}
+                isSupporter={isSupporter}
+              />
+            )}
 
             {/* Nút Khẩn cấp/SOS (Thêm từ phiên bản 1) */}
             <button

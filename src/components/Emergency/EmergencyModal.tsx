@@ -35,6 +35,15 @@ interface EmergencyModalProps {
   onClose: () => void;
 }
 
+interface ShareLocationRecord {
+  id: number;
+  user_id: string;
+  share_with_user_id?: string | null;
+  latitude: number;
+  longitude: number;
+  processed: boolean;
+}
+
 export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose }) => {
   const { profile } = useAuth();
   const [supportTeam, setSupportTeam] = useState<SupportMember[]>([]);
@@ -48,6 +57,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     lng: number;
   } | null>(null);
   const [sendingLocation, setSendingLocation] = useState(false);
+  const [currentSOSRecord, setCurrentSOSRecord] = useState<ShareLocationRecord | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -141,6 +151,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     // Update user's safety status via backend API
     if (profile?.user_id) {
       try {
+        // Update traveller status
         await fetch(`${API_URL}/travellers/${profile.user_id}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -152,6 +163,24 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
             is_shared_location: true,
           }),
         });
+
+        // Create share_location record for SOS
+        const sosRes = await fetch(`${API_URL}/share-locations`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            user_id: profile.user_id,
+            latitude: userLocation?.lat || 0,
+            longitude: userLocation?.lng || 0,
+            processed: false,
+          }),
+        });
+        
+        const sosResult = await sosRes.json();
+        if (sosResult.status === 201 && sosResult.data) {
+          setCurrentSOSRecord(sosResult.data);
+        }
       } catch {
         // Failed to update safety status
       }
@@ -162,8 +191,22 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     setSelectedSupport(support);
     setSendingLocation(true);
 
-    // Simulate sending location to support
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    // Update share_location record with selected supporter
+    if (currentSOSRecord?.id) {
+      try {
+        await fetch(`${API_URL}/share-locations/${currentSOSRecord.id}/share-with`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            share_with_user_id: support.user_id,
+          }),
+        });
+      } catch {
+        // Failed to update share with user
+      }
+    }
+
     setSendingLocation(false);
   };
 
@@ -186,6 +229,14 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
           credentials: 'include',
           body: JSON.stringify({ is_safe: true }),
         });
+
+        // Delete share_location record (cancel SOS)
+        await fetch(`${API_URL}/share-locations/cancel/${profile.user_id}`, {
+          method: 'DELETE',
+          credentials: 'include',
+        });
+        
+        setCurrentSOSRecord(null);
       } catch {
         // Failed to update safety status
       }
