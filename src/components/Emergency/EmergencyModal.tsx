@@ -11,21 +11,23 @@ import {
   CheckCircle,
   Loader2,
   PhoneCall,
-  Navigation,
-} from "lucide-react";
-import { supabase } from "../../lib/supabase";
-import { useAuth } from "../../contexts/AuthContext";
+  Navigation
+} from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
+
+const API_URL = process.env.NEXT_PUBLIC_API_URL;
+
+interface UserInfo {
+  id: string;
+  full_name: string;
+  phone: string;
+  avatar_url: string | null;
+}
 
 interface SupportMember {
-  uuid: string;
-  id_user: string;
+  user_id: string;
   is_available: boolean;
-  user: {
-    name: string;
-    phone: string;
-    avatar_url: string | null;
-  };
-  regions: string[];
+  user: UserInfo | null;
 }
 
 interface EmergencyModalProps {
@@ -33,11 +35,8 @@ interface EmergencyModalProps {
   onClose: () => void;
 }
 
-export const EmergencyModal: React.FC<EmergencyModalProps> = ({
-  isOpen,
-  onClose,
-}) => {
-  const { user, profile } = useAuth();
+export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose }) => {
+  const { profile } = useAuth();
   const [supportTeam, setSupportTeam] = useState<SupportMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [sosActivated, setSosActivated] = useState(false);
@@ -66,8 +65,8 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
             lng: position.coords.longitude,
           });
         },
-        (error) => {
-          console.error("Error getting location:", error);
+        () => {
+          // Location access denied or unavailable
         }
       );
     }
@@ -77,26 +76,60 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
     try {
       setLoading(true);
 
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/supporters`);
-      if (!res.ok) {
-        throw new Error("Failed to fetch support team");
+      // Fetch all supporters from backend API
+      const supportersRes = await fetch(`${API_URL}/supporters`, {
+        credentials: 'include',
+      });
+      const supportersResult = await supportersRes.json();
+
+      if (supportersResult.status !== 200 || !supportersResult.data) {
+        setSupportTeam([]);
+        return;
       }
-      const data = await res.json();
-      console.log("Support Team Data:", data);
 
-      // Fetch support team members
-      const transformedTeam = data.map((s: any) => ({
-        ...s,
-        user: {
-          user_id: s.id_user,
-          is_available: s.is_available,
-        },
-        regions: s.regions || [],
-      }));
+      const supporters = supportersResult.data;
 
-      setSupportTeam(transformedTeam);
-    } catch (error) {
-      console.error("Error fetching support team:", error);
+      // Filter available supporters (or use all if none available)
+      const availableSupporters = supporters.filter((s: { is_available: boolean }) => s.is_available);
+      const supportersToUse = availableSupporters.length > 0 ? availableSupporters : supporters;
+
+      if (supportersToUse.length === 0) {
+        setSupportTeam([]);
+        return;
+      }
+
+      // Fetch user info for each supporter
+      const supportersWithUsers: SupportMember[] = await Promise.all(
+        supportersToUse.map(async (supporter: { user_id: string; is_available: boolean }) => {
+          try {
+            const userRes = await fetch(`${API_URL}/users/${supporter.user_id}`, {
+              credentials: 'include',
+            });
+            const userResult = await userRes.json();
+            
+            return {
+              user_id: supporter.user_id,
+              is_available: supporter.is_available,
+              user: userResult.status === 200 && userResult.data ? {
+                id: userResult.data.id,
+                full_name: userResult.data.full_name,
+                phone: userResult.data.phone,
+                avatar_url: userResult.data.avatar_url,
+              } : null,
+            };
+          } catch {
+            return {
+              user_id: supporter.user_id,
+              is_available: supporter.is_available,
+              user: null,
+            };
+          }
+        })
+      );
+
+      setSupportTeam(supportersWithUsers);
+    } catch {
+      setSupportTeam([]);
     } finally {
       setLoading(false);
     }
@@ -105,20 +138,22 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
   const handleSOS = async () => {
     setSosActivated(true);
 
-    // Update user's safety status
+    // Update user's safety status via backend API
     if (profile?.user_id) {
       try {
-        await supabase
-          .from("traveller")
-          .update({
+        await fetch(`${API_URL}/travellers/${profile.user_id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
             is_safe: false,
             latitude: userLocation?.lat,
             longitude: userLocation?.lng,
             is_shared_location: true,
-          })
-          .eq("id_user", profile.user_id);
-      } catch (error) {
-        console.error("Error updating safety status:", error);
+          }),
+        });
+      } catch {
+        // Failed to update safety status
       }
     }
   };
@@ -142,15 +177,17 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
     setSosActivated(false);
     setSelectedSupport(null);
 
-    // Update user's safety status
+    // Update user's safety status via backend API
     if (profile?.user_id) {
       try {
-        await supabase
-          .from("traveller")
-          .update({ is_safe: true })
-          .eq("id_user", profile.user_id);
-      } catch (error) {
-        console.error("Error updating safety status:", error);
+        await fetch(`${API_URL}/travellers/${profile.user_id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ is_safe: true }),
+        });
+      } catch {
+        // Failed to update safety status
       }
     }
   };
@@ -263,21 +300,20 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
               <div className="space-y-3">
                 {supportTeam.map((support) => (
                   <div
-                    key={support.uuid}
-                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
-                      selectedSupport?.uuid === support.uuid
-                        ? "border-traveller bg-traveller/5"
-                        : "border-border hover:border-traveller/50 hover:bg-muted/30"
-                    }`}
+                    key={support.user_id}
+                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${selectedSupport?.user_id === support.user_id
+                        ? 'border-traveller bg-traveller/5'
+                        : 'border-border hover:border-traveller/50 hover:bg-muted/30'
+                      }`}
                     onClick={() => sosActivated && handleSelectSupport(support)}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 h-12 bg-traveller/20 rounded-full flex items-center justify-center">
-                          {support.user.avatar_url ? (
+                          {support.user?.avatar_url ? (
                             <img
                               src={support.user.avatar_url}
-                              alt={support.user.name}
+                              alt={support.user?.full_name || 'Support'}
                               className="w-full h-full rounded-full object-cover"
                             />
                           ) : (
@@ -286,18 +322,16 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
                         </div>
                         <div>
                           <h4 className="font-semibold text-foreground flex items-center">
-                            {support.user.name}
+                            {support.user?.full_name || 'Support Member'}
                             <span className="ml-2 w-2 h-2 bg-green-500 rounded-full"></span>
                           </h4>
                           <p className="text-sm text-muted-foreground">
-                            {support.regions.length > 0
-                              ? `Regions: ${support.regions.join(", ")}`
-                              : "Support Member"}
+                            {support.user?.phone ? `📞 ${support.user.phone}` : 'Hỗ trợ viên'}
                           </p>
                         </div>
                       </div>
 
-                      {selectedSupport?.uuid === support.uuid ? (
+                      {selectedSupport?.user_id === support.user_id ? (
                         sendingLocation ? (
                           <Loader2 className="w-6 h-6 text-traveller animate-spin" />
                         ) : (
@@ -307,7 +341,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleCall(support.user.phone);
+                            handleCall(support.user?.phone || '');
                           }}
                           className="p-2 bg-green-500 hover:bg-green-600 rounded-full transition-colors"
                           title="Call"
@@ -317,23 +351,22 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({
                       )}
                     </div>
 
-                    {selectedSupport?.uuid === support.uuid &&
-                      !sendingLocation && (
-                        <div className="mt-3 pt-3 border-t border-border">
-                          <p className="text-sm text-green-600 font-medium mb-2">
-                            ✓ Location shared with {support.user.name}
-                          </p>
-                          <div className="flex space-x-2">
-                            <button
-                              onClick={() => handleCall(support.user.phone)}
-                              className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
-                            >
-                              <PhoneCall className="w-4 h-4" />
-                              <span>Call Now</span>
-                            </button>
-                          </div>
+                    {selectedSupport?.user_id === support.user_id && !sendingLocation && (
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <p className="text-sm text-green-600 font-medium mb-2">
+                          ✓ Đã chia sẻ vị trí với {support.user?.full_name || 'hỗ trợ viên'}
+                        </p>
+                        <div className="flex space-x-2">
+                          <button
+                            onClick={() => handleCall(support.user?.phone || '')}
+                            className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                          >
+                            <PhoneCall className="w-4 h-4" />
+                            <span>Gọi ngay</span>
+                          </button>
                         </div>
-                      )}
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>

@@ -11,6 +11,7 @@ interface AuthContextType {
   account: Account | null;
   profile: Profile | null;
   loading: boolean;
+  isAdmin: boolean;
   signUp: (email: string, password: string, username: string, fullName?: string) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
@@ -27,6 +28,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [account, setAccount] = useState<Account | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
     fetchUser();
@@ -44,43 +46,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         throw new Error("Unauthorized");
       }
 
-      const { data } = await res.json();
+      const result = await res.json();
+      const data = result.data;
 
       if (!data?.isAuthenticated || !data.user) {
         setUser(null);
         setAccount(null);
         setProfile(null);
+        setIsAdmin(false);
         return;
       }
 
       setUser(data.user);
       setAccount(data.account ?? null);
 
+      // Check if user is admin
+      try {
+        const adminRes = await fetch(`${beApi}/admins/${data.user.id}`, {
+          credentials: "include",
+        });
+        if (adminRes.ok) {
+          const adminResult = await adminRes.json();
+          setIsAdmin(adminResult.status === 200 && adminResult.data !== null);
+        } else {
+          setIsAdmin(false);
+        }
+      } catch {
+        setIsAdmin(false);
+      }
+
       const email = data.account?.email;
 
-      const travellerRes = await fetch(`${beApi}/travellers/${data.user.id}`);
-
-      if (!travellerRes.ok) {
-        setProfile(null);
-        return;
-      }
-
-      const travellerResult = await travellerRes.json();
-
-      if (travellerResult.status === 200) {
-        setProfile({
-          ...data.user,
-          ...travellerResult.data,
-          email,
+      // Fetch traveller data but don't block on failure
+      try {
+        const travellerRes = await fetch(`${beApi}/travellers/${data.user.id}`, {
+          credentials: "include",
         });
-      } else {
-        setProfile(null);
+
+        if (travellerRes.ok) {
+          const travellerResult = await travellerRes.json();
+          if (travellerResult.status === 200) {
+            setProfile({
+              ...data.user,
+              ...travellerResult.data,
+              email,
+            });
+          } else {
+            setProfile({ ...data.user, email });
+          }
+        } else {
+          setProfile({ ...data.user, email });
+        }
+      } catch {
+        setProfile({ ...data.user, email });
       }
-    } catch (error) {
-      console.error("fetchUser error:", error);
+    } catch {
       setUser(null);
       setAccount(null);
       setProfile(null);
+      setIsAdmin(false);
     } finally {
       setLoading(false);
     }
@@ -104,16 +128,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         }),
       });
 
+      const result = await res.json();
+
       if (!res.ok) {
-        const errorData = await res.json().catch(() => ({}));
-        throw new Error(errorData.message || "Sign up failed");
+        throw new Error(result.message || "Sign up failed");
       }
 
-      await fetchUser();
-    } catch (error) {
-      console.error("signUp error:", error);
+      // Directly set user from response instead of calling fetchUser
+      if (result.data?.user) {
+        setUser(result.data.user);
+        setAccount(result.data.account ?? null);
+        setProfile({
+          ...result.data.user,
+          email: result.data.account?.email,
+        });
+      }
+      
       setLoading(false);
-      throw error; // Re-throw to allow form to handle error
+    } catch (error) {
+      setLoading(false);
+      throw error;
     }
   };
 
@@ -130,14 +164,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         body: JSON.stringify({ email, password }),
       });
 
+      const result = await res.json();
+
       if (!res.ok) {
-        throw new Error("Sign in failed");
+        throw new Error(result.message || "Sign in failed");
       }
 
-      await fetchUser();
-    } catch (error) {
-      console.error("signIn error:", error);
+      // Directly set user from response instead of calling fetchUser
+      if (result.data?.user) {
+        setUser(result.data.user);
+        setAccount(result.data.account ?? null);
+        setProfile({
+          ...result.data.user,
+          email: result.data.account?.email,
+        });
+      }
+      
       setLoading(false);
+    } catch (error) {
+      setLoading(false);
+      throw error;
     }
   };
 
@@ -157,8 +203,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(null);
       setAccount(null);
       setProfile(null);
-    } catch (error) {
-      console.error("signOut error:", error);
+      setIsAdmin(false);
+    } catch {
+      // Logout failed silently
     } finally {
       setLoading(false);
     }
@@ -169,6 +216,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     account,
     profile,
     loading,
+    isAdmin,
     signUp,
     signIn,
     signOut,

@@ -119,9 +119,9 @@ export const Weather: React.FC = () => {
             lng: position.coords.longitude,
           });
         },
-        (err) => {
-          console.error('Geolocation error:', err);
-          setLocation({ lat: 10.7769, lng: 106.7009 }); // Default to Ho Chi Minh City
+        () => {
+          // Fallback to Ho Chi Minh City if geolocation fails
+          setLocation({ lat: 10.7769, lng: 106.7009 });
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
@@ -196,9 +196,9 @@ export const Weather: React.FC = () => {
         main: weatherInfo.main,
         city: geoData.address?.city || geoData.address?.town || geoData.address?.village || 'Unknown Location',
       });
-    } catch (err: any) {
-      console.error('Weather fetch error:', err);
-      setError(err.message || 'Failed to fetch weather data');
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch weather data';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
