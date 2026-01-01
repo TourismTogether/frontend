@@ -10,6 +10,8 @@ import {
   X,
   Check,
   AlertCircle,
+  Edit,
+  Pencil,
 } from "lucide-react";
 import { ICost, IRoute } from "@/lib/type/interface";
 
@@ -28,13 +30,23 @@ interface AddCostFormProps {
   onSubmit: (
     newCost: Omit<ICost, "id" | "created_at" | "updated_at" | "route_id">
   ) => void;
+  initialData?: ICost;
 }
 
-const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit }) => {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [category, setCategory] = useState("other");
-  const [amount, setAmount] = useState<number>(0);
+const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit, initialData }) => {
+  const [title, setTitle] = useState(initialData?.title || "");
+  const [description, setDescription] = useState(initialData?.description || "");
+  const [category, setCategory] = useState(initialData?.category || "other");
+  const [amount, setAmount] = useState<number>(initialData?.amount || 0);
+
+  React.useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.title || "");
+      setDescription(initialData.description || "");
+      setCategory(initialData.category || "other");
+      setAmount(initialData.amount || 0);
+    }
+  }, [initialData]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,7 +67,9 @@ const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit }) => {
 
   return (
     <div className="bg-white p-4 rounded-lg shadow-inner border border-gray-100 mt-2">
-      <h4 className="text-sm font-bold mb-3 text-trip">Thêm Chi Phí</h4>
+      <h4 className="text-sm font-bold mb-3 text-trip">
+        {initialData ? "Sửa Chi Phí" : "Thêm Chi Phí"}
+      </h4>
       <form onSubmit={handleSubmit} className="space-y-2">
         <input
           type="text"
@@ -101,7 +115,7 @@ const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit }) => {
             disabled={!title.trim() || !amount || amount <= 0}
           >
             <Check className="w-4 h-4 mr-1" />
-            <span>Thêm</span>
+            <span>{initialData ? "Cập nhật" : "Thêm"}</span>
           </button>
           <button
             type="button"
@@ -125,6 +139,8 @@ interface RouteCardProps {
   ) => void;
   onDeleteCost: (routeId: string, costId: string) => void;
   onDeleteRoute?: (routeId: string) => void;
+  onEditRoute?: (route: IRoute) => void;
+  onEditCost?: (routeId: string, cost: ICost) => void;
 }
 
 export const RouteCard: React.FC<RouteCardProps> = ({
@@ -132,8 +148,11 @@ export const RouteCard: React.FC<RouteCardProps> = ({
   onAddCost,
   onDeleteCost,
   onDeleteRoute,
+  onEditRoute,
+  onEditCost,
 }) => {
   const [isAddingCost, setIsAddingCost] = useState(false);
+  const [editingCostId, setEditingCostId] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const totalRouteCost = route.costs.reduce(
     (sum, cost) => sum + cost.amount,
@@ -209,6 +228,16 @@ export const RouteCard: React.FC<RouteCardProps> = ({
           <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-trip/10 text-trip">
             Stop {(route.index ?? 0) + 1}
           </span>
+          {onEditRoute && route.id && (
+            <button
+              onClick={() => onEditRoute(route)}
+              className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              title="Edit route"
+              aria-label="Edit route"
+            >
+              <Edit className="w-4 h-4" />
+            </button>
+          )}
           {onDeleteRoute && route.id && (
             <button
               onClick={handleDeleteClick}
@@ -266,11 +295,35 @@ export const RouteCard: React.FC<RouteCardProps> = ({
           </button>
         </div>
 
-        {isAddingCost && (
+        {(isAddingCost || editingCostId) && (
           <div className="mb-4">
             <AddCostForm
-              onClose={() => setIsAddingCost(false)}
-              onSubmit={handleAddCostSubmit}
+              onClose={() => {
+                setIsAddingCost(false);
+                setEditingCostId(null);
+              }}
+              onSubmit={(newCost) => {
+                if (editingCostId && onEditCost && route.id) {
+                  // Edit existing cost
+                  const existingCost = route.costs.find(c => c.id === editingCostId);
+                  if (existingCost) {
+                    onEditCost(route.id, {
+                      ...existingCost,
+                      ...newCost,
+                    });
+                  }
+                  setEditingCostId(null);
+                } else if (route.id) {
+                  // Add new cost
+                  onAddCost(route.id, newCost);
+                  setIsAddingCost(false);
+                }
+              }}
+              initialData={
+                editingCostId
+                  ? route.costs.find((c) => c.id === editingCostId) || undefined
+                  : undefined
+              }
             />
           </div>
         )}
@@ -283,15 +336,16 @@ export const RouteCard: React.FC<RouteCardProps> = ({
             </p>
           ) : (
             <div className="text-xs border rounded-lg overflow-hidden">
-              <div className="grid grid-cols-4 font-semibold bg-gray-100 p-2 text-foreground/80 border-b">
+              <div className="grid grid-cols-5 font-semibold bg-gray-100 p-2 text-foreground/80 border-b">
                 <span className="col-span-2">Mô tả</span>
                 <span className="text-right">Số tiền</span>
+                <span className="text-center">Sửa</span>
                 <span className="text-center">Xóa</span>
               </div>
               {route.costs.map((cost) => (
                 <div
                   key={cost.id}
-                  className="grid grid-cols-4 items-center p-2 hover:bg-gray-50 border-b last:border-b-0"
+                  className="grid grid-cols-5 items-center p-2 hover:bg-gray-50 border-b last:border-b-0"
                 >
                   <span className="col-span-2 truncate">
                     {cost.description}
@@ -299,6 +353,20 @@ export const RouteCard: React.FC<RouteCardProps> = ({
                   <span className="text-right font-medium text-destructive">
                     {formatCurrencyLocal(cost.amount)}
                   </span>
+                  <div className="flex justify-center">
+                    {onEditCost && cost.id && (
+                      <button
+                        onClick={() => {
+                          setEditingCostId(cost.id || null);
+                          setIsAddingCost(false);
+                        }}
+                        className="text-blue-400 hover:text-blue-600 transition-colors"
+                        aria-label={`Sửa chi phí ${cost.description}`}
+                      >
+                        <Pencil className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
                   <div className="flex justify-center">
                     <button
                       onClick={() =>

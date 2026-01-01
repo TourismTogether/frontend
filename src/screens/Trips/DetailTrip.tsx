@@ -153,6 +153,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddingRoute, setIsAddingRoute] = useState(false);
+  const [editingRoute, setEditingRoute] = useState<IRoute | null>(null);
   const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState(false);
   const [recommendations, setRecommendations] = useState<RecommendedRoute[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
@@ -550,6 +551,128 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
     }
   };
 
+  const handleEditRoute = (route: IRoute) => {
+    setEditingRoute(route);
+  };
+
+  const handleUpdateRoute = async (formValues: {
+    title: string;
+    description: string;
+    lngStart: number;
+    latStart: number;
+    lngEnd: number;
+    latEnd: number;
+    details: string[];
+  }) => {
+    if (!trip || !API_URL || !editingRoute?.id) return;
+
+    try {
+      // Only send fields that exist in the backend route model
+      const routePayload = {
+        trip_id: trip.id,
+        index: editingRoute.index,
+        title: formValues.title,
+        description: formValues.description,
+        lngStart: formValues.lngStart,
+        latStart: formValues.latStart,
+        lngEnd: formValues.lngEnd,
+        latEnd: formValues.latEnd,
+        // Note: details is not part of the route table, it's handled separately if needed
+      };
+
+      const response = await fetch(`${API_URL}/routes/${editingRoute.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(routePayload),
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.message || "Failed to update route");
+      }
+
+      const result = await response.json();
+      const apiRoute = result.data || result;
+
+      const updatedRoute: IRoute = {
+        ...normalizeRoute(apiRoute),
+        ...formValues,
+        index: editingRoute.index,
+        costs: editingRoute.costs,
+        created_at: editingRoute.created_at,
+        updated_at: apiRoute.updated_at || new Date(),
+      };
+
+      const updatedRoutes = trip.routes.map((r) =>
+        r.id === editingRoute.id ? updatedRoute : r
+      );
+
+      setTrip({
+        ...trip,
+        routes: updatedRoutes,
+        spent_amount: calculateSpentAmount(updatedRoutes),
+      });
+
+      setEditingRoute(null);
+      console.log("Route updated successfully:", updatedRoute);
+    } catch (err: any) {
+      console.error("Update Route Error:", err);
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+  const handleEditCost = async (routeId: string, cost: ICost) => {
+    if (!trip || !API_URL || !cost.id) return;
+
+    try {
+      const costPayload = {
+        route_id: routeId,
+        title: cost.title,
+        description: cost.description,
+        category: cost.category,
+        cost: cost.amount, // Backend uses 'cost' field
+      };
+
+      const response = await fetch(`${API_URL}/costs/${cost.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(costPayload),
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.message || "Failed to update cost");
+      }
+
+      const result = await response.json();
+      const apiCost = result.data || result;
+      const updatedCost = normalizeCost(apiCost, trip.currency || "VND");
+
+      const updatedRoutes = trip.routes.map((route) => {
+        if (route.id === routeId) {
+          return {
+            ...route,
+            costs: route.costs.map((c) =>
+              c.id === cost.id ? updatedCost : c
+            ),
+          };
+        }
+        return route;
+      });
+
+      setTrip({
+        ...trip,
+        routes: updatedRoutes,
+        spent_amount: calculateSpentAmount(updatedRoutes),
+      });
+
+      console.log("Cost updated successfully");
+    } catch (err: any) {
+      console.error("Update Cost Error:", err);
+      alert(`Error updating cost: ${err.message}`);
+    }
+  };
+
   // --- RENDER ---
 
   if (loading) {
@@ -666,6 +789,29 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                     ? trip.routes[trip.routes.length - 1].lngEnd
                     : undefined
                 }
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Modal Edit Route */}
+        {editingRoute && (
+          <div 
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                setEditingRoute(null);
+              }
+            }}
+          >
+            <div 
+              className="w-full max-w-2xl rounded-xl bg-white shadow-2xl"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <AddRouteForm
+                onClose={() => setEditingRoute(null)}
+                onSubmit={handleUpdateRoute}
+                initialRoute={editingRoute}
               />
             </div>
           </div>
@@ -813,6 +959,8 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                       onAddCost={handleAddCost}
                       onDeleteCost={handleDeleteCost}
                       onDeleteRoute={handleDeleteRoute}
+                      onEditRoute={handleEditRoute}
+                      onEditCost={handleEditCost}
                     />
                   </div>
                 ))

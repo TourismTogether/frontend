@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { X, Save, MapPin } from "lucide-react";
 import dynamic from "next/dynamic";
+import { IRoute } from "@/lib/type/interface";
 
 // Dynamically import LocationPicker to avoid SSR issues
 const LocationPicker = dynamic(
@@ -43,6 +44,8 @@ interface AddRouteFormProps {
   // Default start coordinates from previous route's end
   defaultStartLat?: number;
   defaultStartLng?: number;
+  // Initial route data for editing
+  initialRoute?: IRoute;
 }
 
 export const AddRouteForm: React.FC<AddRouteFormProps> = ({
@@ -50,30 +53,41 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
   onSubmit,
   defaultStartLat,
   defaultStartLng,
+  initialRoute,
   // Bỏ currentMaxIndex
 }) => {
   // State khởi tạo giá trị cho form (ĐÃ SỬA: Bỏ index)
-  // Use default start coordinates from previous route if provided
+  // Use initial route data if editing, otherwise use default start coordinates from previous route
   const [formData, setFormData] = useState<RouteFormValues>({
-    title: "",
-    description: "",
-    lngStart: defaultStartLng || 0,
-    latStart: defaultStartLat || 0,
-    lngEnd: 0,
-    latEnd: 0,
-    details: "",
+    title: initialRoute?.title || "",
+    description: initialRoute?.description || "",
+    lngStart: initialRoute?.lngStart || defaultStartLng || 0,
+    latStart: initialRoute?.latStart || defaultStartLat || 0,
+    lngEnd: initialRoute?.lngEnd || 0,
+    latEnd: initialRoute?.latEnd || 0,
+    details: initialRoute?.details?.join("\n") || "",
   });
 
-  // Update form data when default coordinates change
+  // Update form data when default coordinates change or initial route changes
   React.useEffect(() => {
-    if (defaultStartLat && defaultStartLng) {
+    if (initialRoute) {
+      setFormData({
+        title: initialRoute.title || "",
+        description: initialRoute.description || "",
+        lngStart: initialRoute.lngStart || 0,
+        latStart: initialRoute.latStart || 0,
+        lngEnd: initialRoute.lngEnd || 0,
+        latEnd: initialRoute.latEnd || 0,
+        details: initialRoute.details?.join("\n") || "",
+      });
+    } else if (defaultStartLat && defaultStartLng) {
       setFormData(prev => ({
         ...prev,
         latStart: defaultStartLat,
         lngStart: defaultStartLng,
       }));
     }
-  }, [defaultStartLat, defaultStartLng]);
+  }, [defaultStartLat, defaultStartLng, initialRoute]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -126,7 +140,7 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
         <X className="w-5 h-5" />
       </button>
       <h2 className="text-2xl font-bold mb-6 text-trip border-b pb-2">
-        Thêm Chặng Lịch Trình Mới
+        {initialRoute ? "Chỉnh Sửa Chặng Lịch Trình" : "Thêm Chặng Lịch Trình Mới"}
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -279,7 +293,7 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
           type="submit"
           className="w-full bg-trip text-white p-2 rounded-md hover:bg-trip-dark transition-colors flex items-center justify-center font-bold mt-6"
         >
-          <Save className="w-5 h-5 mr-2" /> Lưu Lịch trình
+          <Save className="w-5 h-5 mr-2" /> {initialRoute ? "Cập nhật" : "Lưu"} Lịch trình
         </button>
       </form>
     </div>
