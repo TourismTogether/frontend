@@ -8,6 +8,8 @@ import {
   User,
   Calendar,
   Loader2,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
@@ -36,6 +38,7 @@ export default function DestinationReviews({ destinationId }: Props) {
   const router = useRouter();
   const { user } = useAuth();
   const [open, setOpen] = useState(false);
+  const [editingReview, setEditingReview] = useState<Review | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [destinationName, setDestinationName] = useState<string>("");
@@ -154,6 +157,47 @@ export default function DestinationReviews({ destinationId }: Props) {
     if (diffInSeconds < 2592000)
       return `${Math.floor(diffInSeconds / 86400)} ngày trước`;
     return formatDate(dateString);
+  };
+
+  const handleEditReview = (review: Review) => {
+    setEditingReview(review);
+  };
+
+  const handleDeleteReview = async (review: Review) => {
+    if (!user?.id || review.traveller_id !== user.id) {
+      alert("Bạn không có quyền xóa đánh giá này");
+      return;
+    }
+
+    if (!confirm("Bạn có chắc chắn muốn xóa đánh giá này?")) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`${API_URL}/api/assess-destination`, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          traveller_id: review.traveller_id,
+          destination_id: review.destination_id,
+        }),
+      });
+
+      const result = await res.json();
+
+      if (!res.ok || result.error) {
+        throw new Error(result.message || "Xóa đánh giá thất bại");
+      }
+
+      // Refresh reviews
+      fetchReviews();
+      fetchDestinationInfo();
+    } catch (err: any) {
+      console.error("deleteReview error:", err);
+      alert(err.message || "Có lỗi xảy ra khi xóa đánh giá");
+    }
   };
 
   return (
@@ -290,12 +334,35 @@ export default function DestinationReviews({ destinationId }: Props) {
                             </span>
                           </div>
                         </div>
-                        {review.created_at && (
-                          <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
-                            <Calendar className="w-4 h-4" />
-                            <span>{formatTimeAgo(review.created_at)}</span>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-3">
+                          {review.created_at && (
+                            <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+                              <Calendar className="w-4 h-4" />
+                              <span>{formatTimeAgo(review.created_at)}</span>
+                            </div>
+                          )}
+                          {/* Edit and Delete buttons - only show if user owns the review */}
+                          {user && review.traveller_id === user.id && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => handleEditReview(review)}
+                                className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
+                                title="Chỉnh sửa đánh giá"
+                                aria-label="Chỉnh sửa đánh giá"
+                              >
+                                <Edit className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteReview(review)}
+                                className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                                title="Xóa đánh giá"
+                                aria-label="Xóa đánh giá"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -317,8 +384,8 @@ export default function DestinationReviews({ destinationId }: Props) {
         )}
       </div>
 
-      {/* Review Modal */}
-      {open && (
+      {/* Create Review Modal */}
+      {open && !editingReview && (
         <CreateReviewModal
           destinationId={destinationId}
           onClose={() => setOpen(false)}
@@ -327,6 +394,24 @@ export default function DestinationReviews({ destinationId }: Props) {
             fetchReviews();
             fetchDestinationInfo();
           }}
+        />
+      )}
+
+      {/* Edit Review Modal */}
+      {editingReview && (
+        <CreateReviewModal
+          destinationId={destinationId}
+          onClose={() => setEditingReview(null)}
+          onSuccess={() => {
+            setEditingReview(null);
+            fetchReviews();
+            fetchDestinationInfo();
+          }}
+          initialData={{
+            rating_star: editingReview.rating_star,
+            comment: editingReview.comment,
+          }}
+          isEdit={true}
         />
       )}
     </div>
