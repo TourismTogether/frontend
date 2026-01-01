@@ -40,23 +40,40 @@ interface AddRouteFormProps {
     details: string[];
   }) => void;
   // Bỏ currentMaxIndex vì nó được tính ở component cha
+  // Default start coordinates from previous route's end
+  defaultStartLat?: number;
+  defaultStartLng?: number;
 }
 
 export const AddRouteForm: React.FC<AddRouteFormProps> = ({
   onClose,
   onSubmit,
+  defaultStartLat,
+  defaultStartLng,
   // Bỏ currentMaxIndex
 }) => {
   // State khởi tạo giá trị cho form (ĐÃ SỬA: Bỏ index)
+  // Use default start coordinates from previous route if provided
   const [formData, setFormData] = useState<RouteFormValues>({
     title: "",
     description: "",
-    lngStart: 0,
-    latStart: 0,
+    lngStart: defaultStartLng || 0,
+    latStart: defaultStartLat || 0,
     lngEnd: 0,
     latEnd: 0,
     details: "",
   });
+
+  // Update form data when default coordinates change
+  React.useEffect(() => {
+    if (defaultStartLat && defaultStartLng) {
+      setFormData(prev => ({
+        ...prev,
+        latStart: defaultStartLat,
+        lngStart: defaultStartLng,
+      }));
+    }
+  }, [defaultStartLat, defaultStartLng]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -183,12 +200,17 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
             <label className="text-sm font-medium mb-2 block">
               Điểm Bắt đầu - Click trên bản đồ để chọn
             </label>
+            {defaultStartLat && defaultStartLng && (
+              <div className="mb-2 p-2 bg-blue-50 border border-blue-200 rounded-md text-xs text-blue-700">
+                <span className="font-semibold">ℹ️ Tự động:</span> Điểm bắt đầu được đặt tại điểm kết thúc của chặng trước đó. Bạn có thể thay đổi bằng cách click trên bản đồ.
+              </div>
+            )}
             <LocationPicker
               onLocationSelect={(lat, lng) => {
                 setFormData(prev => ({ ...prev, latStart: lat, lngStart: lng }));
               }}
-              initialLat={formData.latStart || 10.7769}
-              initialLng={formData.lngStart || 106.7009}
+              initialLat={formData.latStart || defaultStartLat || 10.7769}
+              initialLng={formData.lngStart || defaultStartLng || 106.7009}
               height="250px"
             />
             <div className="grid grid-cols-2 gap-2 mt-2">

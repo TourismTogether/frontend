@@ -9,6 +9,7 @@ import {
   Trash2,
   X,
   Check,
+  AlertCircle,
 } from "lucide-react";
 import { ICost, IRoute } from "@/lib/type/interface";
 
@@ -123,14 +124,17 @@ interface RouteCardProps {
     newCost: Omit<ICost, "id" | "created_at" | "updated_at" | "route_id">
   ) => void;
   onDeleteCost: (routeId: string, costId: string) => void;
+  onDeleteRoute?: (routeId: string) => void;
 }
 
 export const RouteCard: React.FC<RouteCardProps> = ({
   route,
   onAddCost,
   onDeleteCost,
+  onDeleteRoute,
 }) => {
   const [isAddingCost, setIsAddingCost] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const totalRouteCost = route.costs.reduce(
     (sum, cost) => sum + cost.amount,
     0
@@ -145,17 +149,77 @@ export const RouteCard: React.FC<RouteCardProps> = ({
     setIsAddingCost(false);
   };
 
+  const handleDeleteClick = () => {
+    if (!route.id) return;
+    
+    if (showDeleteConfirm) {
+      // Confirm deletion
+      if (onDeleteRoute) {
+        onDeleteRoute(route.id);
+      }
+      setShowDeleteConfirm(false);
+    } else {
+      // Show confirmation
+      setShowDeleteConfirm(true);
+      // Auto-hide confirmation after 3 seconds
+      setTimeout(() => setShowDeleteConfirm(false), 3000);
+    }
+  };
+
   return (
-    <div className="bg-card p-5 rounded-xl shadow-md border border-border transition-shadow hover:shadow-lg">
+    <div className="bg-card p-5 rounded-xl shadow-md border border-border transition-shadow hover:shadow-lg relative">
+      {/* Delete Confirmation Overlay */}
+      {showDeleteConfirm && (
+        <div className="absolute inset-0 bg-red-50 border-2 border-red-300 rounded-xl flex items-center justify-center z-20 backdrop-blur-sm">
+          <div className="text-center p-4">
+            <AlertCircle className="h-8 w-8 text-red-600 mx-auto mb-2" />
+            <p className="text-sm font-semibold text-red-900 mb-1">
+              Delete this route?
+            </p>
+            <p className="text-xs text-red-700 mb-3">
+              This will also delete all associated costs.
+            </p>
+            <div className="flex gap-2 justify-center">
+              <button
+                onClick={handleDeleteClick}
+                className="px-4 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Confirm Delete
+              </button>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-1.5 bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header và Title */}
       <div className="flex justify-between items-start mb-2 border-b pb-2 border-dashed">
-        <h3 className="text-xl font-bold text-foreground">
-          <Route className="inline w-5 h-5 mr-2 text-traveller" />
-          {route.title}
-        </h3>
-        <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-trip/10 text-trip">
-          Stop {(route.index ?? 0) + 1}
-        </span>
+        <div className="flex-1">
+          <h3 className="text-xl font-bold text-foreground">
+            <Route className="inline w-5 h-5 mr-2 text-traveller" />
+            {route.title}
+          </h3>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-trip/10 text-trip">
+            Stop {(route.index ?? 0) + 1}
+          </span>
+          {onDeleteRoute && route.id && (
+            <button
+              onClick={handleDeleteClick}
+              className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              title="Delete route"
+              aria-label="Delete route"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
+        </div>
       </div>
 
       <p className="text-sm text-muted-foreground mb-3">{route.description}</p>

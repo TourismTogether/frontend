@@ -13,12 +13,15 @@ import {
   PlusCircle,
   Loader2,
   AlertCircle,
+  Sparkles,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AddRouteForm } from "./AddRouteForm";
 import { RouteCard } from "@/components/Route/RouteCard";
+import { RouteRecommendationModal } from "@/components/Route/RouteRecommendationModal";
 import dynamic from "next/dynamic";
 import { ICost, IRoute, ITrip, IDestination } from "@/lib/type/interface";
+import { recommendRoutes, RecommendedRoute } from "@/services/routeRecommendationService";
 
 // Dynamically import RouteMap to avoid SSR issues
 const RouteMap = dynamic(
@@ -150,6 +153,9 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddingRoute, setIsAddingRoute] = useState(false);
+  const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState(false);
+  const [recommendations, setRecommendations] = useState<RecommendedRoute[]>([]);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
 
   useEffect(() => {
     const fetchTripAndRoutes = async () => {
@@ -411,6 +417,139 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
     }
   };
 
+  const handleGetRecommendations = async () => {
+    if (!trip || !API_URL) return;
+
+    setIsRecommendationModalOpen(true);
+    setLoadingRecommendations(true);
+
+    try {
+      const recommended = await recommendRoutes(
+        API_URL,
+        {
+          id: trip.id!,
+          destination_id: trip.destination_id,
+          destination: trip.destination,
+          routes: trip.routes,
+        },
+        5
+      );
+
+      setRecommendations(recommended);
+    } catch (err) {
+      console.error("Error getting recommendations:", err);
+      alert("Failed to get route recommendations. Please try again.");
+      setRecommendations([]);
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
+
+  const handleSelectRecommendedRoute = async (routeData: {
+    index: number;
+    title: string;
+    description: string;
+    lngStart: number;
+    latStart: number;
+    lngEnd: number;
+    latEnd: number;
+    details: string[];
+  }) => {
+    if (!trip || !API_URL) return;
+
+    try {
+      // Calculate next index
+      const nextIndex =
+        trip.routes.length > 0
+          ? Math.max(...trip.routes.map((r) => r.index || 0)) + 1
+          : 0;
+
+      const routePayload = {
+        ...routeData,
+        index: nextIndex,
+        trip_id: trip.id,
+        costs: [],
+      };
+
+      const response = await fetch(`${API_URL}/routes`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(routePayload),
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.message || "Failed to create route");
+      }
+
+      const result = await response.json();
+      const apiRoute = result.data || result;
+
+      const newRoute: IRoute = {
+        ...normalizeRoute(apiRoute),
+        ...routeData,
+        index: nextIndex,
+        costs: [],
+        created_at: apiRoute.created_at || new Date(),
+        updated_at: apiRoute.updated_at || new Date(),
+      };
+
+      const updatedRoutes = [...trip.routes, newRoute];
+      updatedRoutes.sort((a, b) => (a.index || 0) - (b.index || 0));
+
+      setTrip({
+        ...trip,
+        routes: updatedRoutes,
+        spent_amount: calculateSpentAmount(updatedRoutes),
+      });
+
+      console.log("Recommended route added successfully:", newRoute);
+    } catch (err: any) {
+      console.error("Add Recommended Route Error:", err);
+      alert(`Error: ${err.message}`);
+    }
+  };
+
+  const handleDeleteRoute = async (routeId: string) => {
+    if (!trip || !API_URL || !routeId) return;
+
+    if (!confirm("Are you sure you want to delete this route? This will also delete all associated costs.")) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_URL}/routes/${routeId}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+      });
+
+      if (!response.ok) {
+        const errJson = await response.json().catch(() => ({}));
+        throw new Error(errJson.message || "Failed to delete route");
+      }
+
+      // Remove route from local state
+      const updatedRoutes = trip.routes.filter((r) => r.id !== routeId);
+      
+      // Re-index remaining routes to maintain sequence
+      const reindexedRoutes = updatedRoutes.map((r, index) => ({
+        ...r,
+        index: index,
+      }));
+
+      setTrip({
+        ...trip,
+        routes: reindexedRoutes,
+        spent_amount: calculateSpentAmount(reindexedRoutes),
+      });
+
+      console.log("Route deleted successfully");
+    } catch (err: any) {
+      console.error("Delete Route Error:", err);
+      alert(`Error deleting route: ${err.message}`);
+    }
+  };
+
   // --- RENDER ---
 
   if (loading) {
@@ -517,15 +656,29 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
               <AddRouteForm
                 onClose={() => setIsAddingRoute(false)}
                 onSubmit={handleAddNewRoute}
-                currentMaxIndex={
+                defaultStartLat={
                   trip.routes.length > 0
-                    ? Math.max(...trip.routes.map((r) => r.index || 0))
-                    : 0
+                    ? trip.routes[trip.routes.length - 1].latEnd
+                    : undefined
+                }
+                defaultStartLng={
+                  trip.routes.length > 0
+                    ? trip.routes[trip.routes.length - 1].lngEnd
+                    : undefined
                 }
               />
             </div>
           </div>
         )}
+
+        {/* Route Recommendation Modal */}
+        <RouteRecommendationModal
+          isOpen={isRecommendationModalOpen}
+          onClose={() => setIsRecommendationModalOpen(false)}
+          recommendations={recommendations}
+          onSelectRoute={handleSelectRecommendedRoute}
+          loading={loadingRecommendations}
+        />
 
         <div className="grid grid-cols-1 gap-6 lg:gap-8 lg:grid-cols-3">
           {/* LEFT: Info & Budget - Enhanced */}
@@ -631,12 +784,20 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                 </div>
                 Itinerary
               </h2>
-              <button
-                onClick={() => setIsAddingRoute(true)}
-                className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
-              >
-                <PlusCircle className="h-5 w-5" /> Add Stop
-              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={handleGetRecommendations}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <Sparkles className="h-5 w-5" /> Recommend Route
+                </button>
+                <button
+                  onClick={() => setIsAddingRoute(true)}
+                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                >
+                  <PlusCircle className="h-5 w-5" /> Add Stop
+                </button>
+              </div>
             </div>
 
             <div className="space-y-4">
@@ -651,6 +812,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                       route={route}
                       onAddCost={handleAddCost}
                       onDeleteCost={handleDeleteCost}
+                      onDeleteRoute={handleDeleteRoute}
                     />
                   </div>
                 ))
