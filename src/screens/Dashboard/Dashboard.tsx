@@ -10,8 +10,8 @@ import {
   BarChart3, // Stats
   MapPin, // Route
   ChevronRight, // Icon cho Quick Assess item
-  TrendingUp,
   Cloud, // Weather
+  Shield, // Admin
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import dynamic from "next/dynamic";
@@ -125,7 +125,7 @@ const QuickAssessItem: React.FC<QuickAssessItemProps> = ({
 };
 
 export const Dashboard: React.FC = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const [stats, setStats] = useState({
     totalRoutes: 0,
     totalTrips: 0,
@@ -540,6 +540,15 @@ export const Dashboard: React.FC = () => {
                 bg="bg-cyan-500/10"
                 link="/weather"
               />
+              {isAdmin && (
+                <QuickAssessItem
+                  icon={Shield}
+                  label="Admin Panel"
+                  color="text-red-500"
+                  bg="bg-red-500/10"
+                  link="/admin"
+                />
+              )}
             </div>
           </div>
         </div>
