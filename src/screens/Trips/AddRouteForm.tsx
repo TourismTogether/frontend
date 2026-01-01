@@ -44,6 +44,9 @@ interface AddRouteFormProps {
   // Default start coordinates from previous route's end
   defaultStartLat?: number;
   defaultStartLng?: number;
+  // Default end coordinates (usually destination coordinates)
+  defaultEndLat?: number;
+  defaultEndLng?: number;
   // Initial route data for editing
   initialRoute?: IRoute;
 }
@@ -53,18 +56,20 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
   onSubmit,
   defaultStartLat,
   defaultStartLng,
+  defaultEndLat,
+  defaultEndLng,
   initialRoute,
   // Bỏ currentMaxIndex
 }) => {
   // State khởi tạo giá trị cho form (ĐÃ SỬA: Bỏ index)
-  // Use initial route data if editing, otherwise use default start coordinates from previous route
+  // Use initial route data if editing, otherwise use default coordinates
   const [formData, setFormData] = useState<RouteFormValues>({
     title: initialRoute?.title || "",
     description: initialRoute?.description || "",
     lngStart: initialRoute?.lngStart || defaultStartLng || 0,
     latStart: initialRoute?.latStart || defaultStartLat || 0,
-    lngEnd: initialRoute?.lngEnd || 0,
-    latEnd: initialRoute?.latEnd || 0,
+    lngEnd: initialRoute?.lngEnd || defaultEndLng || 0,
+    latEnd: initialRoute?.latEnd || defaultEndLat || 0,
     details: initialRoute?.details?.join("\n") || "",
   });
 
@@ -80,14 +85,17 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
         latEnd: initialRoute.latEnd || 0,
         details: initialRoute.details?.join("\n") || "",
       });
-    } else if (defaultStartLat && defaultStartLng) {
+    } else {
+      // When creating new route, set defaults
       setFormData(prev => ({
         ...prev,
-        latStart: defaultStartLat,
-        lngStart: defaultStartLng,
+        latStart: defaultStartLat || prev.latStart || 0,
+        lngStart: defaultStartLng || prev.lngStart || 0,
+        latEnd: defaultEndLat || prev.latEnd || 0,
+        lngEnd: defaultEndLng || prev.lngEnd || 0,
       }));
     }
-  }, [defaultStartLat, defaultStartLng, initialRoute]);
+  }, [defaultStartLat, defaultStartLng, defaultEndLat, defaultEndLng, initialRoute]);
 
   const handleChange = (
     e: React.ChangeEvent<
@@ -256,12 +264,17 @@ export const AddRouteForm: React.FC<AddRouteFormProps> = ({
             <label className="text-sm font-medium mb-2 block">
               Điểm Kết thúc - Click trên bản đồ để chọn
             </label>
+            {defaultEndLat && defaultEndLng && !initialRoute && (
+              <div className="mb-2 p-2 bg-green-50 border border-green-200 rounded-md text-xs text-green-700">
+                <span className="font-semibold">ℹ️ Tự động:</span> Điểm kết thúc được đặt tại destination của trip. Bạn có thể thay đổi bằng cách click trên bản đồ.
+              </div>
+            )}
             <LocationPicker
               onLocationSelect={(lat, lng) => {
                 setFormData(prev => ({ ...prev, latEnd: lat, lngEnd: lng }));
               }}
-              initialLat={formData.latEnd || 10.7769}
-              initialLng={formData.lngEnd || 106.7009}
+              initialLat={formData.latEnd || defaultEndLat || 10.7769}
+              initialLng={formData.lngEnd || defaultEndLng || 106.7009}
               height="250px"
             />
             <div className="grid grid-cols-2 gap-2 mt-2">

@@ -21,7 +21,7 @@ import { RouteCard } from "@/components/Route/RouteCard";
 import { RouteRecommendationModal } from "@/components/Route/RouteRecommendationModal";
 import dynamic from "next/dynamic";
 import { ICost, IRoute, ITrip, IDestination } from "@/lib/type/interface";
-import { recommendRoutes, RecommendedRoute } from "@/services/routeRecommendationService";
+import { generateAIItinerary, AIGeneratedRoute, TripContext } from "@/services/aiRoutePlannerService";
 
 // Dynamically import RouteMap to avoid SSR issues
 const RouteMap = dynamic(
@@ -155,7 +155,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
   const [isAddingRoute, setIsAddingRoute] = useState(false);
   const [editingRoute, setEditingRoute] = useState<IRoute | null>(null);
   const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState(false);
-  const [recommendations, setRecommendations] = useState<RecommendedRoute[]>([]);
+  const [aiGeneratedRoutes, setAiGeneratedRoutes] = useState<AIGeneratedRoute[]>([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
 
   useEffect(() => {
@@ -419,28 +419,30 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
   };
 
   const handleGetRecommendations = async () => {
-    if (!trip || !API_URL) return;
+    if (!trip || !API_URL || !trip.destination) {
+      alert("Vui lòng đảm bảo trip có thông tin destination.");
+      return;
+    }
 
     setIsRecommendationModalOpen(true);
     setLoadingRecommendations(true);
 
     try {
-      const recommended = await recommendRoutes(
-        API_URL,
-        {
-          id: trip.id!,
-          destination_id: trip.destination_id,
-          destination: trip.destination,
-          routes: trip.routes,
-        },
-        5
-      );
+      const context: TripContext = {
+        destination: trip.destination,
+        startDate: trip.start_date,
+        endDate: trip.end_date,
+        budget: trip.total_budget,
+        difficulty: trip.difficult,
+        existingRoutes: trip.routes,
+      };
 
-      setRecommendations(recommended);
+      const generatedRoutes = await generateAIItinerary(API_URL, context);
+      setAiGeneratedRoutes(generatedRoutes);
     } catch (err) {
-      console.error("Error getting recommendations:", err);
-      alert("Failed to get route recommendations. Please try again.");
-      setRecommendations([]);
+      console.error("Error generating AI itinerary:", err);
+      alert("Không thể tạo lộ trình AI. Vui lòng thử lại.");
+      setAiGeneratedRoutes([]);
     } finally {
       setLoadingRecommendations(false);
     }
@@ -782,13 +784,15 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                 defaultStartLat={
                   trip.routes.length > 0
                     ? trip.routes[trip.routes.length - 1].latEnd
-                    : undefined
+                    : trip.destination?.latitude
                 }
                 defaultStartLng={
                   trip.routes.length > 0
                     ? trip.routes[trip.routes.length - 1].lngEnd
-                    : undefined
+                    : trip.destination?.longitude
                 }
+                defaultEndLat={trip.destination?.latitude}
+                defaultEndLng={trip.destination?.longitude}
               />
             </div>
           </div>
@@ -821,8 +825,85 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
         <RouteRecommendationModal
           isOpen={isRecommendationModalOpen}
           onClose={() => setIsRecommendationModalOpen(false)}
-          recommendations={recommendations}
-          onSelectRoute={handleSelectRecommendedRoute}
+          aiGeneratedRoutes={aiGeneratedRoutes}
+          onSelectAllRoutes={async () => {
+            // Add all AI-generated routes to the trip
+            if (!trip || !API_URL || aiGeneratedRoutes.length === 0) return;
+
+            try {
+              const startIndex = trip.routes.length > 0
+                ? Math.max(...trip.routes.map((r) => r.index || 0)) + 1
+                : 0;
+
+              // Create all routes sequentially
+              const newRoutes: IRoute[] = [];
+              
+              for (let idx = 0; idx < aiGeneratedRoutes.length; idx++) {
+                const aiRoute = aiGeneratedRoutes[idx];
+                const routePayload = {
+                  index: startIndex + idx,
+                  title: aiRoute.route.title,
+                  description: aiRoute.route.description,
+                  lngStart: aiRoute.route.lngStart,
+                  latStart: aiRoute.route.latStart,
+                  lngEnd: aiRoute.route.lngEnd,
+                  latEnd: aiRoute.route.latEnd,
+                  trip_id: trip.id,
+                  costs: [],
+                };
+
+                const response = await fetch(`${API_URL}/routes`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(routePayload),
+                });
+
+                if (!response.ok) {
+                  const errJson = await response.json().catch(() => ({}));
+                  throw new Error(errJson.message || `Failed to create route ${idx + 1}`);
+                }
+
+                const result = await response.json();
+                const apiRoute = result.data || result;
+
+                const newRoute: IRoute = {
+                  ...normalizeRoute(apiRoute),
+                  index: startIndex + idx,
+                  title: aiRoute.route.title,
+                  description: aiRoute.route.description,
+                  lngStart: aiRoute.route.lngStart,
+                  latStart: aiRoute.route.latStart,
+                  lngEnd: aiRoute.route.lngEnd,
+                  latEnd: aiRoute.route.latEnd,
+                  details: aiRoute.route.details || [],
+                  costs: [],
+                  created_at: apiRoute.created_at || new Date(),
+                  updated_at: apiRoute.updated_at || new Date(),
+                };
+
+                newRoutes.push(newRoute);
+              }
+
+              // Update trip with all new routes
+              const updatedRoutes = [...trip.routes, ...newRoutes];
+              updatedRoutes.sort((a, b) => (a.index || 0) - (b.index || 0));
+
+              setTrip({
+                ...trip,
+                routes: updatedRoutes,
+                spent_amount: calculateSpentAmount(updatedRoutes),
+              });
+
+              setIsRecommendationModalOpen(false);
+              console.log(`Successfully added ${newRoutes.length} AI routes`);
+            } catch (err: any) {
+              console.error("Add All AI Routes Error:", err);
+              alert(`Lỗi khi thêm routes: ${err.message}`);
+            }
+          }}
+          onSelectRoute={(routeData) => {
+            handleSelectRecommendedRoute(routeData);
+          }}
           loading={loadingRecommendations}
         />
 
