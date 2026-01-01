@@ -21,15 +21,25 @@ import { RouteCard } from "@/components/Route/RouteCard";
 import { RouteRecommendationModal } from "@/components/Route/RouteRecommendationModal";
 import dynamic from "next/dynamic";
 import { ICost, IRoute, ITrip, IDestination } from "@/lib/type/interface";
-import { generateAIItinerary, AIGeneratedRoute, TripContext } from "@/services/aiRoutePlannerService";
+import {
+  generateAIItinerary,
+  AIGeneratedRoute,
+  TripContext,
+} from "@/services/aiRoutePlannerService";
 
 // Dynamically import RouteMap to avoid SSR issues
 const RouteMap = dynamic(
-  () => import("@/components/Map/RouteMap").then((mod) => ({ default: mod.RouteMap })),
+  () =>
+    import("@/components/Map/RouteMap").then((mod) => ({
+      default: mod.RouteMap,
+    })),
   {
     ssr: false,
     loading: () => (
-      <div className="w-full rounded-lg overflow-hidden border border-gray-300 bg-gray-100 flex items-center justify-center" style={{ height: '500px' }}>
+      <div
+        className="w-full rounded-lg overflow-hidden border border-gray-300 bg-gray-100 flex items-center justify-center"
+        style={{ height: "500px" }}
+      >
         <p className="text-gray-500">Loading map...</p>
       </div>
     ),
@@ -118,7 +128,7 @@ const normalizeRoute = (apiRoute: any): IRoute => {
   const latStart = Number(apiRoute.latStart ?? apiRoute.lat_start);
   const lngEnd = Number(apiRoute.lngEnd ?? apiRoute.lng_end);
   const latEnd = Number(apiRoute.latEnd ?? apiRoute.lat_end);
-  
+
   return {
     id: apiRoute.id,
     index: Number(apiRoute.index) || 0,
@@ -154,8 +164,11 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
   const [error, setError] = useState<string | null>(null);
   const [isAddingRoute, setIsAddingRoute] = useState(false);
   const [editingRoute, setEditingRoute] = useState<IRoute | null>(null);
-  const [isRecommendationModalOpen, setIsRecommendationModalOpen] = useState(false);
-  const [aiGeneratedRoutes, setAiGeneratedRoutes] = useState<AIGeneratedRoute[]>([]);
+  const [isRecommendationModalOpen, setIsRecommendationModalOpen] =
+    useState(false);
+  const [aiGeneratedRoutes, setAiGeneratedRoutes] = useState<
+    AIGeneratedRoute[]
+  >([]);
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
 
   useEffect(() => {
@@ -529,7 +542,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
 
       // Remove route from local state
       const updatedRoutes = trip.routes.filter((r) => r.id !== routeId);
-      
+
       // Re-index remaining routes to maintain sequence
       const reindexedRoutes = updatedRoutes.map((r, index) => ({
         ...r,
@@ -650,9 +663,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
         if (route.id === routeId) {
           return {
             ...route,
-            costs: route.costs.map((c) =>
-              c.id === cost.id ? updatedCost : c
-            ),
+            costs: route.costs.map((c) => (c.id === cost.id ? updatedCost : c)),
           };
         }
         return route;
@@ -675,7 +686,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
 
   if (loading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="flex h-screen w-full items-center justify-center bg-linear-to-br from-gray-50 via-white to-gray-50">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
           <p className="text-gray-600 font-medium">Loading trip details...</p>
@@ -686,7 +697,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
 
   if (error || !trip) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-6 bg-gradient-to-br from-gray-50 via-white to-gray-50 p-4 text-center">
+      <div className="flex h-screen flex-col items-center justify-center gap-6 bg-linear-to-br from-gray-50 via-white to-gray-50 p-4 text-center">
         <div className="p-4 bg-red-100 rounded-full">
           <AlertCircle className="h-16 w-16 text-red-600" />
         </div>
@@ -694,7 +705,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
         <p className="text-gray-600 max-w-md">{error || "Trip not found"}</p>
         <button
           onClick={() => router.push("/trips")}
-          className="rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-6 py-3 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+          className="rounded-xl bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 px-6 py-3 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
         >
           Back to Trips
         </button>
@@ -709,14 +720,14 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
   const destinationName = trip.destination?.name || "Unknown Destination";
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 pb-20 relative">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 pb-20 relative">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         {/* Navigation - Enhanced */}
         <button
           onClick={() => router.push("/trips")}
           className="mb-6 flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors group"
         >
-          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" /> 
+          <ArrowLeft className="mr-2 h-4 w-4 group-hover:-translate-x-1 transition-transform" />
           Back to Trips
         </button>
 
@@ -737,8 +748,16 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                 </span>
                 <span className="flex items-center text-sm text-gray-600 bg-gray-50 px-3 py-1 rounded-lg">
                   <Calendar className="mr-1.5 h-4 w-4 text-blue-600" />
-                  {new Date(trip.start_date).toLocaleDateString("en-US", { month: "long", day: "numeric" })} -{" "}
-                  {new Date(trip.end_date).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric" })}
+                  {new Date(trip.start_date).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                  })}{" "}
+                  -{" "}
+                  {new Date(trip.end_date).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
                 </span>
               </div>
               {trip.description && (
@@ -747,8 +766,10 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                 </p>
               )}
             </div>
-            <div className="text-left md:text-right bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Destination</p>
+            <div className="text-left md:text-right bg-linear-to-br from-blue-50 to-indigo-50 rounded-xl p-4 border border-blue-100">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                Destination
+              </p>
               <div className="flex items-center md:justify-end gap-2">
                 <MapPin className="h-5 w-5 text-blue-600" />
                 <p className="text-lg font-bold text-gray-900">
@@ -761,7 +782,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
 
         {/* Modal Add Route */}
         {isAddingRoute && (
-          <div 
+          <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={(e) => {
               // Close when clicking on the backdrop (not on the form itself)
@@ -770,13 +791,20 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
               }
             }}
           >
-            <div 
+            <div
               className="w-full max-w-2xl rounded-xl bg-white shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
               <AddRouteForm
                 onClose={() => setIsAddingRoute(false)}
-                onSubmit={handleAddNewRoute}
+                onSubmit={(route) => {
+                  // Remove 'index' if present before passing to prop
+                  // and match expected signature: (route: { title, description, lngStart, latStart, lngEnd, latEnd, details }) => void
+                  // Since handleAddNewRoute needs 'index', wrap here if needed
+                  const newRoute = { ...route, index: trip.routes.length };
+                  // If handleAddNewRoute returns a Promise, ignore it for AddRouteForm expectations
+                  void handleAddNewRoute(newRoute);
+                }}
                 defaultStartLat={
                   trip.routes.length > 0
                     ? trip.routes[trip.routes.length - 1].latEnd
@@ -796,7 +824,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
 
         {/* Modal Edit Route */}
         {editingRoute && (
-          <div 
+          <div
             className="fixed inset-0 z-50 flex items-center justify-center p-4"
             onClick={(e) => {
               if (e.target === e.currentTarget) {
@@ -804,7 +832,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
               }
             }}
           >
-            <div 
+            <div
               className="w-full max-w-2xl rounded-xl bg-white shadow-2xl"
               onClick={(e) => e.stopPropagation()}
             >
@@ -827,13 +855,14 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
             if (!trip || !API_URL || aiGeneratedRoutes.length === 0) return;
 
             try {
-              const startIndex = trip.routes.length > 0
-                ? Math.max(...trip.routes.map((r) => r.index || 0)) + 1
-                : 0;
+              const startIndex =
+                trip.routes.length > 0
+                  ? Math.max(...trip.routes.map((r) => r.index || 0)) + 1
+                  : 0;
 
               // Create all routes sequentially
               const newRoutes: IRoute[] = [];
-              
+
               for (let idx = 0; idx < aiGeneratedRoutes.length; idx++) {
                 const aiRoute = aiGeneratedRoutes[idx];
                 const routePayload = {
@@ -856,7 +885,9 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
 
                 if (!response.ok) {
                   const errJson = await response.json().catch(() => ({}));
-                  throw new Error(errJson.message || `Failed to create route ${idx + 1}`);
+                  throw new Error(
+                    errJson.message || `Failed to create route ${idx + 1}`
+                  );
                 }
 
                 const result = await response.json();
@@ -926,17 +957,21 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                 </div>
                 <div className="flex justify-between items-center py-2 border-b border-gray-100">
                   <span className="text-gray-600">Distance</span>
-                  <span className="font-bold text-gray-900">{trip.distance} km</span>
+                  <span className="font-bold text-gray-900">
+                    {trip.distance} km
+                  </span>
                 </div>
                 <div className="flex justify-between items-center py-2">
                   <span className="text-gray-600">Difficulty</span>
-                  <span className={`font-bold px-3 py-1 rounded-lg ${
-                    trip.difficult >= 4 
-                      ? "bg-red-100 text-red-700" 
-                      : trip.difficult >= 3 
-                      ? "bg-orange-100 text-orange-700" 
-                      : "bg-green-100 text-green-700"
-                  }`}>
+                  <span
+                    className={`font-bold px-3 py-1 rounded-lg ${
+                      trip.difficult >= 4
+                        ? "bg-red-100 text-red-700"
+                        : trip.difficult >= 3
+                        ? "bg-orange-100 text-orange-700"
+                        : "bg-green-100 text-green-700"
+                    }`}
+                  >
                     {trip.difficult}/5
                   </span>
                 </div>
@@ -955,16 +990,18 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
               <div className="mb-6">
                 <div className="flex justify-between items-center text-sm mb-2">
                   <span className="text-gray-600 font-medium">Progress</span>
-                  <span className="font-bold text-gray-900">{budgetUsage.toFixed(0)}%</span>
+                  <span className="font-bold text-gray-900">
+                    {budgetUsage.toFixed(0)}%
+                  </span>
                 </div>
                 <div className="h-3 w-full rounded-full bg-gray-200 overflow-hidden">
                   <div
                     className={`h-3 rounded-full transition-all duration-500 ${
-                      remaining < 0 
-                        ? "bg-gradient-to-r from-red-500 to-red-600" 
-                        : budgetUsage > 80 
-                        ? "bg-gradient-to-r from-yellow-500 to-orange-500" 
-                        : "bg-gradient-to-r from-green-500 to-emerald-500"
+                      remaining < 0
+                        ? "bg-linear-to-r from-red-500 to-red-600"
+                        : budgetUsage > 80
+                        ? "bg-linear-to-r from-yellow-500 to-orange-500"
+                        : "bg-linear-to-r from-green-500 to-emerald-500"
                     }`}
                     style={{ width: `${Math.min(budgetUsage, 100)}%` }}
                   ></div>
@@ -987,8 +1024,8 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                 <div
                   className={`mt-3 flex justify-between items-center rounded-xl p-4 font-bold ${
                     remaining < 0
-                      ? "bg-gradient-to-r from-red-50 to-red-100 text-red-700 border-2 border-red-200"
-                      : "bg-gradient-to-r from-green-50 to-emerald-50 text-green-700 border-2 border-green-200"
+                      ? "bg-linear-to-r from-red-50 to-red-100 text-red-700 border-2 border-red-200"
+                      : "bg-linear-to-r from-green-50 to-emerald-50 text-green-700 border-2 border-green-200"
                   }`}
                 >
                   <span>Remaining</span>
@@ -1010,13 +1047,13 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
               <div className="flex items-center gap-3">
                 <button
                   onClick={handleGetRecommendations}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="flex items-center gap-2 rounded-xl bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <Sparkles className="h-5 w-5" /> Recommend Route
                 </button>
                 <button
                   onClick={() => setIsAddingRoute(true)}
-                  className="flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                  className="flex items-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                 >
                   <PlusCircle className="h-5 w-5" /> Add Stop
                 </button>
@@ -1028,7 +1065,7 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                 trip.routes.map((route, index) => (
                   <div key={route.id} className="relative">
                     {/* Route number indicator */}
-                    <div className="absolute -left-3 top-6 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-indigo-600 to-blue-600 text-white font-bold text-sm shadow-lg border-2 border-white">
+                    <div className="absolute -left-3 top-6 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-linear-to-br from-indigo-600 to-blue-600 text-white font-bold text-sm shadow-lg border-2 border-white">
                       {index + 1}
                     </div>
                     <RouteCard
@@ -1043,18 +1080,19 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                 ))
               ) : (
                 <div className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-gray-300 bg-white py-16 text-center">
-                  <div className="mb-4 rounded-full bg-gradient-to-br from-indigo-100 to-blue-100 p-4">
+                  <div className="mb-4 rounded-full bg-linear-to-br from-indigo-100 to-blue-100 p-4">
                     <MapPin className="h-10 w-10 text-indigo-600" />
                   </div>
                   <h3 className="text-xl font-bold text-gray-900 mb-2">
                     No routes yet
                   </h3>
                   <p className="mt-1 text-sm text-gray-600 max-w-md">
-                    Start planning your trip by adding the first location to your itinerary.
+                    Start planning your trip by adding the first location to
+                    your itinerary.
                   </p>
                   <button
                     onClick={() => setIsAddingRoute(true)}
-                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
+                    className="mt-6 inline-flex items-center gap-2 rounded-xl bg-linear-to-r from-indigo-600 to-blue-600 hover:from-indigo-700 hover:to-blue-700 px-5 py-2.5 text-sm font-semibold text-white transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105"
                   >
                     <PlusCircle className="h-5 w-5" />
                     Add first route
@@ -1067,7 +1105,11 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
 
         {/* Trip Route Map - Enhanced */}
         {trip.routes.length > 0 && (
-          <div className={`mt-8 bg-white rounded-2xl border border-gray-200 p-6 shadow-lg transition-opacity ${isAddingRoute ? 'opacity-50' : 'opacity-100'}`}>
+          <div
+            className={`mt-8 bg-white rounded-2xl border border-gray-200 p-6 shadow-lg transition-opacity ${
+              isAddingRoute ? "opacity-50" : "opacity-100"
+            }`}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-5 flex items-center">
               <div className="p-2 bg-indigo-100 rounded-lg mr-3">
                 <MapPin className="h-6 w-6 text-indigo-600" />
@@ -1075,7 +1117,11 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
               Trip Route Map
             </h2>
             <div className="rounded-xl overflow-hidden border border-gray-200">
-              <RouteMap routes={trip.routes} height="500px" showAllRoutes={true} />
+              <RouteMap
+                routes={trip.routes}
+                height="500px"
+                showAllRoutes={true}
+              />
             </div>
           </div>
         )}
