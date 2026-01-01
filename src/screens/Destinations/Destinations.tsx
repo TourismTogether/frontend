@@ -204,7 +204,7 @@ export const Destinations: React.FC = () => {
                       }}
                     />
                   ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-destination to-destination/60 flex items-center justify-center">
+                    <div className="w-full h-full bg-linear-to-br from-destination to-destination/60 flex items-center justify-center">
                       <MapPin className="w-16 h-16 text-white/50" />
                     </div>
                   )}
@@ -234,7 +234,7 @@ export const Destinations: React.FC = () => {
                   </h3>
 
                   <div className="flex items-center text-sm text-muted-foreground mb-3">
-                    <MapPin className="w-4 h-4 mr-1 flex-shrink-0" />
+                    <MapPin className="w-4 h-4 mr-1 shrink-0" />
                     <span className="truncate">
                       {dest.region_name ? `${dest.region_name}, ` : ""}
                       {dest.country || "Unknown"}
@@ -243,7 +243,7 @@ export const Destinations: React.FC = () => {
 
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current flex-shrink-0" />
+                      <Star className="w-4 h-4 text-yellow-500 fill-current shrink-0" />
                       {/* Rating */}
                       <span className="ml-1 text-sm font-medium text-foreground">
                         {Number(

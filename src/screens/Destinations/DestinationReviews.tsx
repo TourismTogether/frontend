@@ -201,7 +201,7 @@ export default function DestinationReviews({ destinationId }: Props) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
@@ -228,7 +228,7 @@ export default function DestinationReviews({ destinationId }: Props) {
             {user && (
               <button
                 onClick={() => setOpen(true)}
-                className="flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                className="flex items-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
               >
                 <MessageSquare className="w-5 h-5" />
                 <span>Viết đánh giá</span>
@@ -238,7 +238,7 @@ export default function DestinationReviews({ destinationId }: Props) {
 
           {/* Stats Card */}
           {stats.totalReviews > 0 && (
-            <div className="mt-6 bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-6 border-2 border-yellow-200 dark:border-yellow-800">
+            <div className="mt-6 bg-linear-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-6 border-2 border-yellow-200 dark:border-yellow-800">
               <div className="flex items-center gap-6">
                 <div className="flex items-center justify-center w-16 h-16 bg-yellow-400 dark:bg-yellow-500 rounded-full">
                   <Star className="w-8 h-8 text-white fill-white" />
@@ -279,7 +279,7 @@ export default function DestinationReviews({ destinationId }: Props) {
             {user && (
               <button
                 onClick={() => setOpen(true)}
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
+                className="inline-flex items-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
               >
                 <MessageSquare className="w-5 h-5" />
                 <span>Viết đánh giá đầu tiên</span>
@@ -297,7 +297,7 @@ export default function DestinationReviews({ destinationId }: Props) {
                   {/* Review Header */}
                   <div className="flex items-start gap-4 mb-4">
                     {/* Avatar */}
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md border-2 border-white dark:border-gray-800">
+                    <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md border-2 border-white dark:border-gray-800">
                       {review.user?.avatar_url ? (
                         <img
                           src={review.user.avatar_url}
@@ -336,7 +336,7 @@ export default function DestinationReviews({ destinationId }: Props) {
                         </div>
                         <div className="flex items-center gap-3">
                           {review.created_at && (
-                            <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+                            <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 shrink-0">
                               <Calendar className="w-4 h-4" />
                               <span>{formatTimeAgo(review.created_at)}</span>
                             </div>
