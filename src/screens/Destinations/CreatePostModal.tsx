@@ -173,7 +173,6 @@ export const CreatePostModal: React.FC<CreatePostModalProps> = ({
         throw new Error('Post was not created. Please try again.');
       }
 
-      console.log('Post created successfully:', newPost[0]);
       onPostCreated();
       onClose();
     } catch (error: any) {

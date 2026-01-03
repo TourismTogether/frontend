@@ -349,7 +349,6 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
       });
 
       setIsAddingRoute(false);
-      console.log("Route added successfully:", newRoute);
     } catch (err: any) {
       console.error("Add Route Error:", err);
       alert(`Error: ${err.message}`);
@@ -518,8 +517,6 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
         routes: updatedRoutes,
         spent_amount: calculateSpentAmount(updatedRoutes),
       });
-
-      console.log("Recommended route added successfully:", newRoute);
     } catch (err: any) {
       console.error("Add Recommended Route Error:", err);
       alert(`Error: ${err.message}`);
@@ -554,8 +551,6 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
         routes: reindexedRoutes,
         spent_amount: calculateSpentAmount(reindexedRoutes),
       });
-
-      console.log("Route deleted successfully");
     } catch (err: any) {
       console.error("Delete Route Error:", err);
       alert(`Error deleting route: ${err.message}`);
@@ -625,7 +620,6 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
       });
 
       setEditingRoute(null);
-      console.log("Route updated successfully:", updatedRoute);
     } catch (err: any) {
       console.error("Update Route Error:", err);
       alert(`Error: ${err.message}`);
@@ -674,8 +668,6 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
         routes: updatedRoutes,
         spent_amount: calculateSpentAmount(updatedRoutes),
       });
-
-      console.log("Cost updated successfully");
     } catch (err: any) {
       console.error("Update Cost Error:", err);
       alert(`Error updating cost: ${err.message}`);
@@ -922,7 +914,6 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
               });
 
               setIsRecommendationModalOpen(false);
-              console.log(`Successfully added ${newRoutes.length} AI routes`);
             } catch (err: any) {
               console.error("Add All AI Routes Error:", err);
               alert(`Lỗi khi thêm routes: ${err.message}`);
