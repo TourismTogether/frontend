@@ -1,24 +1,28 @@
 "use client";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 import { forumService } from "@/services/forumService";
 import {
     ArrowLeft,
     Check,
     ChevronDown,
     Image as ImageIcon,
-    Link as LinkIcon,
+    X,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 export default function NewPost() {
     const { user } = useAuth();
-
     console.log(user);
 
     const router = useRouter();
     const [loading, setLoading] = useState(false);
+
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [formData, setFormData] = useState({
         title: "",
         category: "Destination",
@@ -26,16 +30,68 @@ export default function NewPost() {
         tags: "",
     });
 
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+            setSelectedFile(file);
+            setPreviewUrl(URL.createObjectURL(file));
+        }
+    };
+    const removeImage = () => {
+        setSelectedFile(null);
+        setPreviewUrl(null);
+        if (fileInputRef.current) fileInputRef.current.value = "";
+    };
+
+    const uploadImage = async (file: File): Promise<string | null> => {
+        try {
+            const fileExt = file.name.split(".").pop();
+            const fileName = `${Date.now()}_${Math.random()
+                .toString(36)
+                .substring(2)}.${fileExt}`;
+            const filePath = `forum/${fileName}`;
+
+            const { data, error: uploadError } = await supabase.storage
+                .from("images")
+                .upload(filePath, file);
+
+            if (uploadError) throw uploadError;
+
+            const { data: urlData } = supabase.storage
+                .from("images")
+                .getPublicUrl(filePath);
+            return urlData.publicUrl;
+        } catch (error) {
+            console.error("Error uploading image:", error);
+            return null;
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!user) return alert("Vui lòng đăng nhập!");
+        if (!formData.title || !formData.content)
+            return alert("Please fill in all required fields.");
 
         setLoading(true);
         try {
+            let finalImageUrl = "";
+
+            if (selectedFile) {
+                const uploadedUrl = await uploadImage(selectedFile);
+
+                if (uploadedUrl) {
+                    finalImageUrl = uploadedUrl;
+                } else {
+                    setLoading(false);
+                    return alert("Tải ảnh lên thất bại, vui lòng thử lại.");
+                }
+            }
             const newPost = {
                 user_id: user.id,
                 title: formData.title,
                 content: formData.content,
+                image: finalImageUrl,
                 tags:
                     formData.category +
                     (formData.tags ? `, ${formData.tags}` : ""),
@@ -188,30 +244,52 @@ export default function NewPost() {
                     {/* Media Section */}
                     <div className="bg-card rounded-xl shadow-sm border border-border p-6 space-y-4">
                         <h3 className="text-sm font-semibold text-foreground">
-                            Add Media (Optional)
+                            Add Media
                         </h3>
-                        <button
-                            type="button"
-                            className="w-full flex items-center px-4 py-3 border border-border rounded-lg hover:bg-secondary transition-colors text-left group"
-                        >
-                            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center mr-3 group-hover:bg-card group-hover:shadow-sm transition-all">
-                                <ImageIcon className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
+
+                        {/* Hidden Input */}
+                        <input
+                            id="file-upload"
+                            title="Upload featured image"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleFileChange}
+                        />
+
+                        {/* Image Preview */}
+                        {previewUrl ? (
+                            <div className="relative group rounded-2xl overflow-hidden border border-slate-100 shadow-inner bg-slate-50">
+                                <img
+                                    src={previewUrl}
+                                    alt="Preview"
+                                    className="w-full h-48 object-cover"
+                                />
+                                <button
+                                    id="upload-button"
+                                    title="Click to select a photo"
+                                    type="button"
+                                    onClick={removeImage}
+                                    className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm hover:bg-red-50 transition-colors"
+                                >
+                                    <X className="w-4 h-4" />
+                                </button>
                             </div>
-                            <span className="text-foreground font-medium">
-                                Upload images
-                            </span>
-                        </button>
-                        <button
-                            type="button"
-                            className="w-full flex items-center px-4 py-3 border border-border rounded-lg hover:bg-secondary transition-colors text-left group"
-                        >
-                            <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center mr-3 group-hover:bg-card group-hover:shadow-sm transition-all">
-                                <LinkIcon className="w-4 h-4 text-muted-foreground group-hover:text-foreground" />
-                            </div>
-                            <span className="text-foreground font-medium">
-                                Add link
-                            </span>
-                        </button>
+                        ) : (
+                            <button
+                                type="button"
+                                onClick={() => fileInputRef.current?.click()}
+                                className="w-full py-10 border-2 border-dashed border-slate-200 rounded-2xl flex flex-col items-center justify-center gap-3 hover:bg-slate-50 hover:border-blue-200 transition-all text-slate-400 hover:text-blue-500 group"
+                            >
+                                <div className="p-3 bg-slate-100 rounded-full group-hover:bg-blue-50 transition-colors">
+                                    <ImageIcon className="w-6 h-6" />
+                                </div>
+                                <span className="text-sm font-semibold">
+                                    Click to upload photo
+                                </span>
+                            </button>
+                        )}
                     </div>
                     <div className="bg-guidelines-bg dark:bg-guidelines-bg/20 border border-guidelines-border rounded-xl p-6 transition-colors">
                         <h3 className="text-guidelines-text font-semibold mb-4">

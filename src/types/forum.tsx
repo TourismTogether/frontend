@@ -22,17 +22,18 @@ export interface IPost {
     tags: string;
     total_views: number;
     total_likes: number;
-    reply_count: number;
+    reply_count: 0;
     created_at: string;
     updated_at: string;
     last_activity_at: string;
-    is_pinned: boolean;
+    is_pinned: false;
     is_liked?: boolean;
     forum_categories: {
         name: string;
         color: string;
     };
     profiles?: User;
+    image?: string | null;
 }
 
 export interface IPostReply {

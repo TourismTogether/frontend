@@ -1,7 +1,7 @@
 "use client";
 
 import { IPost } from "@/types/forum";
-import { Clock, Eye, MessageCircle, Plus, TrendingUp, Filter, User } from "lucide-react";
+import { Clock, Eye, MessageCircle, Plus, TrendingUp, Filter, User, Heart } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
@@ -302,18 +302,18 @@ export const Forum: React.FC = () => {
                                                 {/* Meta Info */}
                                                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
                                                     <span className="flex items-center gap-1.5">
-                                                        <MessageCircle className="w-4 h-4 text-blue-500" />
-                                                        <span className="font-medium">{post.reply_count || 0}</span>
+                                                        <MessageCircle className="w-4 h-4 text-gray-400" />
+                                                        <span>{post.reply_count || 0}</span>
                                                     </span>
                                                     <span className="flex items-center gap-1.5">
-                                                        <Eye className="w-4 h-4 text-gray-400" />
-                                                        <span>{post.total_views || 0}</span>
+                                                        <Heart className="w-4 h-4 text-gray-400" />
+                                                        <span>{post.total_likes || 0}</span>
                                                     </span>
                                                     <span className="flex items-center gap-1.5">
                                                         <Clock className="w-4 h-4 text-gray-400" />
                                                         <span>{formatTimeAgo(post.last_activity_at)}</span>
                                                     </span>
-                                                    <span className="text-gray-600 font-medium">
+                                                    <span className="text-gray-400 font-medium">
                                                         {post.profiles?.full_name || "User"}
                                                     </span>
                                                 </div>
