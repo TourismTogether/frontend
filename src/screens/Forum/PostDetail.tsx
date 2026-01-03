@@ -190,12 +190,10 @@ export default function PostDetail({ postData }: PostDetailProps) {
     const handleUpdate = async () => {
         setIsSaving(true);
         try {
-            console.log(postData.id, editTitle, editContent);
             const response = await forumService.update(postData.id!, {
                 title: editTitle,
                 content: editContent,
             });
-            console.log(postData.id, editTitle, editContent);
             if (response) {
                 alert("Cập nhật thành công!");
                 setIsEditingMode(false);

@@ -35,17 +35,9 @@ interface EmergencyModalProps {
   onClose: () => void;
 }
 
-interface ShareLocationRecord {
-  id: number;
-  user_id: string;
-  share_with_user_id?: string | null;
-  latitude: number;
-  longitude: number;
-  processed: boolean;
-}
 
 export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose }) => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [supportTeam, setSupportTeam] = useState<SupportMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [sosActivated, setSosActivated] = useState(false);
@@ -57,16 +49,68 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     lng: number;
   } | null>(null);
   const [sendingLocation, setSendingLocation] = useState(false);
-  const [currentSOSRecord, setCurrentSOSRecord] = useState<ShareLocationRecord | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      fetchSupportTeam();
       getUserLocation();
+      fetchSupportTeam();
     }
-  }, [isOpen]);
+  }, [isOpen, profile?.user_id, user?.id]);
+
+  // Check SOS status when modal opens and when supportTeam is loaded
+  useEffect(() => {
+    if (isOpen && supportTeam.length >= 0) {
+      checkSOSStatus();
+    }
+  }, [isOpen, supportTeam, profile?.user_id, user?.id]);
+
+  const checkSOSStatus = async () => {
+    const userId = profile?.user_id || user?.id;
+    if (!userId) return;
+
+    try {
+      const res = await fetch(`${API_URL}/travellers/${userId}`, {
+        credentials: 'include',
+      });
+      const result = await res.json();
+      
+      if (result.status === 200 && result.data) {
+        // Update SOS status based on server data
+        const isSafe = result.data.is_safe !== false; // Default to true if undefined
+        const isShared = result.data.is_shared_location === true;
+        setSosActivated(!isSafe && isShared);
+        
+        // If SOS is not active, clear selected support
+        if (isSafe || !isShared) {
+          setSelectedSupport(null);
+        } else if (!isSafe && isShared) {
+          // If SOS is active, check if there's a selected supporter
+          if (result.data.emergency_contacts && Array.isArray(result.data.emergency_contacts) && result.data.emergency_contacts.length > 0) {
+            // Find the supporter that matches
+            const supporterId = result.data.emergency_contacts[0];
+            const supporter = supportTeam.find(s => s.user_id === supporterId);
+            if (supporter) {
+              setSelectedSupport(supporter);
+            } else {
+              setSelectedSupport(null);
+            }
+          } else {
+            setSelectedSupport(null);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error checking SOS status:', error);
+    }
+  };
 
   const getUserLocation = () => {
+    // Default coordinates (Ho Chi Minh City)
+    const defaultLocation = {
+      lat: 10.762855472351717,
+      lng: 106.68247646794529,
+    };
+
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -76,13 +120,21 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
           });
         },
         () => {
-          // Location access denied or unavailable
+          // Location access denied or unavailable - use default
+          setUserLocation(defaultLocation);
+        },
+        {
+          timeout: 5000,
+          enableHighAccuracy: false,
         }
       );
+    } else {
+      // Geolocation not supported - use default
+      setUserLocation(defaultLocation);
     }
   };
 
-  const fetchSupportTeam = async () => {
+  const fetchSupportTeam = async (): Promise<void> => {
     try {
       setLoading(true);
 
@@ -148,42 +200,40 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
   const handleSOS = async () => {
     setSosActivated(true);
 
+    // Get user ID from profile or user
+    const userId = profile?.user_id || user?.id;
+    
     // Update user's safety status via backend API
-    if (profile?.user_id) {
+    if (userId) {
       try {
-        // Update traveller status
-        await fetch(`${API_URL}/travellers/${profile.user_id}`, {
+        // Update traveller status - activate SOS
+        const response = await fetch(`${API_URL}/travellers/${userId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
             is_safe: false,
-            latitude: userLocation?.lat,
-            longitude: userLocation?.lng,
+            latitude: userLocation?.lat || 0,
+            longitude: userLocation?.lng || 0,
             is_shared_location: true,
+            emergency_contacts: [], // Reset emergency contacts when activating SOS
           }),
         });
 
-        // Create share_location record for SOS
-        const sosRes = await fetch(`${API_URL}/share-locations`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            user_id: profile.user_id,
-            latitude: userLocation?.lat || 0,
-            longitude: userLocation?.lng || 0,
-            processed: false,
-          }),
-        });
-        
-        const sosResult = await sosRes.json();
-        if (sosResult.status === 201 && sosResult.data) {
-          setCurrentSOSRecord(sosResult.data);
+        const result = await response.json();
+        if (result.status !== 200) {
+          console.error('Failed to activate SOS:', result.message);
+          alert('Không thể kích hoạt SOS. Vui lòng thử lại.');
+          setSosActivated(false);
         }
-      } catch {
-        // Failed to update safety status
+      } catch (error) {
+        console.error('Error activating SOS:', error);
+        alert('Có lỗi xảy ra khi kích hoạt SOS. Vui lòng thử lại.');
+        setSosActivated(false);
       }
+    } else {
+      alert('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
+      setSosActivated(false);
     }
   };
 
@@ -191,19 +241,55 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     setSelectedSupport(support);
     setSendingLocation(true);
 
-    // Update share_location record with selected supporter
-    if (currentSOSRecord?.id) {
+    // Get user ID from profile or user
+    const userId = profile?.user_id || user?.id;
+
+    // Update traveller's emergency_contacts with selected supporter
+    if (userId) {
       try {
-        await fetch(`${API_URL}/share-locations/${currentSOSRecord.id}/share-with`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+        // Get current traveller data
+        const travellerRes = await fetch(`${API_URL}/travellers/${userId}`, {
           credentials: 'include',
-          body: JSON.stringify({
-            share_with_user_id: support.user_id,
-          }),
         });
-      } catch {
-        // Failed to update share with user
+        const travellerResult = await travellerRes.json();
+        
+        if (travellerResult.status === 200 && travellerResult.data) {
+          // Parse emergency_contacts - có thể là jsonb string hoặc array
+          let currentContacts: string[] = [];
+          if (travellerResult.data.emergency_contacts) {
+            if (typeof travellerResult.data.emergency_contacts === 'string') {
+              try {
+                currentContacts = JSON.parse(travellerResult.data.emergency_contacts);
+              } catch {
+                currentContacts = [];
+              }
+            } else if (Array.isArray(travellerResult.data.emergency_contacts)) {
+              currentContacts = travellerResult.data.emergency_contacts;
+            }
+          }
+
+          // Add supporter_id to emergency_contacts if not already present
+          const updatedContacts = currentContacts.includes(support.user_id)
+            ? currentContacts
+            : [...currentContacts, support.user_id];
+
+          // Update traveller with new emergency_contacts
+          const updateRes = await fetch(`${API_URL}/travellers/${userId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              emergency_contacts: updatedContacts,
+            }),
+          });
+
+          const updateResult = await updateRes.json();
+          if (updateResult.status !== 200) {
+            console.error('Failed to update emergency contacts:', updateResult.message);
+          }
+        }
+      } catch (error) {
+        console.error('Error updating emergency contacts:', error);
       }
     }
 
@@ -220,23 +306,23 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     setSosActivated(false);
     setSelectedSupport(null);
 
+    // Get user ID from profile or user
+    const userId = profile?.user_id || user?.id;
+
     // Update user's safety status via backend API
-    if (profile?.user_id) {
+    if (userId) {
       try {
-        await fetch(`${API_URL}/travellers/${profile.user_id}`, {
+        // Cancel SOS - set is_safe to true
+        await fetch(`${API_URL}/travellers/${userId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
-          body: JSON.stringify({ is_safe: true }),
+          body: JSON.stringify({ 
+            is_safe: true,
+            is_shared_location: false,
+            emergency_contacts: [],
+          }),
         });
-
-        // Delete share_location record (cancel SOS)
-        await fetch(`${API_URL}/share-locations/cancel/${profile.user_id}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
-        
-        setCurrentSOSRecord(null);
       } catch {
         // Failed to update safety status
       }

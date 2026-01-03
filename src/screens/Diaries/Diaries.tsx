@@ -94,7 +94,6 @@ export default function Diaries() {
   }
 
   async function handleShareDiary() {
-    console.log(shareDiary);
 
     const post = {
       user_id: shareDiary.user_id,

@@ -77,8 +77,43 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       const email = data.account?.email;
 
-      // Fetch traveller data but don't block on failure
+      // Get user location automatically
+      const getUserLocation = (): Promise<{ lat: number; lng: number }> => {
+        return new Promise((resolve) => {
+          const defaultLocation = {
+            lat: 10.762855472351717,
+            lng: 106.68247646794529,
+          };
+
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                resolve({
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                });
+              },
+              () => {
+                // Location access denied or unavailable - use default
+                resolve(defaultLocation);
+              },
+              {
+                timeout: 5000,
+                enableHighAccuracy: false,
+              }
+            );
+          } else {
+            // Geolocation not supported - use default
+            resolve(defaultLocation);
+          }
+        });
+      };
+
+      // Fetch traveller data and update location
       try {
+        // Get location first
+        const location = await getUserLocation();
+
         const travellerRes = await fetch(`${beApi}/travellers/${data.user.id}`, {
           credentials: "include",
         });
@@ -86,16 +121,95 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         if (travellerRes.ok) {
           const travellerResult = await travellerRes.json();
           if (travellerResult.status === 200) {
+            // Update location if traveller exists
+            try {
+              await fetch(`${beApi}/travellers/${data.user.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  latitude: location.lat,
+                  longitude: location.lng,
+                }),
+              });
+            } catch {
+              // Failed to update location, continue anyway
+            }
+
             setProfile({
               ...data.user,
               ...travellerResult.data,
               email,
             });
           } else {
-            setProfile({ ...data.user, email });
+            // Traveller doesn't exist yet, create with location
+            try {
+              const createRes = await fetch(`${beApi}/travellers`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  user_id: data.user.id,
+                  bio: '',
+                  is_shared_location: false,
+                  latitude: location.lat,
+                  longitude: location.lng,
+                  is_safe: true,
+                }),
+              });
+              
+              if (createRes.ok) {
+                const createResult = await createRes.json();
+                if (createResult.status === 201) {
+                  setProfile({
+                    ...data.user,
+                    ...createResult.data,
+                    email,
+                  });
+                } else {
+                  setProfile({ ...data.user, email });
+                }
+              } else {
+                setProfile({ ...data.user, email });
+              }
+            } catch {
+              setProfile({ ...data.user, email });
+            }
           }
         } else {
-          setProfile({ ...data.user, email });
+          // Traveller doesn't exist, create with location
+          try {
+            const createRes = await fetch(`${beApi}/travellers`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                user_id: data.user.id,
+                bio: '',
+                is_shared_location: false,
+                latitude: location.lat,
+                longitude: location.lng,
+                is_safe: true,
+              }),
+            });
+            
+            if (createRes.ok) {
+              const createResult = await createRes.json();
+              if (createResult.status === 201) {
+                setProfile({
+                  ...data.user,
+                  ...createResult.data,
+                  email,
+                });
+              } else {
+                setProfile({ ...data.user, email });
+              }
+            } else {
+              setProfile({ ...data.user, email });
+            }
+          } catch {
+            setProfile({ ...data.user, email });
+          }
         }
       } catch {
         setProfile({ ...data.user, email });
