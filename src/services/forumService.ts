@@ -40,7 +40,7 @@ export const forumService = {
                 const data = await res.json();
                 return Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [];
             }
-            console.error("Failed to fetch replies:", res.status);
+            // console.error("Failed to fetch replies:");
             return [];
         } catch (error) {
             console.error("Error fetching replies:", error);
@@ -65,12 +65,13 @@ export const forumService = {
         return data.data || data;
     },
 
-    toggleLike: async (id: string) => {
+    toggleLike: async (id: string, userId: string) => {
         const res = await fetch(
             `${API_URL}/posts/${id}/like`,
             {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ user_id: userId }),
             }
         );
         if (!res.ok) throw new Error("Không thể like");
