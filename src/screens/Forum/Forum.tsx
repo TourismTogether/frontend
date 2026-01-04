@@ -66,8 +66,8 @@ export const Forum: React.FC = () => {
                 : rawData.data || [];
 
             // Fetch user info for posts
-            const postUserIds = [
-                ...new Set(rawPosts.map((p: any) => p.user_id || p.id_user).filter(Boolean)),
+            const postUserIds: string[] = [
+                ...new Set(rawPosts.map((p: any) => p.user_id || p.id_user).filter(Boolean) as string[]),
             ];
 
             const userInfoMap: Record<string, any> = {};
