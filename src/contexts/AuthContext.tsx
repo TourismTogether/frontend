@@ -12,7 +12,12 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   isAdmin: boolean;
-  signUp: (email: string, password: string, username: string, fullName?: string) => Promise<void>;
+  signUp: (
+    email: string,
+    password: string,
+    username: string,
+    fullName?: string
+  ) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
@@ -79,9 +84,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Fetch traveller data but don't block on failure
       try {
-        const travellerRes = await fetch(`${beApi}/travellers/${data.user.id}`, {
-          credentials: "include",
-        });
+        const travellerRes = await fetch(
+          `${beApi}/travellers/${data.user.id}`,
+          {
+            credentials: "include",
+          }
+        );
 
         if (travellerRes.ok) {
           const travellerResult = await travellerRes.json();
@@ -110,7 +118,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   };
 
-  const signUp = async (email: string, password: string, username: string, fullName?: string) => {
+  const signUp = async (
+    email: string,
+    password: string,
+    username: string,
+    fullName?: string
+  ) => {
     setLoading(true);
 
     try {
@@ -120,11 +133,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ 
-          email, 
-          password, 
+        body: JSON.stringify({
+          email,
+          password,
           username,
-          full_name: fullName || username // Use username as fallback if full_name not provided
+          full_name: fullName || username, // Use username as fallback if full_name not provided
         }),
       });
 
@@ -143,7 +156,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           email: result.data.account?.email,
         });
       }
-      
+
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -179,7 +192,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           email: result.data.account?.email,
         });
       }
-      
+
       setLoading(false);
     } catch (error) {
       setLoading(false);
