@@ -358,6 +358,7 @@ interface Props {
 interface Review {
   traveller_id: string;
   destination_id: string;
+  no: number;
   rating_star: number;
   comment?: string;
   created_at?: string;
@@ -587,6 +588,7 @@ export default function DestinationReviews({ destinationId }: Props) {
       {/* Edit Review Modal */}
       {editingReview && (
         <CreateReviewModal
+          mode="edit"
           destinationId={destinationId}
           onClose={() => setEditingReview(null)}
           onSuccess={() => {
@@ -594,11 +596,7 @@ export default function DestinationReviews({ destinationId }: Props) {
             fetchReviews();
             fetchDestinationInfo();
           }}
-          initialData={{
-            rating_star: editingReview.rating_star,
-            comment: editingReview.comment,
-          }}
-          isEdit={true}
+          initialData={editingReview}
         />
       )}
     </div>
