@@ -8,7 +8,7 @@ import CreateReviewModal from "./CreateReviewModal";
 interface Review {
   traveller_id: string;
   destination_id: string;
-  no: number;                    
+  no: number;
   rating_star: number;
   comment?: string | null;
   created_at?: string;
@@ -27,7 +27,11 @@ interface Props {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-export default function ReviewItem({ review, destinationId, onUpdated }: Props) {
+export default function ReviewItem({
+  review,
+  destinationId,
+  onUpdated,
+}: Props) {
   const { user } = useAuth();
   const [openEdit, setOpenEdit] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -38,9 +42,12 @@ export default function ReviewItem({ review, destinationId, onUpdated }: Props) 
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 60) return "vừa xong";
-    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)} phút trước`;
-    if (diffInSeconds < 86400) return `${Math.floor(diffInSeconds / 3600)} giờ trước`;
-    if (diffInSeconds < 2592000) return `${Math.floor(diffInSeconds / 86400)} ngày trước`;
+    if (diffInSeconds < 3600)
+      return `${Math.floor(diffInSeconds / 60)} phút trước`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)} giờ trước`;
+    if (diffInSeconds < 2592000)
+      return `${Math.floor(diffInSeconds / 86400)} ngày trước`;
     return date.toLocaleDateString("vi-VN", {
       year: "numeric",
       month: "long",
@@ -66,7 +73,7 @@ export default function ReviewItem({ review, destinationId, onUpdated }: Props) 
         body: JSON.stringify({
           traveller_id: review.traveller_id,
           destination_id: destinationId,
-          no: review.no,  
+          no: review.no,
         }),
       });
 
@@ -76,7 +83,7 @@ export default function ReviewItem({ review, destinationId, onUpdated }: Props) 
         throw new Error(result.message || "Xóa đánh giá thất bại");
       }
 
-      onUpdated(); 
+      onUpdated();
     } catch (err: any) {
       console.error("Delete error:", err);
       alert(err.message || "Có lỗi khi xóa đánh giá");
@@ -93,7 +100,7 @@ export default function ReviewItem({ review, destinationId, onUpdated }: Props) 
         <div className="p-6">
           {/* Header */}
           <div className="flex items-start gap-4 mb-4">
-            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center flex-shrink-0 shadow-md border-2 border-white dark:border-gray-800">
+            <div className="w-12 h-12 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0 shadow-md border-2 border-white dark:border-gray-800">
               {review.user?.avatar_url ? (
                 <img
                   src={review.user.avatar_url}
@@ -131,7 +138,7 @@ export default function ReviewItem({ review, destinationId, onUpdated }: Props) 
                 </div>
 
                 {review.created_at && (
-                  <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 flex-shrink-0">
+                  <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400 shrink-0">
                     <Calendar className="w-4 h-4" />
                     <span>{formatTimeAgo(review.created_at)}</span>
                   </div>

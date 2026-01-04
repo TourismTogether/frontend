@@ -104,7 +104,11 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
 
   // Refresh assessment stats when pathname changes (e.g., when returning from reviews page)
   useEffect(() => {
-    if (pathname && pathname.includes(`/destinations/${destinationId}`) && !pathname.includes('/reviews')) {
+    if (
+      pathname &&
+      pathname.includes(`/destinations/${destinationId}`) &&
+      !pathname.includes("/reviews")
+    ) {
       // Only refresh if we're on the detail page (not reviews page)
       fetchAssessmentStats();
     }
@@ -211,8 +215,9 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
     destination.rating ||
     0
   ).toFixed(1);
-  
-  const totalReviews = assessmentStats?.totalReviews || destination.total_reviews || 0;
+
+  const totalReviews =
+    assessmentStats?.totalReviews || destination.total_reviews || 0;
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
@@ -329,7 +334,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
               </div>
 
               {/* Rating Box */}
-              <div className="flex items-center bg-gradient-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-5 border-2 border-yellow-200 dark:border-yellow-800">
+              <div className="flex items-center bg-linear-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-5 border-2 border-yellow-200 dark:border-yellow-800">
                 <div className="flex items-center justify-center w-16 h-16 bg-yellow-400 dark:bg-yellow-500 rounded-full mr-4">
                   <Star className="w-8 h-8 text-white fill-white" />
                 </div>
@@ -338,9 +343,11 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                     {currentRating}
                   </div>
                   <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {totalReviews > 0 
-                      ? `${totalReviews} ${totalReviews === 1 ? 'đánh giá' : 'đánh giá'}`
-                      : 'Chưa có đánh giá'}
+                    {totalReviews > 0
+                      ? `${totalReviews} ${
+                          totalReviews === 1 ? "đánh giá" : "đánh giá"
+                        }`
+                      : "Chưa có đánh giá"}
                   </div>
                 </div>
               </div>
@@ -351,7 +358,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
               {user && (
                 <button
                   onClick={() => setShowReviewModal(true)}
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl py-3 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                  className="w-full flex items-center justify-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl py-3 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
                 >
                   <MessageSquare className="w-5 h-5" />
                   <span>Đánh giá địa điểm</span>
@@ -500,7 +507,7 @@ const FactItem: React.FC<FactItemProps> = ({
   isCode = false,
 }) => (
   <div className="flex items-start space-x-3 border-b border-gray-100 dark:border-gray-800 pb-3 last:border-b-0 last:pb-0">
-    <Icon className={`w-5 h-5 flex-shrink-0 mt-1 ${color}`} />
+    <Icon className={`w-5 h-5 shrink-0 mt-1 ${color}`} />
     <div className="flex-1">
       <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
         {title}

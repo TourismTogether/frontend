@@ -184,7 +184,7 @@ export const Profile: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+      <div className="flex justify-center items-center h-screen bg-linear-to-br from-gray-50 via-white to-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600 font-medium">Loading profile...</p>
@@ -194,11 +194,11 @@ export const Profile: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-gray-50">
+    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Profile Header Card */}
         <div className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden mb-8">
-          <div className="h-32 bg-gradient-to-r from-blue-600 to-indigo-600"></div>
+          <div className="h-32 bg-linear-to-r from-blue-600 to-indigo-600"></div>
           <div className="px-6 sm:px-8 pb-8">
             <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between -mt-16 gap-4">
               <div className="flex items-end space-x-4">
@@ -246,7 +246,7 @@ export const Profile: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <button className="flex items-center space-x-2 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-2.5 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold">
+              <button className="flex items-center space-x-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-5 py-2.5 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold">
                 <Edit2 className="w-4 h-4" />
                 <span>Edit Profile</span>
               </button>
@@ -314,13 +314,13 @@ export const Profile: React.FC = () => {
             Trip Statistics
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
+            <div className="bg-linear-to-r from-green-50 to-emerald-50 rounded-lg p-4 border border-green-200">
               <p className="text-sm text-gray-600 mb-1">Completed Trips</p>
               <p className="text-3xl font-bold text-green-700">
                 {stats.tripsCompleted}
               </p>
             </div>
-            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
+            <div className="bg-linear-to-r from-blue-50 to-indigo-50 rounded-lg p-4 border border-blue-200">
               <p className="text-sm text-gray-600 mb-1">Completion Rate</p>
               <p className="text-3xl font-bold text-blue-700">
                 {stats.totalTrips > 0
