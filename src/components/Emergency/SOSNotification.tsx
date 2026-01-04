@@ -19,18 +19,15 @@ import { useAuth } from "../../contexts/AuthContext";
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface SOSAlert {
-  id: number;
   user_id: string;
-  share_with_user_id: string | null;
   latitude: number;
   longitude: number;
-  processed: boolean;
-  created_at: string;
-  updated_at: string;
+  is_safe: boolean;
+  is_shared_location: boolean;
+  emergency_contacts?: string[] | null;
   user_full_name?: string;
   user_phone?: string;
   user_avatar_url?: string;
-  share_with_full_name?: string;
 }
 
 interface SOSNotificationProps {
@@ -46,23 +43,28 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
   const [sosAlerts, setSOSAlerts] = useState<SOSAlert[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [processingId, setProcessingId] = useState<number | null>(null);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   const fetchSOSAlerts = useCallback(async () => {
-    if (!isSupporter || !currentUserId) return;
+    if (!isSupporter || !currentUserId) {
+      setSOSAlerts([]);
+      return;
+    }
 
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/share-locations/supporter/${currentUserId}`, {
+      const res = await fetch(`${API_URL}/travellers/sos/supporter/${currentUserId}`, {
         credentials: "include",
       });
       const result = await res.json();
 
       if (result.status === 200 && result.data) {
         setSOSAlerts(result.data);
+      } else {
+        setSOSAlerts([]);
       }
-    } catch {
-      // Failed to fetch SOS alerts
+    } catch (error) {
+      setSOSAlerts([]);
     } finally {
       setLoading(false);
     }
@@ -77,16 +79,22 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
     return () => clearInterval(interval);
   }, [fetchSOSAlerts]);
 
-  const handleMarkAsProcessed = async (id: number) => {
-    setProcessingId(id);
+  const handleMarkAsProcessed = async (userId: string) => {
+    setProcessingId(userId);
     try {
-      await fetch(`${API_URL}/share-locations/${id}/processed`, {
+      await fetch(`${API_URL}/travellers/${userId}`, {
         method: "PATCH",
+        headers: { 'Content-Type': 'application/json' },
         credentials: "include",
+        body: JSON.stringify({
+          is_safe: true,
+          is_shared_location: false,
+          emergency_contacts: [],
+        }),
       });
       await fetchSOSAlerts();
-    } catch {
-      // Failed to mark as processed
+    } catch (error) {
+      // Error marking as processed
     } finally {
       setProcessingId(null);
     }
@@ -106,47 +114,40 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
   };
 
   const getAlertColor = (alert: SOSAlert): string => {
-    if (alert.processed) {
+    if (alert.is_safe) {
       return "border-green-500 bg-green-50";
     }
-    if (alert.share_with_user_id === currentUserId) {
+    if (alert.emergency_contacts && alert.emergency_contacts.includes(currentUserId || '')) {
       return "border-red-500 bg-red-50";
     }
     return "border-yellow-500 bg-yellow-50";
   };
 
   const getAlertBadgeColor = (alert: SOSAlert): string => {
-    if (alert.processed) {
+    if (alert.is_safe) {
       return "bg-green-500";
     }
-    if (alert.share_with_user_id === currentUserId) {
+    if (alert.emergency_contacts && alert.emergency_contacts.includes(currentUserId || '')) {
       return "bg-red-500";
     }
     return "bg-yellow-500";
   };
 
   const getAlertLabel = (alert: SOSAlert): string => {
-    if (alert.processed) {
+    if (alert.is_safe) {
       return "Đã xử lý";
     }
-    if (alert.share_with_user_id === currentUserId) {
+    if (alert.emergency_contacts && alert.emergency_contacts.includes(currentUserId || '')) {
       return "Yêu cầu trực tiếp";
     }
     return "Cần hỗ trợ";
   };
 
-  const pendingAlerts = sosAlerts.filter((a) => !a.processed);
+  const pendingAlerts = sosAlerts.filter((a) => !a.is_safe);
   const urgentAlerts = sosAlerts.filter(
-    (a) => !a.processed && a.share_with_user_id === currentUserId
+    (a) => !a.is_safe && a.emergency_contacts && a.emergency_contacts.includes(currentUserId || '')
   );
 
-  const formatTime = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleTimeString("vi-VN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   if (!isSupporter) return null;
 
@@ -218,7 +219,7 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
                 <div className="divide-y divide-border">
                   {sosAlerts.map((alert) => (
                     <div
-                      key={alert.id}
+                      key={alert.user_id}
                       className={`p-4 transition-colors ${getAlertColor(alert)}`}
                     >
                       {/* Alert Header */}
@@ -239,9 +240,8 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
                             <h4 className="font-semibold text-foreground">
                               {alert.user_full_name || "Người dùng"}
                             </h4>
-                            <div className="flex items-center space-x-2 text-xs text-muted-foreground">
-                              <Clock className="w-3 h-3" />
-                              <span>{formatTime(alert.created_at)}</span>
+                            <div className="text-xs text-muted-foreground">
+                              ID: {alert.user_id.substring(0, 8)}...
                             </div>
                           </div>
                         </div>
@@ -269,18 +269,15 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
                         </div>
                       )}
 
-                      {/* Share with info */}
-                      {alert.share_with_user_id && alert.share_with_full_name && (
-                        <div className="text-xs text-muted-foreground mb-3 flex items-center space-x-1">
-                          <span>Yêu cầu hỗ trợ từ:</span>
-                          <span className="font-medium text-foreground">
-                            {alert.share_with_full_name}
-                          </span>
+                      {/* Emergency contacts info */}
+                      {alert.emergency_contacts && alert.emergency_contacts.length > 0 && (
+                        <div className="text-xs text-muted-foreground mb-3">
+                          <span>Đã chọn {alert.emergency_contacts.length} supporter(s)</span>
                         </div>
                       )}
 
                       {/* Actions */}
-                      {!alert.processed && (
+                      {!alert.is_safe && (
                         <div className="flex space-x-2">
                           <button
                             onClick={() => openGoogleMaps(alert.latitude, alert.longitude)}
@@ -298,11 +295,11 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
                             </button>
                           )}
                           <button
-                            onClick={() => handleMarkAsProcessed(alert.id)}
-                            disabled={processingId === alert.id}
+                            onClick={() => handleMarkAsProcessed(alert.user_id)}
+                            disabled={processingId === alert.user_id}
                             className="flex items-center justify-center px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors disabled:opacity-50"
                           >
-                            {processingId === alert.id ? (
+                            {processingId === alert.user_id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
                             ) : (
                               <CheckCircle className="w-4 h-4" />
@@ -312,7 +309,7 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
                       )}
 
                       {/* Processed badge */}
-                      {alert.processed && (
+                      {alert.is_safe && (
                         <div className="flex items-center justify-center space-x-2 text-green-600 bg-green-100 rounded-lg py-2">
                           <CheckCircle className="w-4 h-4" />
                           <span className="text-sm font-medium">Đã xử lý xong</span>
