@@ -208,6 +208,8 @@ export default function CreateDiary() {
     diary.is_draft = true;
     diary.is_public = false;
 
+    console.log(diary);
+
     let res = await fetch(`${API}/diaries`, {
       method: "POST",
       headers: {

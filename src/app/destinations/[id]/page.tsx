@@ -12,6 +12,8 @@ export default function DestinationDetailPage() {
   const params = useParams();
   const destinationId = params?.id as string;
 
+  // console.log(destinationId);
+
   useEffect(() => {
     if (!loading && !user) {
       router.push("/auth");

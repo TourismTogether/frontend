@@ -90,6 +90,8 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
         status: formData.status,
       };
 
+      console.log("Sending update payload:", updatePayload); // Debug log
+
       const response = await fetch(`${API_URL}/trips/${formData.id}`, {
         method: "PATCH",
         headers: {
@@ -106,6 +108,7 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
       }
 
       const result = await response.json();
+      console.log("Update successful:", result); // Debug log
 
       onTripUpdated();
       onClose();

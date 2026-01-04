@@ -15,6 +15,7 @@ import React, { useRef, useState } from "react";
 
 export default function NewPost() {
     const { user } = useAuth();
+    console.log(user);
 
     const router = useRouter();
     const [loading, setLoading] = useState(false);
