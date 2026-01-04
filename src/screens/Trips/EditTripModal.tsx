@@ -335,19 +335,20 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
                 htmlFor="edit_spent_amount"
                 className="block text-sm font-medium text-foreground mb-2"
               >
-                Spent Amount (VND) *
+                Spent Amount (VND){" "}
+                <span className="text-xs text-gray-500">
+                  (Auto-calculated from costs)
+                </span>
               </label>
               <input
                 id="edit_spent_amount"
                 name="spent_amount"
                 type="number"
                 value={formData.spent_amount || 0}
-                onChange={handleChange}
-                required
-                min="0"
-                step="1000"
-                max={formData.total_budget || undefined}
-                className="w-full p-3 border border-border rounded-lg bg-input text-foreground focus:ring-2 focus:ring-trip focus:border-trip transition-colors"
+                readOnly
+                disabled
+                className="w-full p-3 border border-border rounded-lg bg-gray-100 text-foreground cursor-not-allowed opacity-75"
+                title="Spent amount is automatically calculated from route costs and cannot be edited manually"
               />
             </div>
           </div>

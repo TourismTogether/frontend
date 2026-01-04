@@ -634,7 +634,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
 
       {/* Route Legend */}
       {validRoutes.length > 0 && (
-        <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-1000 max-w-xs pointer-events-auto overflow-hidden">
+        <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-w-xs pointer-events-auto overflow-hidden">
           {/* Legend Header with Toggle Button */}
           <div
             className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors"
