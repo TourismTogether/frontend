@@ -58,10 +58,14 @@ const calculateSpentAmount = (routes: IRoute[]): number => {
   if (!routes || routes.length === 0) return 0;
   return routes.reduce((sumRoute, route) => {
     const currentCosts = Array.isArray(route.costs) ? route.costs : [];
-    const routeCost = currentCosts.reduce(
-      (sumCost, cost) => sumCost + (cost.amount || 0),
-      0
-    );
+    const routeCost = currentCosts.reduce((sumCost, cost) => {
+      // Ensure amount is a number, not a string
+      const amount =
+        typeof cost.amount === "string"
+          ? parseFloat(cost.amount) || 0
+          : Number(cost.amount) || 0;
+      return sumCost + amount;
+    }, 0);
     return sumRoute + routeCost;
   }, 0);
 };
@@ -96,11 +100,18 @@ const normalizeCost = (
   apiCost: any,
   defaultCurrency: string = "VND"
 ): ICost => {
+  // Ensure amount is always a number, not a string
+  const rawAmount = apiCost.cost || apiCost.amount || 0;
+  const amount =
+    typeof rawAmount === "string"
+      ? parseFloat(rawAmount) || 0
+      : Number(rawAmount) || 0;
+
   return {
     id: apiCost.id,
     title: apiCost.title || "",
     description: apiCost.description || "",
-    amount: apiCost.cost || apiCost.amount || 0,
+    amount: amount,
     category: apiCost.category || "other",
     currency: apiCost.currency || defaultCurrency,
     route_id: apiCost.route_id,
@@ -389,11 +400,26 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
         return route;
       });
 
+      const newSpentAmount = calculateSpentAmount(updatedRoutes);
+
+      // Update local state
       setTrip({
         ...trip,
         routes: updatedRoutes,
-        spent_amount: calculateSpentAmount(updatedRoutes),
+        spent_amount: newSpentAmount,
       });
+
+      // Sync spent_amount to backend
+      try {
+        await fetch(`${API_URL}/trips/${trip.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ spent_amount: newSpentAmount }),
+        });
+      } catch (syncErr) {
+        console.error("Failed to sync spent_amount to backend:", syncErr);
+        // Don't throw - local state is updated, backend sync can fail silently
+      }
     } catch (err) {
       console.error("Add cost error:", err);
       alert("Failed to add cost");
@@ -420,11 +446,26 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
         return route;
       });
 
+      const newSpentAmount = calculateSpentAmount(updatedRoutes);
+
+      // Update local state
       setTrip({
         ...trip,
         routes: updatedRoutes,
-        spent_amount: calculateSpentAmount(updatedRoutes),
+        spent_amount: newSpentAmount,
       });
+
+      // Sync spent_amount to backend
+      try {
+        await fetch(`${API_URL}/trips/${trip.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ spent_amount: newSpentAmount }),
+        });
+      } catch (syncErr) {
+        console.error("Failed to sync spent_amount to backend:", syncErr);
+        // Don't throw - local state is updated, backend sync can fail silently
+      }
     } catch (err) {
       console.error("Delete cost error:", err);
       alert("Failed to delete cost");
@@ -669,11 +710,26 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
         return route;
       });
 
+      const newSpentAmount = calculateSpentAmount(updatedRoutes);
+
+      // Update local state
       setTrip({
         ...trip,
         routes: updatedRoutes,
-        spent_amount: calculateSpentAmount(updatedRoutes),
+        spent_amount: newSpentAmount,
       });
+
+      // Sync spent_amount to backend
+      try {
+        await fetch(`${API_URL}/trips/${trip.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ spent_amount: newSpentAmount }),
+        });
+      } catch (syncErr) {
+        console.error("Failed to sync spent_amount to backend:", syncErr);
+        // Don't throw - local state is updated, backend sync can fail silently
+      }
 
       console.log("Cost updated successfully");
     } catch (err: any) {
@@ -713,9 +769,12 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
     );
   }
 
-  const budgetUsage =
-    trip.total_budget > 0 ? (trip.spent_amount / trip.total_budget) * 100 : 0;
-  const remaining = trip.total_budget - trip.spent_amount;
+  // Ensure values are numbers, not strings
+  const totalBudget = Number(trip.total_budget) || 0;
+  const spentAmount = Number(trip.spent_amount) || 0;
+
+  const budgetUsage = totalBudget > 0 ? (spentAmount / totalBudget) * 100 : 0;
+  const remaining = totalBudget - spentAmount;
 
   const destinationName = trip.destination?.name || "Unknown Destination";
 
@@ -1012,13 +1071,13 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
                 <div className="flex justify-between items-center py-2 bg-gray-50 rounded-lg px-3">
                   <span className="text-gray-600 text-sm">Total Budget</span>
                   <span className="font-bold text-gray-900">
-                    {formatCurrency(trip.total_budget)}
+                    {formatCurrency(totalBudget)}
                   </span>
                 </div>
                 <div className="flex justify-between items-center py-2 bg-gray-50 rounded-lg px-3">
                   <span className="text-gray-600 text-sm">Spent</span>
                   <span className="font-bold text-red-600">
-                    {formatCurrency(trip.spent_amount)}
+                    {formatCurrency(spentAmount)}
                   </span>
                 </div>
                 <div
