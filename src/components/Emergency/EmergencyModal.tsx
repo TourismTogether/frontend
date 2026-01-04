@@ -35,17 +35,8 @@ interface EmergencyModalProps {
   onClose: () => void;
 }
 
-interface ShareLocationRecord {
-  id: number;
-  user_id: string;
-  share_with_user_id?: string | null;
-  latitude: number;
-  longitude: number;
-  processed: boolean;
-}
-
 export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose }) => {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [supportTeam, setSupportTeam] = useState<SupportMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [sosActivated, setSosActivated] = useState(false);
@@ -57,7 +48,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     lng: number;
   } | null>(null);
   const [sendingLocation, setSendingLocation] = useState(false);
-  const [currentSOSRecord, setCurrentSOSRecord] = useState<ShareLocationRecord | null>(null);
 
   useEffect(() => {
     if (isOpen) {
@@ -65,6 +55,24 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
       getUserLocation();
     }
   }, [isOpen]);
+
+  // Check SOS status when modal opens and when supportTeam is loaded
+  useEffect(() => {
+    if (isOpen && supportTeam.length >= 0) {
+      checkSOSStatus();
+    }
+  }, [isOpen, supportTeam]);
+
+  // Check SOS status periodically when SOS is activated
+  useEffect(() => {
+    if (!sosActivated || !isOpen) return;
+
+    const checkInterval = setInterval(async () => {
+      await checkSOSStatus();
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(checkInterval);
+  }, [sosActivated, isOpen]);
 
   const getUserLocation = () => {
     if (navigator.geolocation) {
@@ -76,9 +84,67 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
           });
         },
         () => {
-          // Location access denied or unavailable
+          // Location access denied or unavailable - use default
+          setUserLocation({
+            lat: 10.762892238148003,
+            lng: 106.68248479264726,
+          });
+        },
+        {
+          timeout: 5000,
+          enableHighAccuracy: false,
         }
       );
+    } else {
+      // Geolocation not supported - use default
+      setUserLocation({
+        lat: 10.762892238148003,
+        lng: 106.68248479264726,
+      });
+    }
+  };
+
+  const checkSOSStatus = async () => {
+    const userId = profile?.user_id || profile?.id || user?.id;
+    if (!userId) return;
+
+    try {
+      const res = await fetch(`${API_URL}/travellers/${userId}`, {
+        credentials: 'include',
+      });
+      const result = await res.json();
+      
+      if (result.status === 200 && result.data) {
+        const isSafe = result.data.is_safe !== false;
+        const isShared = result.data.is_shared_location === true;
+        
+        // If SOS was processed (is_safe = true), automatically deactivate
+        if (isSafe || !isShared) {
+          if (sosActivated) {
+            // Show notification that SOS has been resolved
+            alert('SOS has been resolved by a supporter. Thank you!');
+          }
+          setSosActivated(false);
+          setSelectedSupport(null);
+        } else {
+          setSosActivated(true);
+          
+          // Update selected support if emergency_contacts exists
+          if (result.data.emergency_contacts && Array.isArray(result.data.emergency_contacts) && result.data.emergency_contacts.length > 0) {
+            const supporterId = result.data.emergency_contacts[0];
+            const supporter = supportTeam.find(s => s.user_id === supporterId);
+            if (supporter) {
+              setSelectedSupport(supporter);
+            } else {
+              setSelectedSupport(null);
+            }
+          } else {
+            setSelectedSupport(null);
+          }
+        }
+      }
+    } catch (error) {
+      // Error checking SOS status
     }
   };
 
@@ -146,68 +212,138 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
   };
 
   const handleSOS = async () => {
+    // Get user ID from profile or user
+    const userId = profile?.user_id || profile?.id || user?.id;
+    
+    if (!userId) {
+      alert('User information not found. Please log in again.');
+      return;
+    }
+
+    // Get current location before activating SOS
+    let currentLat = userLocation?.lat;
+    let currentLng = userLocation?.lng;
+
+    // If location is not available, try to get it now
+    if (!currentLat || !currentLng) {
+      try {
+        const location = await new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                resolve({
+                  lat: position.coords.latitude,
+                  lng: position.coords.longitude,
+                });
+              },
+              () => {
+                // Use default if location access denied
+                resolve({
+                  lat: 10.762892238148003,
+                  lng: 106.68248479264726,
+                });
+              },
+              { timeout: 5000, enableHighAccuracy: false }
+            );
+          } else {
+            resolve({
+              lat: 10.762892238148003,
+              lng: 106.68248479264726,
+            });
+          }
+        });
+        currentLat = location.lat;
+        currentLng = location.lng;
+        setUserLocation(location);
+      } catch {
+        // Use default coordinates
+        currentLat = 10.762892238148003;
+        currentLng = 106.68248479264726;
+        setUserLocation({ lat: currentLat, lng: currentLng });
+      }
+    }
+
     setSosActivated(true);
 
-    // Update user's safety status via backend API
-    if (profile?.user_id) {
-      try {
-        // Update traveller status
-        await fetch(`${API_URL}/travellers/${profile.user_id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            is_safe: false,
-            latitude: userLocation?.lat,
-            longitude: userLocation?.lng,
-            is_shared_location: true,
-          }),
-        });
+    try {
+      // Update traveller status - activate SOS with current location
+      const response = await fetch(`${API_URL}/travellers/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          is_safe: false,
+          latitude: currentLat,
+          longitude: currentLng,
+          is_shared_location: true,
+          emergency_contacts: [], // Reset emergency contacts when activating SOS
+        }),
+      });
 
-        // Create share_location record for SOS
-        const sosRes = await fetch(`${API_URL}/share-locations`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            user_id: profile.user_id,
-            latitude: userLocation?.lat || 0,
-            longitude: userLocation?.lng || 0,
-            processed: false,
-          }),
-        });
-        
-        const sosResult = await sosRes.json();
-        if (sosResult.status === 201 && sosResult.data) {
-          setCurrentSOSRecord(sosResult.data);
-        }
-      } catch {
-        // Failed to update safety status
+      const result = await response.json();
+      if (result.status !== 200) {
+        alert('Failed to activate SOS. Please try again.');
+        setSosActivated(false);
+      } else {
+        alert('SOS activated! Your location has been sent to supporters.');
       }
+    } catch (error) {
+      alert('An error occurred while activating SOS. Please try again.');
+      setSosActivated(false);
     }
   };
 
   const handleSelectSupport = async (support: SupportMember) => {
+    // Get user ID from profile or user
+    const userId = profile?.user_id || profile?.id || user?.id;
+    
+    if (!userId) return;
+
     setSelectedSupport(support);
     setSendingLocation(true);
 
-    // Update share_location record with selected supporter
-    if (currentSOSRecord?.id) {
-      try {
-        await fetch(`${API_URL}/share-locations/${currentSOSRecord.id}/share-with`, {
+    try {
+      // Get current traveller data
+      const travellerRes = await fetch(`${API_URL}/travellers/${userId}`, {
+        credentials: 'include',
+      });
+      const travellerResult = await travellerRes.json();
+      
+      if (travellerResult.status === 200 && travellerResult.data) {
+        // Parse emergency_contacts - có thể là jsonb string hoặc array
+        let currentContacts: string[] = [];
+        if (travellerResult.data.emergency_contacts) {
+          if (typeof travellerResult.data.emergency_contacts === 'string') {
+            try {
+              currentContacts = JSON.parse(travellerResult.data.emergency_contacts);
+            } catch {
+              currentContacts = [];
+            }
+          } else if (Array.isArray(travellerResult.data.emergency_contacts)) {
+            currentContacts = travellerResult.data.emergency_contacts;
+          }
+        }
+
+        // Add supporter_id to emergency_contacts if not already present
+        const updatedContacts = currentContacts.includes(support.user_id)
+          ? currentContacts
+          : [...currentContacts, support.user_id];
+
+        // Update traveller with new emergency_contacts
+        await fetch(`${API_URL}/travellers/${userId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
           body: JSON.stringify({
-            share_with_user_id: support.user_id,
+            emergency_contacts: updatedContacts,
           }),
         });
-      } catch {
-        // Failed to update share with user
       }
+    } catch (error) {
+      // Error updating emergency contacts
+    } finally {
+      setSendingLocation(false);
     }
-
-    setSendingLocation(false);
   };
 
   const handleCall = (phone: string) => {
@@ -217,29 +353,28 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
   };
 
   const cancelSOS = async () => {
+    // Get user ID from profile or user
+    const userId = profile?.user_id || profile?.id || user?.id;
+    
+    if (!userId) return;
+
     setSosActivated(false);
     setSelectedSupport(null);
 
-    // Update user's safety status via backend API
-    if (profile?.user_id) {
-      try {
-        await fetch(`${API_URL}/travellers/${profile.user_id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({ is_safe: true }),
-        });
-
-        // Delete share_location record (cancel SOS)
-        await fetch(`${API_URL}/share-locations/cancel/${profile.user_id}`, {
-          method: 'DELETE',
-          credentials: 'include',
-        });
-        
-        setCurrentSOSRecord(null);
-      } catch {
-        // Failed to update safety status
-      }
+    try {
+      // Cancel SOS - set is_safe to true, is_shared_location to false, and clear emergency_contacts
+      await fetch(`${API_URL}/travellers/${userId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ 
+          is_safe: true,
+          is_shared_location: false,
+          emergency_contacts: [],
+        }),
+      });
+    } catch (error) {
+      alert('An error occurred while canceling SOS. Please try again.');
     }
   };
 
