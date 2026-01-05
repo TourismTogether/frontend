@@ -261,21 +261,21 @@ export const Dashboard: React.FC = () => {
       // Find the nearest trip (newest trip by start_date, or upcoming trip)
       if (tripsData.length > 0) {
         const now = new Date().getTime();
-        
+
         // Sort trips: upcoming trips first, then by start_date descending
         const sortedTrips = [...tripsData].sort((a, b) => {
           const startA = new Date(a.start_date).getTime();
           const startB = new Date(b.start_date).getTime();
           const endA = new Date(a.end_date).getTime();
           const endB = new Date(b.end_date).getTime();
-          
+
           // Prioritize upcoming trips
           const aIsUpcoming = startA > now;
           const bIsUpcoming = startB > now;
-          
+
           if (aIsUpcoming && !bIsUpcoming) return -1;
           if (!aIsUpcoming && bIsUpcoming) return 1;
-          
+
           // If both upcoming or both past, sort by start_date descending (newest first)
           return startB - startA;
         });
@@ -442,7 +442,8 @@ export const Dashboard: React.FC = () => {
                     {newestTrip.title || "Untitled Trip"}
                     {newestTripRoutes.length > 0 && (
                       <span className="ml-2 text-xs">
-                        ({newestTripRoutes.length} route{newestTripRoutes.length > 1 ? "s" : ""})
+                        ({newestTripRoutes.length} route
+                        {newestTripRoutes.length > 1 ? "s" : ""})
                       </span>
                     )}
                   </p>
@@ -463,17 +464,12 @@ export const Dashboard: React.FC = () => {
                 {newestTripRoutes.slice(0, 3).map((route, idx) => (
                   <Link
                     key={route.id || idx}
-                    href={
-                      newestTrip.id
-                        ? `/trips/${newestTrip.id}`
-                        : "#"
-                    }
+                    href={newestTrip.id ? `/trips/${newestTrip.id}` : "#"}
                     className="border border-gray-200 rounded-lg p-4 hover:border-blue-300 transition-colors bg-gray-50/50"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <h3 className="font-semibold text-gray-800 line-clamp-1">
-                        {route.title ||
-                          `Route ${(route.index ?? 0) + 1}`}
+                        {route.title || `Route ${(route.index ?? 0) + 1}`}
                       </h3>
                       <span className="text-xs px-2 py-1 rounded bg-indigo-100 text-indigo-700">
                         #{route.index !== undefined ? route.index + 1 : idx + 1}
@@ -496,7 +492,8 @@ export const Dashboard: React.FC = () => {
                 ))}
                 {newestTripRoutes.length > 3 && (
                   <p className="text-sm text-gray-500 text-center pt-2">
-                    +{newestTripRoutes.length - 3} more route{newestTripRoutes.length - 3 > 1 ? "s" : ""}
+                    +{newestTripRoutes.length - 3} more route
+                    {newestTripRoutes.length - 3 > 1 ? "s" : ""}
                   </p>
                 )}
               </div>
@@ -506,12 +503,12 @@ export const Dashboard: React.FC = () => {
                 <p className="text-gray-500 mb-4">
                   No routes found. Create a route to get started!
                 </p>
-                <button
-                  onClick={() => setShowCreateRoute(true)}
-                  className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium"
+                <Link
+                  href="/trips"
+                  className="inline-block px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm font-medium"
                 >
                   Plan Your First Route
-                </button>
+                </Link>
               </div>
             )}
           </div>
@@ -534,14 +531,14 @@ export const Dashboard: React.FC = () => {
                 label="Go to Discussions"
                 color="text-blue-500"
                 bg="bg-blue-500/10"
-                link="/posts"
+                link="/forum"
               />
               <QuickAssessItem
                 icon={NotebookPen}
                 label="Go to Diaries"
                 color="text-orange-500"
                 bg="bg-orange-500/10"
-                link="/diary"
+                link="/diaries"
               />
               <QuickAssessItem
                 icon={BarChart3}
