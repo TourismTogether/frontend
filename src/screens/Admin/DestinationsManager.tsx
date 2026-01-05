@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import dynamic from "next/dynamic";
 import {
   Plus,
   Pencil,
@@ -15,6 +16,12 @@ import {
   Image as ImageIcon,
 } from "lucide-react";
 
+// Dynamically import LocationPicker to avoid SSR issues
+const LocationPicker = dynamic(
+  () => import("../../components/Map/LocationPicker").then((mod) => mod.LocationPicker),
+  { ssr: false }
+);
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 interface Destination {
@@ -22,6 +29,7 @@ interface Destination {
   name: string;
   country: string;
   region_name: string;
+  description?: string;
   latitude: number;
   longitude: number;
   category: string;
@@ -57,6 +65,7 @@ export const DestinationsManager: React.FC = () => {
     name: "",
     country: "",
     region_name: "",
+    description: "",
     latitude: 0,
     longitude: 0,
     category: "",
@@ -91,8 +100,9 @@ export const DestinationsManager: React.FC = () => {
       name: "",
       country: "",
       region_name: "",
-      latitude: 0,
-      longitude: 0,
+      description: "",
+      latitude: 10.762880383009653, // Default to Ho Chi Minh City
+      longitude: 106.6824797006774,
       category: "",
       best_season: "",
       images: [],
@@ -106,8 +116,9 @@ export const DestinationsManager: React.FC = () => {
       name: destination.name,
       country: destination.country || "",
       region_name: destination.region_name || "",
-      latitude: destination.latitude || 0,
-      longitude: destination.longitude || 0,
+      description: destination.description || "",
+      latitude: destination.latitude || 10.762880383009653,
+      longitude: destination.longitude || 106.6824797006774,
       category: destination.category || "",
       best_season: destination.best_season || "",
       images: destination.images || [],
@@ -135,27 +146,101 @@ export const DestinationsManager: React.FC = () => {
     e.preventDefault();
 
     try {
+      let regionId: string | null = null;
+
+      // If region_name is provided, find or create region
+      if (formData.region_name) {
+        try {
+          // First, try to find existing region by address
+          const regionsRes = await fetch(`${API_URL}/regions`, {
+            credentials: "include",
+          });
+          const regionsResult = await regionsRes.json();
+          
+          if (regionsResult.status === 200 && regionsResult.data) {
+            const existingRegion = regionsResult.data.find(
+              (r: any) => r.address === formData.region_name
+            );
+            
+            if (existingRegion) {
+              regionId = existingRegion.id;
+            } else {
+              // Create new region if not found
+              const createRegionRes = await fetch(`${API_URL}/regions`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                  address: formData.region_name,
+                  created_at: new Date().toISOString(),
+                  updated_at: new Date().toISOString(),
+                }),
+              });
+              const createRegionResult = await createRegionRes.json();
+              
+              if (createRegionResult.status === 200 && createRegionResult.data) {
+                regionId = createRegionResult.data.id;
+              }
+            }
+          }
+        } catch (err) {
+          alert("Failed to process region. Please try again.");
+          return;
+        }
+      }
+
+      // Prepare destination data
+      const destinationData: any = {
+        name: formData.name,
+        country: formData.country || "",
+        description: formData.description || "",
+        latitude: formData.latitude,
+        longitude: formData.longitude,
+        category: formData.category || "",
+        best_season: formData.best_season || "",
+        images: formData.images || [],
+        rating: 0,
+      };
+
+      // Add region_id if available
+      if (regionId) {
+        destinationData.region_id = regionId;
+      }
+
+      let response: Response;
       if (editingDestination) {
         // Update
-        await fetch(`${API_URL}/destinations/${editingDestination.id}`, {
+        response = await fetch(`${API_URL}/destinations/${editingDestination.id}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify(formData),
+          body: JSON.stringify(destinationData),
         });
       } else {
-        // Create
-        await fetch(`${API_URL}/destinations`, {
+        // Create - region_id is required
+        if (!regionId) {
+          alert("Region is required. Please enter a region name.");
+          return;
+        }
+        
+        response = await fetch(`${API_URL}/destinations`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify(formData),
+          body: JSON.stringify(destinationData),
         });
       }
-      setShowModal(false);
-      fetchDestinations();
-    } catch {
-      // Handle error silently
+
+      const result = await response.json();
+
+      if (result.status === 200) {
+        setShowModal(false);
+        fetchDestinations();
+      } else {
+        alert(result.message || "Failed to save destination. Please try again.");
+      }
+    } catch (err) {
+      alert("An error occurred. Please try again.");
     }
   };
 
@@ -296,7 +381,7 @@ export const DestinationsManager: React.FC = () => {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-lg my-8">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl my-8">
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="text-lg font-semibold">
                 {editingDestination
@@ -358,6 +443,43 @@ export const DestinationsManager: React.FC = () => {
                 </div>
               </div>
 
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Mô tả
+                </label>
+                <textarea
+                  value={formData.description}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  placeholder="Nhập mô tả về điểm đến..."
+                />
+              </div>
+
+              {/* Map Picker */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Chọn vị trí trên bản đồ (Click để chọn tọa độ)
+                </label>
+                {typeof window !== "undefined" && (
+                  <LocationPicker
+                    initialLat={formData.latitude || 10.762880383009653}
+                    initialLng={formData.longitude || 106.6824797006774}
+                    onLocationSelect={(lat, lng) => {
+                      setFormData({
+                        ...formData,
+                        latitude: lat,
+                        longitude: lng,
+                      });
+                    }}
+                    height="300px"
+                  />
+                )}
+              </div>
+
+              {/* Manual Coordinate Input */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -367,12 +489,13 @@ export const DestinationsManager: React.FC = () => {
                     type="number"
                     step="any"
                     value={formData.latitude}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const lat = parseFloat(e.target.value) || 0;
                       setFormData({
                         ...formData,
-                        latitude: parseFloat(e.target.value) || 0,
-                      })
-                    }
+                        latitude: lat,
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -384,12 +507,13 @@ export const DestinationsManager: React.FC = () => {
                     type="number"
                     step="any"
                     value={formData.longitude}
-                    onChange={(e) =>
+                    onChange={(e) => {
+                      const lng = parseFloat(e.target.value) || 0;
                       setFormData({
                         ...formData,
-                        longitude: parseFloat(e.target.value) || 0,
-                      })
-                    }
+                        longitude: lng,
+                      });
+                    }}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>

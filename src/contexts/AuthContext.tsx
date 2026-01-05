@@ -398,6 +398,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setUser(result.data.user);
         setAccount(result.data.account ?? null);
 
+        // Check if user is admin
+        try {
+          const adminRes = await fetch(`${beApi}/admins/${result.data.user.id}`, {
+            credentials: "include",
+          });
+          if (adminRes.ok) {
+            const adminResult = await adminRes.json();
+            setIsAdmin(adminResult.status === 200 && adminResult.data !== null);
+          } else {
+            setIsAdmin(false);
+          }
+        } catch {
+          setIsAdmin(false);
+        }
+
         // Get user location
         let userLat = DEFAULT_LATITUDE;
         let userLng = DEFAULT_LONGITUDE;

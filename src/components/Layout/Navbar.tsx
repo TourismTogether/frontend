@@ -17,6 +17,7 @@ import {
   Menu,
   X,
   Cloud,
+  Shield,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { EmergencyModal } from "../Emergency/EmergencyModal";
@@ -24,7 +25,7 @@ import { SOSNotification } from "../Emergency/SOSNotification";
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
-  const { user, profile, account, signOut } = useAuth(); // Lấy user, profile, account, signOut từ useAuth
+  const { user, profile, account, signOut, isAdmin } = useAuth(); // Lấy user, profile, account, signOut, isAdmin từ useAuth
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State cho Mobile Menu
   const [showEmergency, setShowEmergency] = useState(false); // State cho Emergency Modal
   const [isSupporter, setIsSupporter] = useState(false); // State cho Supporter check
@@ -62,6 +63,8 @@ export const Navbar: React.FC = () => {
     { path: "/destinations", icon: BookOpen, label: "Destinations" },
     { path: "/forum", icon: MessageCircle, label: "Forum" },
     { path: "/diaries", icon: BookOpen, label: "Diaries" }, // Giữ lại từ phiên bản 2
+    // Admin Manager - chỉ hiển thị khi user là admin
+    ...(isAdmin ? [{ path: "/admin", icon: Shield, label: "Admin Manager" }] : []),
   ];
 
   const handleSignOut = () => {
