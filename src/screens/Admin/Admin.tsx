@@ -1,38 +1,38 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { 
-  Shield, 
-  Users, 
-  MapPin, 
+import React, { useState } from "react";
+import {
+  Shield,
+  Users,
+  MapPin,
   ArrowLeft,
-  LayoutDashboard
-} from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { SupportTeamManager } from './SupportTeamManager';
-import { DestinationsManager } from './DestinationsManager';
+  LayoutDashboard,
+} from "lucide-react";
+import { useRouter } from "next/navigation";
+import { SupportTeamManager } from "./SupportTeamManager";
+import { DestinationsManager } from "./DestinationsManager";
 
-type TabType = 'overview' | 'supporters' | 'destinations';
+type TabType = "overview" | "supporters" | "destinations";
 
 export const Admin: React.FC = () => {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<TabType>('overview');
+  const [activeTab, setActiveTab] = useState<TabType>("overview");
 
   const tabs = [
-    { id: 'overview' as TabType, label: 'Tổng quan', icon: LayoutDashboard },
-    { id: 'supporters' as TabType, label: 'Support Team', icon: Users },
-    { id: 'destinations' as TabType, label: 'Destinations', icon: MapPin },
+    { id: "overview" as TabType, label: "Tổng quan", icon: LayoutDashboard },
+    { id: "supporters" as TabType, label: "Support Team", icon: Users },
+    { id: "destinations" as TabType, label: "Destinations", icon: MapPin },
   ];
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+      <div className="bg-linear-to-r from-indigo-600 to-purple-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
-                onClick={() => router.push('/dashboard')}
+                onClick={() => router.push("/dashboard")}
                 className="p-2 hover:bg-white/20 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -59,8 +59,8 @@ export const Admin: React.FC = () => {
                 onClick={() => setActiveTab(tab.id)}
                 className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors ${
                   activeTab === tab.id
-                    ? 'bg-white text-indigo-600 rounded-t-lg'
-                    : 'text-white/80 hover:text-white hover:bg-white/10'
+                    ? "bg-white text-indigo-600 rounded-t-lg"
+                    : "text-white/80 hover:text-white hover:bg-white/10"
                 }`}
               >
                 <tab.icon className="w-4 h-4" />
@@ -73,9 +73,9 @@ export const Admin: React.FC = () => {
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {activeTab === 'overview' && <OverviewTab />}
-        {activeTab === 'supporters' && <SupportTeamManager />}
-        {activeTab === 'destinations' && <DestinationsManager />}
+        {activeTab === "overview" && <OverviewTab />}
+        {activeTab === "supporters" && <SupportTeamManager />}
+        {activeTab === "destinations" && <DestinationsManager />}
       </div>
     </div>
   );
@@ -131,4 +131,3 @@ const OverviewTab: React.FC = () => {
     </div>
   );
 };
-

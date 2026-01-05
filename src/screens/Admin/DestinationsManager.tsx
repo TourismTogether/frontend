@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Plus,
   Pencil,
@@ -12,10 +12,10 @@ import {
   Save,
   Search,
   RefreshCw,
-  Image as ImageIcon
-} from 'lucide-react';
+  Image as ImageIcon,
+} from "lucide-react";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 interface Destination {
   id: string;
@@ -32,41 +32,36 @@ interface Destination {
 }
 
 const CATEGORIES = [
-  'Beach',
-  'Mountain',
-  'City',
-  'Historical',
-  'Nature',
-  'Adventure',
-  'Cultural',
-  'Island',
-  'Desert',
-  'Other'
+  "Beach",
+  "Mountain",
+  "City",
+  "Historical",
+  "Nature",
+  "Adventure",
+  "Cultural",
+  "Island",
+  "Desert",
+  "Other",
 ];
 
-const SEASONS = [
-  'Spring',
-  'Summer',
-  'Autumn',
-  'Winter',
-  'Year-round'
-];
+const SEASONS = ["Spring", "Summer", "Autumn", "Winter", "Year-round"];
 
 export const DestinationsManager: React.FC = () => {
   const [destinations, setDestinations] = useState<Destination[]>([]);
   const [loading, setLoading] = useState(true);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [editingDestination, setEditingDestination] = useState<Destination | null>(null);
+  const [editingDestination, setEditingDestination] =
+    useState<Destination | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    country: '',
-    region_name: '',
+    name: "",
+    country: "",
+    region_name: "",
     latitude: 0,
     longitude: 0,
-    category: '',
-    best_season: '',
-    images: [] as string[]
+    category: "",
+    best_season: "",
+    images: [] as string[],
   });
 
   useEffect(() => {
@@ -77,7 +72,7 @@ export const DestinationsManager: React.FC = () => {
     try {
       setLoading(true);
       const res = await fetch(`${API_URL}/destinations`, {
-        credentials: 'include'
+        credentials: "include",
       });
       const result = await res.json();
       if (result.status === 200) {
@@ -93,14 +88,14 @@ export const DestinationsManager: React.FC = () => {
   const handleCreate = () => {
     setEditingDestination(null);
     setFormData({
-      name: '',
-      country: '',
-      region_name: '',
+      name: "",
+      country: "",
+      region_name: "",
       latitude: 0,
       longitude: 0,
-      category: '',
-      best_season: '',
-      images: []
+      category: "",
+      best_season: "",
+      images: [],
     });
     setShowModal(true);
   };
@@ -109,24 +104,24 @@ export const DestinationsManager: React.FC = () => {
     setEditingDestination(destination);
     setFormData({
       name: destination.name,
-      country: destination.country || '',
-      region_name: destination.region_name || '',
+      country: destination.country || "",
+      region_name: destination.region_name || "",
       latitude: destination.latitude || 0,
       longitude: destination.longitude || 0,
-      category: destination.category || '',
-      best_season: destination.best_season || '',
-      images: destination.images || []
+      category: destination.category || "",
+      best_season: destination.best_season || "",
+      images: destination.images || [],
     });
     setShowModal(true);
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Bạn có chắc muốn xóa destination này?')) return;
+    if (!confirm("Bạn có chắc muốn xóa destination này?")) return;
 
     try {
       const res = await fetch(`${API_URL}/destinations/${id}`, {
-        method: 'DELETE',
-        credentials: 'include'
+        method: "DELETE",
+        credentials: "include",
       });
       if (res.ok) {
         fetchDestinations();
@@ -138,23 +133,23 @@ export const DestinationsManager: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     try {
       if (editingDestination) {
         // Update
         await fetch(`${API_URL}/destinations/${editingDestination.id}`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(formData)
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(formData),
         });
       } else {
         // Create
         await fetch(`${API_URL}/destinations`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify(formData)
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(formData),
         });
       }
       setShowModal(false);
@@ -164,10 +159,11 @@ export const DestinationsManager: React.FC = () => {
     }
   };
 
-  const filteredDestinations = destinations.filter(d => 
-    d.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    d.category?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredDestinations = destinations.filter(
+    (d) =>
+      d.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      d.category?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   if (loading) {
@@ -228,7 +224,7 @@ export const DestinationsManager: React.FC = () => {
               className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
             >
               {/* Image */}
-              <div className="h-40 bg-gradient-to-br from-green-400 to-blue-500 flex items-center justify-center">
+              <div className="h-40 bg-linear-to-br from-green-400 to-blue-500 flex items-center justify-center">
                 {destination.images?.[0] ? (
                   <img
                     src={destination.images[0]}
@@ -244,9 +240,13 @@ export const DestinationsManager: React.FC = () => {
               <div className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h3 className="font-semibold text-gray-900">{destination.name}</h3>
+                    <h3 className="font-semibold text-gray-900">
+                      {destination.name}
+                    </h3>
                     <p className="text-sm text-gray-500">
-                      {destination.country} {destination.region_name && `• ${destination.region_name}`}
+                      {destination.country}{" "}
+                      {destination.region_name &&
+                        `• ${destination.region_name}`}
                     </p>
                   </div>
                   {destination.category && (
@@ -259,13 +259,17 @@ export const DestinationsManager: React.FC = () => {
                 <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
                   <div className="flex items-center">
                     <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
-                    <span>{destination.average_rating?.toFixed(1) || '0.0'}</span>
+                    <span>
+                      {destination.average_rating?.toFixed(1) || "0.0"}
+                    </span>
                     <span className="text-gray-400 ml-1">
                       ({destination.total_reviews || 0} reviews)
                     </span>
                   </div>
                   {destination.best_season && (
-                    <span className="text-gray-400">{destination.best_season}</span>
+                    <span className="text-gray-400">
+                      {destination.best_season}
+                    </span>
                   )}
                 </div>
 
@@ -295,7 +299,9 @@ export const DestinationsManager: React.FC = () => {
           <div className="bg-white rounded-xl shadow-xl w-full max-w-lg my-8">
             <div className="flex items-center justify-between p-4 border-b">
               <h3 className="text-lg font-semibold">
-                {editingDestination ? 'Chỉnh sửa Destination' : 'Thêm Destination mới'}
+                {editingDestination
+                  ? "Chỉnh sửa Destination"
+                  : "Thêm Destination mới"}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
@@ -304,7 +310,10 @@ export const DestinationsManager: React.FC = () => {
                 <X className="w-5 h-5" />
               </button>
             </div>
-            <form onSubmit={handleSubmit} className="p-4 space-y-4 max-h-[70vh] overflow-y-auto">
+            <form
+              onSubmit={handleSubmit}
+              className="p-4 space-y-4 max-h-[70vh] overflow-y-auto"
+            >
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Tên điểm đến *
@@ -312,7 +321,9 @@ export const DestinationsManager: React.FC = () => {
                 <input
                   type="text"
                   value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   required
                 />
@@ -326,7 +337,9 @@ export const DestinationsManager: React.FC = () => {
                   <input
                     type="text"
                     value={formData.country}
-                    onChange={(e) => setFormData({ ...formData, country: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, country: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -337,7 +350,9 @@ export const DestinationsManager: React.FC = () => {
                   <input
                     type="text"
                     value={formData.region_name}
-                    onChange={(e) => setFormData({ ...formData, region_name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, region_name: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -352,7 +367,12 @@ export const DestinationsManager: React.FC = () => {
                     type="number"
                     step="any"
                     value={formData.latitude}
-                    onChange={(e) => setFormData({ ...formData, latitude: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        latitude: parseFloat(e.target.value) || 0,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -364,7 +384,12 @@ export const DestinationsManager: React.FC = () => {
                     type="number"
                     step="any"
                     value={formData.longitude}
-                    onChange={(e) => setFormData({ ...formData, longitude: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        longitude: parseFloat(e.target.value) || 0,
+                      })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -377,12 +402,16 @@ export const DestinationsManager: React.FC = () => {
                   </label>
                   <select
                     value={formData.category}
-                    onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   >
                     <option value="">-- Chọn danh mục --</option>
                     {CATEGORIES.map((cat) => (
-                      <option key={cat} value={cat}>{cat}</option>
+                      <option key={cat} value={cat}>
+                        {cat}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -392,12 +421,16 @@ export const DestinationsManager: React.FC = () => {
                   </label>
                   <select
                     value={formData.best_season}
-                    onChange={(e) => setFormData({ ...formData, best_season: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, best_season: e.target.value })
+                    }
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   >
                     <option value="">-- Chọn mùa --</option>
                     {SEASONS.map((season) => (
-                      <option key={season} value={season}>{season}</option>
+                      <option key={season} value={season}>
+                        {season}
+                      </option>
                     ))}
                   </select>
                 </div>
@@ -411,11 +444,16 @@ export const DestinationsManager: React.FC = () => {
                   <ImageIcon className="w-5 h-5 text-gray-400" />
                   <input
                     type="text"
-                    value={formData.images.join(', ')}
-                    onChange={(e) => setFormData({ 
-                      ...formData, 
-                      images: e.target.value.split(',').map(s => s.trim()).filter(Boolean)
-                    })}
+                    value={formData.images.join(", ")}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        images: e.target.value
+                          .split(",")
+                          .map((s) => s.trim())
+                          .filter(Boolean),
+                      })
+                    }
                     placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
                     className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
@@ -435,7 +473,7 @@ export const DestinationsManager: React.FC = () => {
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
                 >
                   <Save className="w-4 h-4" />
-                  {editingDestination ? 'Cập nhật' : 'Thêm mới'}
+                  {editingDestination ? "Cập nhật" : "Thêm mới"}
                 </button>
               </div>
             </form>
@@ -445,4 +483,3 @@ export const DestinationsManager: React.FC = () => {
     </div>
   );
 };
-
