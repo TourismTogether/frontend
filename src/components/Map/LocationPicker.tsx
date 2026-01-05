@@ -2,16 +2,18 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
 import { MapPin } from 'lucide-react';
 
-// Fix for default marker icon in Next.js
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
+// Fix for default marker icon in Next.js (only on client-side)
+if (typeof window !== 'undefined') {
+  const L = require('leaflet');
+  delete (L.Icon.Default.prototype as any)._getIconUrl;
+  L.Icon.Default.mergeOptions({
+    iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+    iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+    shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+  });
+}
 
 interface LocationPickerProps {
   onLocationSelect: (lat: number, lng: number) => void;
@@ -83,6 +85,10 @@ export const LocationPicker: React.FC<LocationPickerProps> = ({
 
   // Custom marker icon
   const createCustomIcon = (color: string = '#3b82f6') => {
+    if (typeof window === 'undefined') {
+      return null;
+    }
+    const L = require('leaflet');
     return L.divIcon({
       className: 'custom-marker',
       html: `<div style="background-color: ${color}; width: 30px; height: 30px; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.3);"></div>`,

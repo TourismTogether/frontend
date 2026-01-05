@@ -37,23 +37,30 @@ const Popup = dynamic(
   { ssr: false }
 );
 
-import L from "leaflet";
-
-// Fix for default marker icon in Next.js
-if (typeof window !== "undefined") {
-  delete (L.Icon.Default.prototype as any)._getIconUrl;
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
-    iconUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
-    shadowUrl:
-      "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
-  });
-}
-
 // Custom icons for different SOS statuses
+// This function will only be called on client-side since MapContainer has ssr: false
 const createCustomIcon = (color: string) => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  
+  // Lazy load Leaflet only when needed
+  const L = require("leaflet");
+  
+  // Fix for default marker icon in Next.js (only needed once)
+  if (!(L.Icon.Default.prototype as any)._iconUrlFixed) {
+    delete (L.Icon.Default.prototype as any)._getIconUrl;
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
+      iconUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png",
+      shadowUrl:
+        "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
+    });
+    (L.Icon.Default.prototype as any)._iconUrlFixed = true;
+  }
+  
   return L.divIcon({
     className: "custom-marker",
     html: `<div style="background-color: ${color}; width: 30px; height: 30px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3); display: flex; align-items: center; justify-content: center;">
@@ -143,6 +150,9 @@ export const SOSManagement: React.FC = () => {
 
   // Prevent body scroll and manage z-index when modal is open
   useEffect(() => {
+    // Only run on client-side
+    if (typeof window === "undefined") return;
+
     if (selectedRequest) {
       // Prevent body scroll
       document.body.style.overflow = "hidden";
@@ -161,6 +171,7 @@ export const SOSManagement: React.FC = () => {
       });
     }
     return () => {
+      if (typeof window === "undefined") return;
       document.body.style.overflow = "";
       const leafletContainers = document.querySelectorAll(".leaflet-container");
       leafletContainers.forEach((container) => {
