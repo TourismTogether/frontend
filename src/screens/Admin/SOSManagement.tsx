@@ -11,6 +11,9 @@ import {
   RefreshCw,
   Filter,
   X,
+  UserPlus,
+  Users,
+  Trash2,
 } from "lucide-react";
 import dynamic from "next/dynamic";
 
@@ -75,12 +78,23 @@ interface SOSRequest {
 
 type SOSStatus = "all" | "pending" | "in_progress" | "completed";
 
+interface Supporter {
+  user_id: string;
+  is_available: boolean;
+  user_full_name?: string;
+  user_phone?: string;
+  user_avatar_url?: string;
+}
+
 export const SOSManagement: React.FC = () => {
   const [sosRequests, setSOSRequests] = useState<SOSRequest[]>([]);
+  const [supporters, setSupporters] = useState<Supporter[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState<SOSRequest | null>(null);
   const [statusFilter, setStatusFilter] = useState<SOSStatus>("all");
   const [processingId, setProcessingId] = useState<string | null>(null);
+  const [selectedSupporterId, setSelectedSupporterId] = useState<string>("");
+  const [assigningSupporter, setAssigningSupporter] = useState<string | null>(null);
 
   const fetchSOSRequests = useCallback(async () => {
     try {
@@ -102,12 +116,58 @@ export const SOSManagement: React.FC = () => {
     }
   }, []);
 
+  const fetchSupporters = useCallback(async () => {
+    try {
+      const res = await fetch(`${API_URL}/supporters/with-user-info`, {
+        credentials: "include",
+      });
+      const result = await res.json();
+
+      if (result.status === 200 && result.data) {
+        setSupporters(result.data);
+      } else {
+        setSupporters([]);
+      }
+    } catch (error) {
+      setSupporters([]);
+    }
+  }, []);
+
   useEffect(() => {
     fetchSOSRequests();
+    fetchSupporters();
     // Polling every 10 seconds for updates
     const interval = setInterval(fetchSOSRequests, 10000);
     return () => clearInterval(interval);
-  }, [fetchSOSRequests]);
+  }, [fetchSOSRequests, fetchSupporters]);
+
+  // Prevent body scroll and manage z-index when modal is open
+  useEffect(() => {
+    if (selectedRequest) {
+      // Prevent body scroll
+      document.body.style.overflow = "hidden";
+      // Lower Leaflet map z-index
+      const leafletContainers = document.querySelectorAll(".leaflet-container");
+      leafletContainers.forEach((container) => {
+        (container as HTMLElement).style.zIndex = "1";
+      });
+    } else {
+      // Restore body scroll
+      document.body.style.overflow = "";
+      // Restore Leaflet map z-index
+      const leafletContainers = document.querySelectorAll(".leaflet-container");
+      leafletContainers.forEach((container) => {
+        (container as HTMLElement).style.zIndex = "";
+      });
+    }
+    return () => {
+      document.body.style.overflow = "";
+      const leafletContainers = document.querySelectorAll(".leaflet-container");
+      leafletContainers.forEach((container) => {
+        (container as HTMLElement).style.zIndex = "";
+      });
+    };
+  }, [selectedRequest]);
 
   const getSOSStatus = (request: SOSRequest): "pending" | "in_progress" | "completed" => {
     if (request.is_safe) {
@@ -181,6 +241,115 @@ export const SOSManagement: React.FC = () => {
     } finally {
       setProcessingId(null);
     }
+  };
+
+  const handleAssignSupporter = async (userId: string, supporterId: string) => {
+    if (!supporterId) {
+      alert("Please select a supporter");
+      return;
+    }
+
+    setAssigningSupporter(userId);
+    try {
+      const request = sosRequests.find((r) => r.user_id === userId);
+      if (!request) {
+        alert("SOS request not found");
+        return;
+      }
+
+      const currentContacts = request.emergency_contacts || [];
+      if (currentContacts.includes(supporterId)) {
+        alert("This supporter is already assigned to this SOS request");
+        return;
+      }
+
+      const updatedContacts = [...currentContacts, supporterId];
+
+      const res = await fetch(`${API_URL}/travellers/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          emergency_contacts: updatedContacts,
+        }),
+      });
+
+      if (res.ok) {
+        // Fetch updated SOS requests
+        const result = await fetch(`${API_URL}/travellers/sos/all`, {
+          credentials: "include",
+        });
+        const fetchResult = await result.json();
+        if (fetchResult.status === 200 && fetchResult.data) {
+          setSOSRequests(fetchResult.data);
+          setSelectedSupporterId("");
+          // Update selectedRequest if it's the one being modified
+          if (selectedRequest?.user_id === userId) {
+            const updatedRequest = fetchResult.data.find((r: SOSRequest) => r.user_id === userId);
+            if (updatedRequest) {
+              setSelectedRequest(updatedRequest);
+            }
+          }
+        }
+      } else {
+        alert("Failed to assign supporter. Please try again.");
+      }
+    } catch (error) {
+      alert("Failed to assign supporter. Please try again.");
+    } finally {
+      setAssigningSupporter(null);
+    }
+  };
+
+  const handleRemoveSupporter = async (userId: string, supporterId: string) => {
+    setAssigningSupporter(userId);
+    try {
+      const request = sosRequests.find((r) => r.user_id === userId);
+      if (!request) {
+        alert("SOS request not found");
+        return;
+      }
+
+      const currentContacts = request.emergency_contacts || [];
+      const updatedContacts = currentContacts.filter((id) => id !== supporterId);
+
+      const res = await fetch(`${API_URL}/travellers/${userId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          emergency_contacts: updatedContacts,
+        }),
+      });
+
+      if (res.ok) {
+        // Fetch updated SOS requests
+        const result = await fetch(`${API_URL}/travellers/sos/all`, {
+          credentials: "include",
+        });
+        const fetchResult = await result.json();
+        if (fetchResult.status === 200 && fetchResult.data) {
+          setSOSRequests(fetchResult.data);
+          // Update selectedRequest if it's the one being modified
+          if (selectedRequest?.user_id === userId) {
+            const updatedRequest = fetchResult.data.find((r: SOSRequest) => r.user_id === userId);
+            if (updatedRequest) {
+              setSelectedRequest(updatedRequest);
+            }
+          }
+        }
+      } else {
+        alert("Failed to remove supporter. Please try again.");
+      }
+    } catch (error) {
+      alert("Failed to remove supporter. Please try again.");
+    } finally {
+      setAssigningSupporter(null);
+    }
+  };
+
+  const getSupporterInfo = (supporterId: string): Supporter | undefined => {
+    return supporters.find((s) => s.user_id === supporterId);
   };
 
   const handleCall = (phone: string) => {
@@ -480,9 +649,22 @@ export const SOSManagement: React.FC = () => {
 
       {/* Selected Request Details Modal */}
       {selectedRequest && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4"
+          style={{ zIndex: 9999 }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setSelectedRequest(null);
+            }
+          }}
+        >
+          <div 
+            className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col relative"
+            style={{ zIndex: 10000 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header - Fixed */}
+            <div className="p-6 border-b border-gray-200 flex-shrink-0">
               <div className="flex items-center justify-between">
                 <h2 className="text-xl font-bold text-gray-900">SOS Request Details</h2>
                 <button
@@ -493,7 +675,8 @@ export const SOSManagement: React.FC = () => {
                 </button>
               </div>
             </div>
-            <div className="p-6 space-y-4">
+            {/* Content - Scrollable */}
+            <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
                 <label className="text-sm font-medium text-gray-700">Traveler Name</label>
                 <p className="text-gray-900">{selectedRequest.user_full_name || "Unknown"}</p>
@@ -522,16 +705,112 @@ export const SOSManagement: React.FC = () => {
                   {selectedRequest.latitude.toFixed(6)}, {selectedRequest.longitude.toFixed(6)}
                 </p>
               </div>
+              {/* Assign Supporter Section */}
+              {!selectedRequest.is_safe && (
+                <div className="pt-4 border-t border-gray-200">
+                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                    Assign Supporter
+                  </label>
+                  <div className="flex gap-2 mb-4">
+                    <select
+                      value={selectedSupporterId}
+                      onChange={(e) => setSelectedSupporterId(e.target.value)}
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      disabled={assigningSupporter === selectedRequest.user_id}
+                    >
+                      <option value="">Select a supporter...</option>
+                      {supporters
+                        .filter(
+                          (s) =>
+                            !selectedRequest.emergency_contacts?.includes(s.user_id)
+                        )
+                        .map((supporter) => (
+                          <option key={supporter.user_id} value={supporter.user_id}>
+                            {supporter.user_full_name || supporter.user_id}
+                            {supporter.user_phone && ` - ${supporter.user_phone}`}
+                          </option>
+                        ))}
+                    </select>
+                    <button
+                      onClick={() =>
+                        handleAssignSupporter(
+                          selectedRequest.user_id,
+                          selectedSupporterId
+                        )
+                      }
+                      disabled={
+                        !selectedSupporterId ||
+                        assigningSupporter === selectedRequest.user_id
+                      }
+                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      Assign
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Assigned Supporters List */}
               {selectedRequest.emergency_contacts &&
                 selectedRequest.emergency_contacts.length > 0 && (
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">
-                      Assigned Supporters
+                  <div className="pt-4 border-t border-gray-200">
+                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                      <Users className="w-4 h-4 inline mr-1" />
+                      Assigned Supporters ({selectedRequest.emergency_contacts.length})
                     </label>
-                    <p className="text-gray-900">
-                      {selectedRequest.emergency_contacts.length} supporter
-                      {selectedRequest.emergency_contacts.length !== 1 ? "s" : ""} assigned
-                    </p>
+                    <div className="space-y-2">
+                      {selectedRequest.emergency_contacts.map((supporterId) => {
+                        const supporter = getSupporterInfo(supporterId);
+                        return (
+                          <div
+                            key={supporterId}
+                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                          >
+                            <div className="flex items-center gap-3">
+                              {supporter?.user_avatar_url ? (
+                                <img
+                                  src={supporter.user_avatar_url}
+                                  alt={supporter.user_full_name || supporterId}
+                                  className="w-8 h-8 rounded-full"
+                                />
+                              ) : (
+                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
+                                  <Users className="w-4 h-4 text-indigo-600" />
+                                </div>
+                              )}
+                              <div>
+                                <p className="text-sm font-medium text-gray-900">
+                                  {supporter?.user_full_name || supporterId}
+                                </p>
+                                {supporter?.user_phone && (
+                                  <p className="text-xs text-gray-500">
+                                    {supporter.user_phone}
+                                  </p>
+                                )}
+                              </div>
+                            </div>
+                            {!selectedRequest.is_safe && (
+                              <button
+                                onClick={() =>
+                                  handleRemoveSupporter(
+                                    selectedRequest.user_id,
+                                    supporterId
+                                  )
+                                }
+                                disabled={
+                                  assigningSupporter === selectedRequest.user_id
+                                }
+                                className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                                title="Remove supporter"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               {!selectedRequest.is_safe && (
