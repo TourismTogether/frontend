@@ -467,3 +467,19 @@ html {
   background: white;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
+
+/* Auth animations */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.5s ease-out;
+}

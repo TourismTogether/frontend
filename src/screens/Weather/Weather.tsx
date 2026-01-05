@@ -18,9 +18,11 @@ import {
   CloudLightning,
   CloudFog,
   ArrowLeft,
+  ChevronDown,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { useAuth } from "../../contexts/AuthContext";
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(
@@ -58,6 +60,79 @@ interface Location {
   lat: number;
   lng: number;
 }
+
+interface City {
+  name: string;
+  lat: number;
+  lng: number;
+}
+
+// Danh sách các tỉnh thành phố ở Việt Nam
+const VIETNAM_CITIES: City[] = [
+  { name: "Hồ Chí Minh", lat: 10.762880383009653, lng: 106.6824797006774 },
+  { name: "Hà Nội", lat: 21.0285, lng: 105.8542 },
+  { name: "Đà Nẵng", lat: 16.0544, lng: 108.2022 },
+  { name: "Hải Phòng", lat: 20.8449, lng: 106.6881 },
+  { name: "Cần Thơ", lat: 10.0452, lng: 105.7469 },
+  { name: "An Giang", lat: 10.5216, lng: 105.1259 },
+  { name: "Bà Rịa - Vũng Tàu", lat: 10.3460, lng: 107.0843 },
+  { name: "Bắc Giang", lat: 21.2731, lng: 106.1946 },
+  { name: "Bắc Kạn", lat: 22.1470, lng: 105.8342 },
+  { name: "Bạc Liêu", lat: 9.2942, lng: 105.7272 },
+  { name: "Bắc Ninh", lat: 21.1861, lng: 106.0763 },
+  { name: "Bến Tre", lat: 10.2415, lng: 106.3759 },
+  { name: "Bình Định", lat: 13.7750, lng: 109.2233 },
+  { name: "Bình Dương", lat: 11.3254, lng: 106.4771 },
+  { name: "Bình Phước", lat: 11.6476, lng: 106.6056 },
+  { name: "Bình Thuận", lat: 10.9287, lng: 108.1021 },
+  { name: "Cà Mau", lat: 9.1776, lng: 105.1527 },
+  { name: "Cao Bằng", lat: 22.6657, lng: 106.2577 },
+  { name: "Đắk Lắk", lat: 12.6662, lng: 108.0500 },
+  { name: "Đắk Nông", lat: 12.0046, lng: 107.6877 },
+  { name: "Điện Biên", lat: 21.4064, lng: 103.0157 },
+  { name: "Đồng Nai", lat: 10.9574, lng: 106.8429 },
+  { name: "Đồng Tháp", lat: 10.4930, lng: 105.6882 },
+  { name: "Gia Lai", lat: 13.9833, lng: 108.0000 },
+  { name: "Hà Giang", lat: 22.8183, lng: 104.9833 },
+  { name: "Hà Nam", lat: 20.5433, lng: 105.9220 },
+  { name: "Hà Tĩnh", lat: 18.3428, lng: 105.9058 },
+  { name: "Hải Dương", lat: 20.9373, lng: 106.3146 },
+  { name: "Hậu Giang", lat: 9.7844, lng: 105.4706 },
+  { name: "Hòa Bình", lat: 20.8133, lng: 105.3383 },
+  { name: "Hưng Yên", lat: 20.6464, lng: 106.0519 },
+  { name: "Khánh Hòa", lat: 12.2388, lng: 109.1967 },
+  { name: "Kiên Giang", lat: 9.9580, lng: 105.1324 },
+  { name: "Kon Tum", lat: 14.3545, lng: 108.0076 },
+  { name: "Lai Châu", lat: 22.3864, lng: 103.4700 },
+  { name: "Lâm Đồng", lat: 11.9404, lng: 108.4583 },
+  { name: "Lạng Sơn", lat: 21.8537, lng: 106.7613 },
+  { name: "Lào Cai", lat: 22.4856, lng: 103.9700 },
+  { name: "Long An", lat: 10.6086, lng: 106.6714 },
+  { name: "Nam Định", lat: 20.4200, lng: 106.1683 },
+  { name: "Nghệ An", lat: 18.6796, lng: 105.6813 },
+  { name: "Ninh Bình", lat: 20.2539, lng: 105.9750 },
+  { name: "Ninh Thuận", lat: 11.5646, lng: 108.9886 },
+  { name: "Phú Thọ", lat: 21.3087, lng: 105.2044 },
+  { name: "Phú Yên", lat: 13.0883, lng: 109.2950 },
+  { name: "Quảng Bình", lat: 17.4687, lng: 106.6227 },
+  { name: "Quảng Nam", lat: 15.8801, lng: 108.3380 },
+  { name: "Quảng Ngãi", lat: 15.1167, lng: 108.8000 },
+  { name: "Quảng Ninh", lat: 21.0064, lng: 107.2925 },
+  { name: "Quảng Trị", lat: 16.7500, lng: 107.2000 },
+  { name: "Sóc Trăng", lat: 9.6025, lng: 105.9739 },
+  { name: "Sơn La", lat: 21.3257, lng: 103.9167 },
+  { name: "Tây Ninh", lat: 11.3131, lng: 106.0963 },
+  { name: "Thái Bình", lat: 20.4461, lng: 106.3369 },
+  { name: "Thái Nguyên", lat: 21.5928, lng: 105.8442 },
+  { name: "Thanh Hóa", lat: 19.8067, lng: 105.7845 },
+  { name: "Thừa Thiên Huế", lat: 16.4637, lng: 107.5909 },
+  { name: "Tiền Giang", lat: 10.3600, lng: 106.3600 },
+  { name: "Trà Vinh", lat: 9.9347, lng: 106.3453 },
+  { name: "Tuyên Quang", lat: 21.8183, lng: 105.2119 },
+  { name: "Vĩnh Long", lat: 10.2537, lng: 105.9750 },
+  { name: "Vĩnh Phúc", lat: 21.3087, lng: 105.5972 },
+  { name: "Yên Bái", lat: 21.7050, lng: 104.8700 },
+];
 
 const getWeatherIcon = (main: string, description: string) => {
   const desc = description.toLowerCase();
@@ -116,31 +191,63 @@ const getWeatherDescription = (
 
 export const Weather: React.FC = () => {
   const router = useRouter();
+  const { profile } = useAuth();
   const [location, setLocation] = useState<Location | null>(null);
   const [weather, setWeather] = useState<WeatherData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [selectedCity, setSelectedCity] = useState<string>("current");
+  const [isLocationFromProfile, setIsLocationFromProfile] = useState(false);
+
+  // Default coordinates (Ho Chi Minh City)
+  const DEFAULT_LAT = 10.762880383009653;
+  const DEFAULT_LNG = 106.6824797006774;
 
   // Get user's current location
   useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        () => {
-          // Fallback to Ho Chi Minh City if geolocation fails
-          setLocation({ lat: 10.7769, lng: 106.7009 });
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    } else {
-      setLocation({ lat: 10.7769, lng: 106.7009 });
-    }
-  }, []);
+    const getUserLocation = async () => {
+      // First, try to get location from profile
+      if (profile?.latitude && profile?.longitude) {
+        const lat = typeof profile.latitude === 'string' ? parseFloat(profile.latitude) : profile.latitude;
+        const lng = typeof profile.longitude === 'string' ? parseFloat(profile.longitude) : profile.longitude;
+        
+        if (!isNaN(lat) && !isNaN(lng)) {
+          setLocation({ lat, lng });
+          setIsLocationFromProfile(true);
+          setSelectedCity("current");
+          return;
+        }
+      }
+
+      // If no profile location, try geolocation API
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+            setIsLocationFromProfile(false);
+            setSelectedCity("current");
+          },
+          () => {
+            // Fallback to default coordinates
+            setLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+            setIsLocationFromProfile(false);
+            setSelectedCity("current");
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        // Geolocation not supported, use default
+        setLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+        setIsLocationFromProfile(false);
+        setSelectedCity("current");
+      }
+    };
+
+    getUserLocation();
+  }, [profile]);
 
   const fetchWeather = useCallback(async () => {
     if (!location) return;
@@ -274,6 +381,51 @@ export const Weather: React.FC = () => {
     );
   }
 
+  const handleCityChange = (cityName: string) => {
+    setSelectedCity(cityName);
+    
+    if (cityName === "current") {
+      // Reset to user's current location
+      if (profile?.latitude && profile?.longitude) {
+        const lat = typeof profile.latitude === 'string' ? parseFloat(profile.latitude) : profile.latitude;
+        const lng = typeof profile.longitude === 'string' ? parseFloat(profile.longitude) : profile.longitude;
+        if (!isNaN(lat) && !isNaN(lng)) {
+          setLocation({ lat, lng });
+          setIsLocationFromProfile(true);
+          return;
+        }
+      }
+      
+      // Try geolocation
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            setLocation({
+              lat: position.coords.latitude,
+              lng: position.coords.longitude,
+            });
+            setIsLocationFromProfile(false);
+          },
+          () => {
+            setLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+            setIsLocationFromProfile(false);
+          },
+          { enableHighAccuracy: true, timeout: 10000 }
+        );
+      } else {
+        setLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
+        setIsLocationFromProfile(false);
+      }
+    } else {
+      // Set location from selected city
+      const city = VIETNAM_CITIES.find(c => c.name === cityName);
+      if (city) {
+        setLocation({ lat: city.lat, lng: city.lng });
+        setIsLocationFromProfile(false);
+      }
+    }
+  };
+
   const weatherDescription = getWeatherDescription(
     weather.main,
     weather.description,
@@ -290,6 +442,31 @@ export const Weather: React.FC = () => {
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
         </button>
+
+        {/* City Selector */}
+        <div className="mb-6 bg-white rounded-xl shadow-lg p-4">
+          <label className="block text-sm font-semibold text-gray-700 mb-2">
+            <MapPin className="w-4 h-4 inline mr-1" />
+            Chọn địa điểm xem thời tiết
+          </label>
+          <div className="relative">
+            <select
+              value={selectedCity}
+              onChange={(e) => handleCityChange(e.target.value)}
+              className="w-full px-4 py-3 pr-10 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none cursor-pointer transition-all"
+            >
+              <option value="current">
+                📍 Vị trí hiện tại {isLocationFromProfile ? "(từ hồ sơ)" : ""}
+              </option>
+              {VIETNAM_CITIES.map((city) => (
+                <option key={city.name} value={city.name}>
+                  {city.name}
+                </option>
+              ))}
+            </select>
+            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+          </div>
+        </div>
 
         {/* Main Weather Card */}
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
