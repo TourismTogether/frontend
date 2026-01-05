@@ -62,7 +62,6 @@ export const Navbar: React.FC = () => {
     { path: "/destinations", icon: BookOpen, label: "Destinations" },
     { path: "/forum", icon: MessageCircle, label: "Forum" },
     { path: "/diaries", icon: BookOpen, label: "Diaries" }, // Giữ lại từ phiên bản 2
-    { path: "/weather", icon: Cloud, label: "Weather" },
   ];
 
   const handleSignOut = () => {
@@ -85,11 +84,13 @@ export const Navbar: React.FC = () => {
         href={link.path}
         // Đóng menu khi nhấp vào liên kết trên mobile
         onClick={() => isMobile && setIsMenuOpen(false)}
-        className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors duration-200 ${isMobile ? "w-full text-lg justify-start" : "hover:bg-muted"
-          } ${isActive(link.path)
+        className={`flex items-center space-x-1 px-3 py-2 rounded-md transition-colors duration-200 ${
+          isMobile ? "w-full text-lg justify-start" : "hover:bg-muted"
+        } ${
+          isActive(link.path)
             ? "bg-traveller/10 text-traveller font-semibold"
             : "text-muted-foreground"
-          } hover:bg-muted`}
+        } hover:bg-muted`}
       >
         <Icon className="w-4 h-4" />
         <span className="text-sm font-medium">{link.label}</span>
@@ -108,7 +109,7 @@ export const Navbar: React.FC = () => {
           >
             <Mountain className="w-8 h-8 text-traveller" />
             <span className="text-xl font-bold text-foreground">
-              AdventureMate
+              Tourism Together
             </span>
           </Link>
 
@@ -145,7 +146,7 @@ export const Navbar: React.FC = () => {
             {/* Nút Khẩn cấp/SOS (Thêm từ phiên bản 1) */}
             <button
               onClick={() => setShowEmergency(true)}
-              className="relative flex items-center space-x-1.5 px-3 py-2 bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all shadow-md hover:shadow-lg group"
+              className="relative flex items-center space-x-1.5 px-3 py-2 bg-linear-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white rounded-lg transition-all shadow-md hover:shadow-lg group"
               title="Emergency SOS"
             >
               <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-ping"></div>
@@ -158,7 +159,12 @@ export const Navbar: React.FC = () => {
                 {/* Avatar / Hồ sơ */}
                 <Link
                   href="/profile"
-                  title={`Xem hồ sơ của ${user.full_name || profile?.username || account?.username || "User"}`}
+                  title={`Xem hồ sơ của ${
+                    user.full_name ||
+                    profile?.username ||
+                    account?.username ||
+                    "User"
+                  }`}
                   className="w-8 h-8 bg-traveller/20 rounded-full flex items-center justify-center cursor-pointer transition-transform hover:scale-105"
                 >
                   {user.avatar_url ? (
@@ -169,7 +175,14 @@ export const Navbar: React.FC = () => {
                     />
                   ) : (
                     <span className="text-sm font-bold text-traveller">
-                      {(user.full_name || profile?.username || account?.username || "U").charAt(0).toUpperCase()}
+                      {(
+                        user.full_name ||
+                        profile?.username ||
+                        account?.username ||
+                        "U"
+                      )
+                        .charAt(0)
+                        .toUpperCase()}
                     </span>
                   )}
                 </Link>
@@ -203,10 +216,11 @@ export const Navbar: React.FC = () => {
 
       {/* Mobile Menu (Sử dụng logic từ phiên bản 2) */}
       <div
-        className={`md:hidden absolute top-16 left-0 w-full bg-card shadow-lg transition-all duration-300 ease-in-out transform ${isMenuOpen
+        className={`md:hidden absolute top-16 left-0 w-full bg-card shadow-lg transition-all duration-300 ease-in-out transform ${
+          isMenuOpen
             ? "translate-y-0 opacity-100"
             : "-translate-y-4 opacity-0 pointer-events-none"
-          }`}
+        }`}
       >
         <div className="px-4 pt-2 pb-4 space-y-2">
           {navLinks.map((link) => (

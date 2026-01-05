@@ -12,6 +12,9 @@ import {
   Globe,
   Sun,
   MessageSquare,
+  ChevronLeft,
+  ChevronRight,
+  TrendingUp,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import CreateReviewModal from "./CreateReviewModal";
@@ -57,6 +60,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
     averageRating: number;
     totalReviews: number;
   } | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
 
   // Define fetchAssessmentStats before using it in useEffect
   const fetchAssessmentStats = useCallback(async () => {
@@ -177,22 +181,28 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-background">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-destination"></div>
+      <div className="flex justify-center items-center h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">Loading destination...</p>
+        </div>
       </div>
     );
   }
 
   if (!destination) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center p-8 bg-card rounded-xl shadow-lg">
-          <h2 className="text-2xl font-bold text-foreground mb-4">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-gray-200">
+          <h2 className="text-3xl font-bold text-gray-900 mb-4">
             Destination not found
           </h2>
+          <p className="text-gray-600 mb-6">
+            The destination you're looking for doesn't exist.
+          </p>
           <button
             onClick={() => router.push("/destinations")}
-            className="text-destination hover:text-destination/80 font-medium"
+            className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
           >
             Go back to destinations
           </button>
@@ -219,225 +229,245 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
   const totalReviews =
     assessmentStats?.totalReviews || destination.total_reviews || 0;
 
+  const handleShare = async () => {
+    try {
+      const currentUrl = window.location.href;
+
+      // Try native share API first (mobile)
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: destination.name,
+            text: destination.description || destination.name,
+            url: currentUrl,
+          });
+          return;
+        } catch (error) {
+          // User cancelled or share failed, fall through to copy
+        }
+      }
+
+      // Fallback to copy to clipboard
+      await navigator.clipboard.writeText(currentUrl);
+      setIsCopied(true);
+      setTimeout(() => {
+        setIsCopied(false);
+      }, 2000);
+    } catch (error) {
+      console.error("Failed to copy URL:", error);
+      alert("Không thể copy URL. Vui lòng thử lại.");
+    }
+  };
+
+  const getCategoryColor = (category: string) => {
+    const colors: Record<string, string> = {
+      Beach: "#3b82f6",
+      Mountain: "#10b981",
+      City: "#8b5cf6",
+      Nature: "#22c55e",
+      Cultural: "#f59e0b",
+    };
+    return colors[category] || "#6366f1";
+  };
+
+  const categoryColor = getCategoryColor(destination.category || "");
+
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors duration-300">
-      <div className="max-w-6xl mx-auto px-4 py-12">
-        {/* Back button (Design nhỏ gọn hơn) */}
-        <button
-          onClick={() => router.back()}
-          className="flex items-center space-x-2 text-gray-500 hover:text-destination mb-8 transition-all duration-300 font-medium"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span>Back to Destinations</span>
-        </button>
+    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
+        {/* Header */}
+        <div className="mb-6">
+          <button
+            onClick={() => router.back()}
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors font-semibold group"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <span>Back to Destinations</span>
+          </button>
+        </div>
 
-        {/* --- GRID CONTAINER: Ảnh và Thông tin cơ bản --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-10">
-          {/* Cột 1 & 2: Image Gallery (Tăng kích thước ảnh) */}
-          <div className="lg:col-span-2 bg-card rounded-2xl overflow-hidden shadow-2xl relative">
-            <div className="h-[400px] md:h-[550px] relative bg-gray-200 dark:bg-gray-800">
-              {hasImages ? (
-                <>
-                  <img
-                    src={images[currentImageIndex].url}
-                    alt={images[currentImageIndex].caption || destination.name}
-                    className="w-full h-full object-cover transition-opacity duration-500"
-                  />
-
-                  {/* Indicators and Navigation (Phong cách tối giản) */}
-                  {images.length > 1 && (
-                    <>
-                      {/* Navigation buttons */}
-                      <button
-                        onClick={() =>
-                          setCurrentImageIndex((prev) =>
-                            prev > 0 ? prev - 1 : images.length - 1
-                          )
-                        }
-                        className="absolute left-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-3 rounded-full hover:bg-black/60 transition-all duration-200 focus:outline-none hidden md:block"
-                        aria-label="Previous image"
-                      >
-                        <ArrowLeft className="w-5 h-5" />
-                      </button>
-                      <button
-                        onClick={() =>
-                          setCurrentImageIndex((prev) =>
-                            prev < images.length - 1 ? prev + 1 : 0
-                          )
-                        }
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 bg-black/30 text-white p-3 rounded-full hover:bg-black/60 transition-all duration-200 focus:outline-none hidden md:block"
-                        aria-label="Next image"
-                      >
-                        <ArrowLeft className="w-5 h-5 rotate-180" />
-                      </button>
-                      {/* Indicators */}
-                      <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2 p-2 bg-black/10 backdrop-blur-sm rounded-full">
-                        {images.map(
-                          (
-                            _: { url: string; caption: string },
-                            index: number
-                          ) => (
+        {/* Unified Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+          {/* Left Column */}
+          <div className="lg:col-span-2 space-y-8">
+            {/* Image Gallery */}
+            <div className="bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100 relative group">
+              <div className="h-[450px] md:h-[600px] relative bg-linear-to-br from-gray-200 to-gray-300">
+                {hasImages ? (
+                  <>
+                    <img
+                      src={images[currentImageIndex].url}
+                      alt={
+                        images[currentImageIndex].caption || destination.name
+                      }
+                      className="w-full h-full object-cover transition-all duration-700 group-hover:scale-105"
+                    />
+                    {images.length > 1 && (
+                      <>
+                        <button
+                          onClick={() =>
+                            setCurrentImageIndex((prev) =>
+                              prev > 0 ? prev - 1 : images.length - 1
+                            )
+                          }
+                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900 p-3 rounded-2xl shadow-xl transition-all hover:scale-110 hidden md:flex"
+                          aria-label="Previous image"
+                        >
+                          <ChevronLeft className="w-6 h-6" />
+                        </button>
+                        <button
+                          onClick={() =>
+                            setCurrentImageIndex((prev) =>
+                              prev < images.length - 1 ? prev + 1 : 0
+                            )
+                          }
+                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900 p-3 rounded-2xl shadow-xl transition-all hover:scale-110 hidden md:flex"
+                          aria-label="Next image"
+                        >
+                          <ChevronRight className="w-6 h-6" />
+                        </button>
+                        <div className="absolute top-5 right-5 bg-black/55 backdrop-blur-sm text-white px-4 py-2 rounded-2xl text-sm font-semibold">
+                          {currentImageIndex + 1} / {images.length}
+                        </div>
+                        <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex space-x-2 p-2 bg-black/30 backdrop-blur-md rounded-2xl border border-white/20">
+                          {images.map((_: any, index: number) => (
                             <button
                               key={index}
                               onClick={() => setCurrentImageIndex(index)}
-                              className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                              className={`rounded-full transition-all duration-300 ${
                                 index === currentImageIndex
-                                  ? "bg-white w-6" // Màu trắng nổi bật
-                                  : "bg-gray-400/70"
+                                  ? "bg-white w-8 h-2.5"
+                                  : "bg-white/50 w-2.5 h-2.5 hover:bg-white/70"
                               }`}
                               aria-label={`View image ${index + 1}`}
                             />
-                          )
-                        )}
-                      </div>
-                    </>
-                  )}
-                </>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center text-muted-foreground/60">
-                  <ImageIcon className="w-20 h-20 mb-3" />
-                  <p>No featured images available</p>
-                </div>
-              )}
+                          ))}
+                        </div>
+                      </>
+                    )}
+                  </>
+                ) : (
+                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-linear-to-br from-gray-100 to-gray-200">
+                    <ImageIcon className="w-24 h-24 mb-4 opacity-50" />
+                    <p className="text-lg font-medium">No images available</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Description */}
+            <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-gray-100">
+              <div className="flex items-center gap-4 mb-8">
+                <div className="w-1.5 h-10 bg-linear-to-b from-blue-600 to-indigo-600 rounded-full"></div>
+                <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+                  About {destination.name}
+                </h2>
+              </div>
+              <div className="prose max-w-none">
+                <p className="text-gray-700 leading-relaxed whitespace-pre-line text-lg font-medium">
+                  {destination.description ||
+                    "No description available. Please check back later or contribute to expand this section."}
+                </p>
+              </div>
             </div>
           </div>
 
-          {/* Cột 3: Header và Rating (Sidebar) */}
-          <div className="lg:col-span-1 flex flex-col space-y-6">
-            {/* Tiêu đề & Rating */}
-            <div className="bg-card p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700/50">
-              <div className="flex items-center space-x-3 mb-3">
+          {/* Right Column */}
+          <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-8">
+            {/* Title & Rating */}
+            <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+              <div className="flex flex-wrap gap-2 mb-6">
                 {destination.category && (
-                  <span className="px-3 py-1 bg-destination/10 text-destination rounded-full text-sm font-semibold border border-destination/30">
+                  <span
+                    className="text-xs px-4 py-2 rounded-xl font-black uppercase tracking-wider border-2"
+                    style={{
+                      backgroundColor: `${categoryColor}10`,
+                      borderColor: categoryColor,
+                      color: categoryColor,
+                    }}
+                  >
                     {destination.category}
                   </span>
                 )}
                 {destination.best_season && (
-                  <span className="px-3 py-1 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded-full text-sm">
-                    <Sun className="w-4 h-4 inline mr-1 text-yellow-500" />
+                  <span className="text-xs px-4 py-2 bg-amber-50 text-amber-700 rounded-xl font-bold border-2 border-amber-100 flex items-center gap-1.5">
+                    <Sun className="w-4 h-4" />
                     {destination.best_season}
                   </span>
                 )}
               </div>
 
-              <h1 className="text-4xl lg:text-5xl font-extrabold text-foreground mb-4 leading-tight">
+              <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4 leading-[1.1] tracking-tight">
                 {destination.name}
               </h1>
 
-              <div className="flex items-center space-x-2 text-gray-500 dark:text-gray-400 mb-6">
-                <MapPin className="w-5 h-5 text-destination" />
-                <span className="text-lg">
+              <div className="flex items-center gap-2 text-gray-500 mb-8 font-semibold bg-gray-50 px-4 py-3 rounded-xl">
+                <MapPin className="w-5 h-5 text-blue-600" />
+                <span>
                   {destination.country ||
                     destination.region_name ||
                     "Unknown Location"}
                 </span>
               </div>
 
-              {/* Rating Box */}
-              <div className="flex items-center bg-linear-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-xl p-5 border-2 border-yellow-200 dark:border-yellow-800">
-                <div className="flex items-center justify-center w-16 h-16 bg-yellow-400 dark:bg-yellow-500 rounded-full mr-4">
-                  <Star className="w-8 h-8 text-white fill-white" />
-                </div>
-                <div>
-                  <div className="text-3xl font-bold text-gray-900 dark:text-white leading-none mb-1">
-                    {currentRating}
+              <div className="bg-linear-to-br from-amber-50 via-amber-100 to-orange-50 rounded-2xl p-6 border border-amber-100 shadow-inner">
+                <div className="flex items-center gap-5">
+                  <div className="flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg ring-4 ring-amber-100">
+                    <Star className="w-8 h-8 text-amber-500 fill-amber-500" />
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
-                    {totalReviews > 0
-                      ? `${totalReviews} ${
-                          totalReviews === 1 ? "đánh giá" : "đánh giá"
-                        }`
-                      : "Chưa có đánh giá"}
+                  <div>
+                    <div className="text-4xl font-black text-gray-900 leading-none mb-1">
+                      {currentRating}
+                    </div>
+                    <div className="text-xs text-gray-600 font-bold uppercase tracking-tight opacity-70">
+                      {totalReviews > 0
+                        ? `${totalReviews} Reviews`
+                        : "No Reviews"}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Action Buttons */}
-            <div className="space-y-3">
+            {/* Actions */}
+            <div className="grid grid-cols-1 gap-3">
               {user && (
                 <button
                   onClick={() => setShowReviewModal(true)}
-                  className="w-full flex items-center justify-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl py-3 font-semibold transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-[1.02]"
+                  className="w-full flex items-center justify-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl py-4 font-black transition-all shadow-lg hover:shadow-blue-200 hover:scale-[1.02]"
                 >
                   <MessageSquare className="w-5 h-5" />
-                  <span>Đánh giá địa điểm</span>
+                  <span>Write a Review</span>
                 </button>
               )}
               <button
                 onClick={() =>
                   router.push(`/destinations/${destinationId}/reviews`)
                 }
-                className="w-full border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 transition-all rounded-xl py-3 font-semibold"
+                className="w-full bg-white border-2 border-gray-100 text-gray-700 hover:bg-gray-50 transition-all rounded-2xl py-4 font-black shadow-sm"
               >
-                Xem tất cả đánh giá ({totalReviews})
+                View All Reviews ({totalReviews})
               </button>
             </div>
 
-            {/* Actions */}
-            <div className="bg-card p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700/50">
-              <h3 className="text-xl font-semibold mb-3 text-foreground">
-                Share This Place
-              </h3>
-              <button
-                onClick={() => {
-                  if (navigator.share) {
-                    navigator.share({
-                      title: destination.name,
-                      text: destination.description || destination.name,
-                      url: window.location.href,
-                    });
-                  } else {
-                    navigator.clipboard.writeText(window.location.href);
-                    alert("Link copied to clipboard!");
-                  }
-                }}
-                className="w-full flex items-center justify-center space-x-2 px-6 py-3 bg-destination hover:bg-destination/90 text-white rounded-xl transition-all duration-300 font-semibold shadow-md shadow-destination/30"
-              >
-                <Share2 className="w-5 h-5" />
-                <span>Share Destination Link</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* --- MAIN DETAIL CONTENT: Description & Facts --- */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Cột 1 & 2: Description (Tăng độ rộng) */}
-          <div className="lg:col-span-2 space-y-8">
-            {/* Description */}
-            <div className="bg-card p-8 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700/50">
-              <h2 className="text-3xl font-bold text-foreground mb-4 border-b pb-2 border-gray-200 dark:border-gray-700">
-                About {destination.name}
-              </h2>
-              <p className="text-gray-700 dark:text-gray-300 leading-relaxed whitespace-pre-line text-lg">
-                {destination.description ||
-                  "No description available. Please check back later or contribute to expand this section."}
-              </p>
-            </div>
-
-            {/* Optional: Map or other rich media section can go here */}
-          </div>
-
-          {/* Cột 3: Fact Box (Thông tin chi tiết) */}
-          <div className="lg:col-span-1 space-y-6">
-            <div className="bg-card p-6 rounded-2xl shadow-xl border border-gray-100 dark:border-gray-700/50">
-              <h3 className="text-2xl font-bold text-foreground mb-4">
+            {/* Quick Facts */}
+            <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+              <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center">
+                <TrendingUp className="w-6 h-6 mr-3 text-blue-600" />
                 Quick Facts
               </h3>
-
-              <dl className="space-y-4">
+              <dl className="space-y-6">
                 <FactItem
                   icon={Globe}
                   title="Category"
                   value={destination.category}
-                  color="text-destination"
+                  color="text-blue-600"
                 />
                 <FactItem
                   icon={Sun}
                   title="Best Season"
                   value={destination.best_season}
-                  color="text-yellow-500"
+                  color="text-amber-500"
                 />
                 <FactItem
                   icon={MapPin}
@@ -447,28 +477,32 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                 />
                 <FactItem
                   icon={Calendar}
-                  title="Date Added"
+                  title="Added On"
                   value={
                     destination.created_at
                       ? new Date(destination.created_at).toLocaleDateString()
                       : "N/A"
                   }
-                  color="text-green-500"
-                />
-                <FactItem
-                  icon={MapPin}
-                  title="Coordinates"
-                  value={
-                    destination.latitude && destination.longitude
-                      ? `${destination.latitude.toFixed(
-                          4
-                        )}, ${destination.longitude.toFixed(4)}`
-                      : "N/A"
-                  }
-                  color="text-red-500"
-                  isCode={true}
+                  color="text-emerald-500"
                 />
               </dl>
+            </div>
+
+            {/* Share */}
+            <div className="bg-linear-to-br from-slate-900 to-slate-800 p-8 rounded-3xl shadow-2xl text-white">
+              <div className="flex items-center gap-3 mb-6">
+                <Share2 className="w-6 h-6 text-blue-400" />
+                <h3 className="text-xl font-black tracking-tight">
+                  Share This Place
+                </h3>
+              </div>
+              <button
+                onClick={handleShare}
+                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all border border-white/10 font-black shadow-lg backdrop-blur-md"
+              >
+                <Share2 className="w-5 h-5" />
+                <span>{isCopied ? "LINK COPIED!" : "COPY LINK"}</span>
+              </button>
             </div>
           </div>
         </div>
@@ -496,7 +530,6 @@ interface FactItemProps {
   title: string;
   value: string | number;
   color: string;
-  isCode?: boolean;
 }
 
 const FactItem: React.FC<FactItemProps> = ({
@@ -504,21 +537,32 @@ const FactItem: React.FC<FactItemProps> = ({
   title,
   value,
   color,
-  isCode = false,
-}) => (
-  <div className="flex items-start space-x-3 border-b border-gray-100 dark:border-gray-800 pb-3 last:border-b-0 last:pb-0">
-    <Icon className={`w-5 h-5 shrink-0 mt-1 ${color}`} />
-    <div className="flex-1">
-      <dt className="text-sm font-medium text-gray-500 dark:text-gray-400">
-        {title}
-      </dt>
-      <dd
-        className={`text-base font-semibold text-foreground ${
-          isCode ? "font-mono text-sm" : ""
-        } capitalize`}
+}) => {
+  const getBgColor = (textColor: string) => {
+    if (textColor.includes("blue")) return "bg-blue-50";
+    if (textColor.includes("amber")) return "bg-amber-50";
+    if (textColor.includes("indigo")) return "bg-indigo-50";
+    if (textColor.includes("emerald")) return "bg-emerald-50";
+    return "bg-slate-50";
+  };
+
+  return (
+    <div className="flex items-center gap-4 group">
+      <div
+        className={`p-3.5 rounded-2xl transition-all group-hover:scale-110 ${getBgColor(
+          color
+        )}`}
       >
-        {value || "Unknown"}
-      </dd>
+        <Icon className={`w-6 h-6 ${color}`} />
+      </div>
+      <div>
+        <dt className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-0.5">
+          {title}
+        </dt>
+        <dd className="text-base font-black text-gray-900 leading-tight">
+          {value || "Unknown"}
+        </dd>
+      </div>
     </div>
-  </div>
-);
+  );
+};
