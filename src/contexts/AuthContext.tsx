@@ -145,18 +145,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             // Update traveller with current location
             try {
               await fetch(`${beApi}/travellers/${data.user.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ 
-                  latitude: userLat, 
-                  longitude: userLng 
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                  latitude: userLat,
+                  longitude: userLng,
                 }),
               });
             } catch {
               // Location update failed, continue with existing data
             }
-            
+
             setProfile({
               ...data.user,
               ...travellerResult.data,
@@ -168,9 +168,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             // Create traveller if not found
             try {
               await fetch(`${beApi}/travellers`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({
                   user_id: data.user.id,
                   bio: "",
@@ -184,15 +184,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             } catch {
               // Traveller creation failed, continue without it
             }
-            setProfile({ ...data.user, email, latitude: userLat, longitude: userLng });
+            setProfile({
+              ...data.user,
+              email,
+              latitude: userLat,
+              longitude: userLng,
+            });
           }
         } else {
           // Create traveller if fetch failed
           try {
             await fetch(`${beApi}/travellers`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
               body: JSON.stringify({
                 user_id: data.user.id,
                 bio: "",
@@ -206,10 +211,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           } catch {
             // Traveller creation failed, continue without it
           }
-          setProfile({ ...data.user, email, latitude: userLat, longitude: userLng });
+          setProfile({
+            ...data.user,
+            email,
+            latitude: userLat,
+            longitude: userLng,
+          });
         }
       } catch {
-        setProfile({ ...data.user, email, latitude: userLat, longitude: userLng });
+        setProfile({
+          ...data.user,
+          email,
+          latitude: userLat,
+          longitude: userLng,
+        });
       }
     } catch {
       setUser(null);
@@ -254,7 +269,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (result.data?.user) {
         setUser(result.data.user);
         setAccount(result.data.account ?? null);
-        
+
         // Get user location
         let userLat = DEFAULT_LATITUDE;
         let userLng = DEFAULT_LONGITUDE;
@@ -268,21 +283,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Update or create traveller with location
         try {
-          const travellerRes = await fetch(`${beApi}/travellers/${result.data.user.id}`, {
-            credentials: "include",
-          });
-          
+          const travellerRes = await fetch(
+            `${beApi}/travellers/${result.data.user.id}`,
+            {
+              credentials: "include",
+            }
+          );
+
           if (travellerRes.ok) {
             const travellerResult = await travellerRes.json();
             if (travellerResult.status === 200) {
               // Update existing traveller with location
               await fetch(`${beApi}/travellers/${result.data.user.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ 
-                  latitude: userLat, 
-                  longitude: userLng 
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                  latitude: userLat,
+                  longitude: userLng,
                 }),
               });
               setProfile({
@@ -295,9 +313,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             } else {
               // Create new traveller
               await fetch(`${beApi}/travellers`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({
                   user_id: result.data.user.id,
                   bio: "",
@@ -318,9 +336,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           } else {
             // Create new traveller if fetch failed
             await fetch(`${beApi}/travellers`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
               body: JSON.stringify({
                 user_id: result.data.user.id,
                 bio: "",
@@ -379,7 +397,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       if (result.data?.user) {
         setUser(result.data.user);
         setAccount(result.data.account ?? null);
-        
+
         // Get user location
         let userLat = DEFAULT_LATITUDE;
         let userLng = DEFAULT_LONGITUDE;
@@ -393,21 +411,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Update or create traveller with location
         try {
-          const travellerRes = await fetch(`${beApi}/travellers/${result.data.user.id}`, {
-            credentials: "include",
-          });
-          
+          const travellerRes = await fetch(
+            `${beApi}/travellers/${result.data.user.id}`,
+            {
+              credentials: "include",
+            }
+          );
+
           if (travellerRes.ok) {
             const travellerResult = await travellerRes.json();
             if (travellerResult.status === 200) {
               // Update existing traveller with location
               await fetch(`${beApi}/travellers/${result.data.user.id}`, {
-                method: 'PATCH',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({ 
-                  latitude: userLat, 
-                  longitude: userLng 
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
+                body: JSON.stringify({
+                  latitude: userLat,
+                  longitude: userLng,
                 }),
               });
               setProfile({
@@ -420,9 +441,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             } else {
               // Create new traveller
               await fetch(`${beApi}/travellers`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                credentials: "include",
                 body: JSON.stringify({
                   user_id: result.data.user.id,
                   bio: "",
@@ -443,9 +464,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           } else {
             // Create new traveller if fetch failed
             await fetch(`${beApi}/travellers`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              credentials: 'include',
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include",
               body: JSON.stringify({
                 user_id: result.data.user.id,
                 bio: "",
