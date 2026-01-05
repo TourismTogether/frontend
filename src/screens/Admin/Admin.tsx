@@ -8,13 +8,15 @@ import {
   ArrowLeft,
   LayoutDashboard,
   AlertTriangle,
+  Globe,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SupportTeamManager } from "./SupportTeamManager";
 import { DestinationsManager } from "./DestinationsManager";
 import { SOSManagement } from "./SOSManagement";
+import { RegionsManager } from "./RegionsManager";
 
-type TabType = "overview" | "supporters" | "destinations" | "sos";
+type TabType = "overview" | "supporters" | "destinations" | "sos" | "regions";
 
 export const Admin: React.FC = () => {
   const router = useRouter();
@@ -24,6 +26,7 @@ export const Admin: React.FC = () => {
     { id: "overview" as TabType, label: "Tổng quan", icon: LayoutDashboard },
     { id: "sos" as TabType, label: "SOS Management", icon: AlertTriangle },
     { id: "supporters" as TabType, label: "Support Team", icon: Users },
+    { id: "regions" as TabType, label: "Regions", icon: Globe },
     { id: "destinations" as TabType, label: "Destinations", icon: MapPin },
   ];
 
@@ -79,6 +82,7 @@ export const Admin: React.FC = () => {
         {activeTab === "overview" && <OverviewTab />}
         {activeTab === "sos" && <SOSManagement />}
         {activeTab === "supporters" && <SupportTeamManager />}
+        {activeTab === "regions" && <RegionsManager />}
         {activeTab === "destinations" && <DestinationsManager />}
       </div>
     </div>
@@ -100,6 +104,21 @@ const OverviewTab: React.FC = () => {
         </div>
         <p className="mt-4 text-gray-600 text-sm">
           Thêm, sửa, xóa thành viên trong đội hỗ trợ SOS
+        </p>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+            <Globe className="w-6 h-6 text-indigo-600" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">Regions</p>
+            <p className="text-2xl font-bold text-gray-900">Quản lý</p>
+          </div>
+        </div>
+        <p className="mt-4 text-gray-600 text-sm">
+          Thêm, sửa, xóa các khu vực/địa điểm
         </p>
       </div>
 

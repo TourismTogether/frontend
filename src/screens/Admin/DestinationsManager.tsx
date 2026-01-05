@@ -18,7 +18,10 @@ import {
 
 // Dynamically import LocationPicker to avoid SSR issues
 const LocationPicker = dynamic(
-  () => import("../../components/Map/LocationPicker").then((mod) => mod.LocationPicker),
+  () =>
+    import("../../components/Map/LocationPicker").then(
+      (mod) => mod.LocationPicker
+    ),
   { ssr: false }
 );
 
@@ -54,8 +57,14 @@ const CATEGORIES = [
 
 const SEASONS = ["Spring", "Summer", "Autumn", "Winter", "Year-round"];
 
+interface Region {
+  id: string;
+  address: string;
+}
+
 export const DestinationsManager: React.FC = () => {
   const [destinations, setDestinations] = useState<Destination[]>([]);
+  const [regions, setRegions] = useState<Region[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [showModal, setShowModal] = useState(false);
@@ -64,6 +73,7 @@ export const DestinationsManager: React.FC = () => {
   const [formData, setFormData] = useState({
     name: "",
     country: "",
+    region_id: "",
     region_name: "",
     description: "",
     latitude: 0,
@@ -75,6 +85,7 @@ export const DestinationsManager: React.FC = () => {
 
   useEffect(() => {
     fetchDestinations();
+    fetchRegions();
   }, []);
 
   const fetchDestinations = async () => {
@@ -94,11 +105,27 @@ export const DestinationsManager: React.FC = () => {
     }
   };
 
+  const fetchRegions = async () => {
+    try {
+      const res = await fetch(`${API_URL}/regions`, {
+        credentials: "include",
+      });
+      const result = await res.json();
+      if (result.status === 200) {
+        setRegions(result.data || []);
+      }
+    } catch (error) {
+      console.error("Error fetching regions:", error);
+    }
+  };
+
   const handleCreate = () => {
     setEditingDestination(null);
+    fetchRegions(); // Refresh regions list
     setFormData({
       name: "",
       country: "",
+      region_id: "",
       region_name: "",
       description: "",
       latitude: 10.762880383009653, // Default to Ho Chi Minh City
@@ -110,11 +137,24 @@ export const DestinationsManager: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleEdit = (destination: Destination) => {
+  const handleEdit = async (destination: Destination) => {
     setEditingDestination(destination);
+    // Refresh regions list before editing
+    const res = await fetch(`${API_URL}/regions`, {
+      credentials: "include",
+    });
+    const result = await res.json();
+    const updatedRegions = result.status === 200 ? result.data || [] : [];
+    setRegions(updatedRegions);
+
+    // Find region_id from region_name using fresh data
+    const matchedRegion = updatedRegions.find(
+      (r: Region) => r.address === destination.region_name
+    );
     setFormData({
       name: destination.name,
       country: destination.country || "",
+      region_id: matchedRegion?.id || "",
       region_name: destination.region_name || "",
       description: destination.description || "",
       latitude: destination.latitude || 10.762880383009653,
@@ -124,6 +164,15 @@ export const DestinationsManager: React.FC = () => {
       images: destination.images || [],
     });
     setShowModal(true);
+  };
+
+  const handleRegionChange = (regionId: string) => {
+    const selectedRegion = regions.find((r) => r.id === regionId);
+    setFormData({
+      ...formData,
+      region_id: regionId,
+      region_name: selectedRegion?.address || "",
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -146,47 +195,10 @@ export const DestinationsManager: React.FC = () => {
     e.preventDefault();
 
     try {
-      let regionId: string | null = null;
-
-      // If region_name is provided, find or create region
-      if (formData.region_name) {
-        try {
-          // First, try to find existing region by address
-          const regionsRes = await fetch(`${API_URL}/regions`, {
-            credentials: "include",
-          });
-          const regionsResult = await regionsRes.json();
-          
-          if (regionsResult.status === 200 && regionsResult.data) {
-            const existingRegion = regionsResult.data.find(
-              (r: any) => r.address === formData.region_name
-            );
-            
-            if (existingRegion) {
-              regionId = existingRegion.id;
-            } else {
-              // Create new region if not found
-              const createRegionRes = await fetch(`${API_URL}/regions`, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                  address: formData.region_name,
-                  created_at: new Date().toISOString(),
-                  updated_at: new Date().toISOString(),
-                }),
-              });
-              const createRegionResult = await createRegionRes.json();
-              
-              if (createRegionResult.status === 200 && createRegionResult.data) {
-                regionId = createRegionResult.data.id;
-              }
-            }
-          }
-        } catch (err) {
-          alert("Failed to process region. Please try again.");
-          return;
-        }
+      // Validate region_id
+      if (!formData.region_id) {
+        alert("Vui lòng chọn khu vực.");
+        return;
       }
 
       // Prepare destination data
@@ -200,29 +212,23 @@ export const DestinationsManager: React.FC = () => {
         best_season: formData.best_season || "",
         images: formData.images || [],
         rating: 0,
+        region_id: formData.region_id,
       };
-
-      // Add region_id if available
-      if (regionId) {
-        destinationData.region_id = regionId;
-      }
 
       let response: Response;
       if (editingDestination) {
         // Update
-        response = await fetch(`${API_URL}/destinations/${editingDestination.id}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(destinationData),
-        });
+        response = await fetch(
+          `${API_URL}/destinations/${editingDestination.id}`,
+          {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify(destinationData),
+          }
+        );
       } else {
-        // Create - region_id is required
-        if (!regionId) {
-          alert("Region is required. Please enter a region name.");
-          return;
-        }
-        
+        // Create
         response = await fetch(`${API_URL}/destinations`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -237,7 +243,9 @@ export const DestinationsManager: React.FC = () => {
         setShowModal(false);
         fetchDestinations();
       } else {
-        alert(result.message || "Failed to save destination. Please try again.");
+        alert(
+          result.message || "Failed to save destination. Please try again."
+        );
       }
     } catch (err) {
       alert("An error occurred. Please try again.");
@@ -430,16 +438,26 @@ export const DestinationsManager: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Vùng/Khu vực
+                    Vùng/Khu vực *
                   </label>
-                  <input
-                    type="text"
-                    value={formData.region_name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, region_name: e.target.value })
-                    }
+                  <select
+                    value={formData.region_id}
+                    onChange={(e) => handleRegionChange(e.target.value)}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                  />
+                    required
+                  >
+                    <option value="">-- Chọn khu vực --</option>
+                    {regions.map((region) => (
+                      <option key={region.id} value={region.id}>
+                        {region.address}
+                      </option>
+                    ))}
+                  </select>
+                  {regions.length === 0 && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Chưa có region nào. Vui lòng tạo region trước.
+                    </p>
+                  )}
                 </div>
               </div>
 
