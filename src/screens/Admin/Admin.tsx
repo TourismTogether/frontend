@@ -7,12 +7,14 @@ import {
   MapPin,
   ArrowLeft,
   LayoutDashboard,
+  AlertTriangle,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { SupportTeamManager } from "./SupportTeamManager";
 import { DestinationsManager } from "./DestinationsManager";
+import { SOSManagement } from "./SOSManagement";
 
-type TabType = "overview" | "supporters" | "destinations";
+type TabType = "overview" | "supporters" | "destinations" | "sos";
 
 export const Admin: React.FC = () => {
   const router = useRouter();
@@ -20,6 +22,7 @@ export const Admin: React.FC = () => {
 
   const tabs = [
     { id: "overview" as TabType, label: "Tổng quan", icon: LayoutDashboard },
+    { id: "sos" as TabType, label: "SOS Management", icon: AlertTriangle },
     { id: "supporters" as TabType, label: "Support Team", icon: Users },
     { id: "destinations" as TabType, label: "Destinations", icon: MapPin },
   ];
@@ -74,6 +77,7 @@ export const Admin: React.FC = () => {
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {activeTab === "overview" && <OverviewTab />}
+        {activeTab === "sos" && <SOSManagement />}
         {activeTab === "supporters" && <SupportTeamManager />}
         {activeTab === "destinations" && <DestinationsManager />}
       </div>
@@ -111,6 +115,21 @@ const OverviewTab: React.FC = () => {
         </div>
         <p className="mt-4 text-gray-600 text-sm">
           Thêm, sửa, xóa các điểm đến du lịch
+        </p>
+      </div>
+
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="flex items-center space-x-4">
+          <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+            <AlertTriangle className="w-6 h-6 text-red-600" />
+          </div>
+          <div>
+            <p className="text-sm text-gray-500">SOS Management</p>
+            <p className="text-2xl font-bold text-gray-900">Monitor</p>
+          </div>
+        </div>
+        <p className="mt-4 text-gray-600 text-sm">
+          Monitor and manage SOS emergency requests from travelers
         </p>
       </div>
 
