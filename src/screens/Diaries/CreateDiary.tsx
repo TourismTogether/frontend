@@ -25,6 +25,12 @@ export default function CreateDiary() {
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [previewData, setPreviewData] = useState<any | null>(null);
 
+  const [openModel, setOpenModel] = useState<boolean>(false);
+  const [topic, setTopic] = useState("");
+  const [goal, setGoal] = useState("");
+  const [audience, setAudience] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const router = useRouter();
 
   useEffect(function () {
@@ -239,13 +245,153 @@ export default function CreateDiary() {
     setPreviewData(null);
   }
 
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+
+    if (!topic || !goal || !audience) {
+      alert("Please fill all fields");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch(`${API}/ai/generate-diary`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          topic,
+          goal,
+          audience,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error(data.message || "Something went wrong");
+      }
+
+      setOpenModel(false);
+      setTopic("");
+      setGoal("");
+      setAudience("");
+
+      const diary = data.result;
+      setTitle(diary.title);
+      setShortDes(diary.shortDes);
+      setMetaItems(diary.metadata);
+      setContentSections(diary.content_sections);
+    } catch (err: any) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <Link href="/diaries" className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors font-medium group">
-          <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
-          Back to Diaries
-        </Link>
+
+        <div className="flex items-center justify-between mb-6">
+          <Link
+            href="/diaries"
+            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors font-medium group"
+          >
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            Back to Diaries
+          </Link>
+
+          <button onClick={() => setOpenModel(true)} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition cursor-pointer">
+            Suggest diary
+          </button>
+
+          {openModel && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+              <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Suggest Diary
+                  </h2>
+                  <button
+                    onClick={() => setOpenModel(false)}
+                    className="text-gray-400 hover:text-gray-600 text-xl"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                {/* Form */}
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                  {/* Topic */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Topic
+                    </label>
+                    <input
+                      type="text"
+                      value={topic}
+                      onChange={(e) => setTopic(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter topic"
+                    />
+                  </div>
+
+                  {/* Goal */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Goal
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={goal}
+                      onChange={(e) => setGoal(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="What is the goal?"
+                    />
+                  </div>
+
+                  {/* Audience */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Audience
+                    </label>
+                    <input
+                      type="text"
+                      value={audience}
+                      onChange={(e) => setAudience(e.target.value)}
+                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Target audience"
+                    />
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex justify-end gap-3 pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setOpenModel(false)}
+                      className="px-4 py-2 text-sm rounded-lg border text-gray-700 hover:bg-gray-100"
+                      disabled={loading}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      disabled={loading}
+                      className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                    >
+                      {loading ? "Submitting..." : "Submit"}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+        </div>
 
         <div className="mb-10">
           <div className="flex items-center justify-between flex-wrap gap-4">
@@ -317,8 +463,8 @@ export default function CreateDiary() {
         <div className="mb-12">
           <h2 className="text-xl font-semibold mb-4 text-gray-900">Info Cards</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {metaItems && metaItems.map((meta: any) => (
-              <div key={meta.id} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition group relative">
+            {metaItems && metaItems.map((meta: any, index: any) => (
+              <div key={index} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition group relative">
                 <input
                   value={meta.title}
                   onChange={(e) =>
