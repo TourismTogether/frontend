@@ -279,14 +279,6 @@ export default function CreateDiary() {
       setGoal("");
       setAudience("");
 
-      console.log("Success:", data);
-
-      //       const [metaItems, setMetaItems] = useState<any | null>(null);
-      // const [contentSections, setContentSections] = useState<any | null>(null);
-      // const [previewImages, setPreviewImages] = useState<any[] | null>(null);
-      // const [title, setTitle] = useState<any | null>("");
-      // const [shortDes, setShortDes] = useState<any | null>("");
-
       const diary = data.result;
       setTitle(diary.title);
       setShortDes(diary.shortDes);

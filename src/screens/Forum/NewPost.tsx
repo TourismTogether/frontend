@@ -13,9 +13,11 @@ import {
 import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
 
+const API = process.env.NEXT_PUBLIC_API_URL;
+
+
 export default function NewPost() {
     const { user } = useAuth();
-    console.log(user);
 
     const router = useRouter();
     const [loading, setLoading] = useState(false);
@@ -29,6 +31,9 @@ export default function NewPost() {
         content: "",
         tags: "",
     });
+
+    const [openModel, setOpenModel] = useState<boolean>(false);
+    const [topic, setTopic] = useState<string>("");
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -113,18 +118,123 @@ export default function NewPost() {
         }
     };
 
+    const handleSubmitSuggest = async (e: React.FormEvent) => {
+        e.preventDefault();
+
+        if (!topic) {
+            alert("Please fill all fields");
+            return;
+        }
+
+        try {
+            setLoading(true);
+
+            const res = await fetch(`${API}/ai/generate-post`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    topic
+                }),
+            });
+
+            const data = await res.json();
+
+            if (!res.ok) {
+                throw new Error(data.message || "Something went wrong");
+            }
+
+            setOpenModel(false);
+            setTopic("");
+
+            const post = data.result;
+
+            setFormData(post)
+        } catch (err: any) {
+            console.error(err);
+            alert(err.message);
+        } finally {
+            setLoading(false);
+        }
+    }
+
     return (
         <div className="min-h-screen bg-muted pt-8 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-300">
             <div className="max-w-4xl mx-auto">
                 {/* Header Section */}
                 <div className="mb-8">
-                    <button
-                        onClick={() => router.back()}
-                        className="flex items-center text-muted-foreground hover:text-foreground mb-4 transition-colors"
-                    >
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back to Forum
-                    </button>
+                    <div className="flex items-center justify-between mb-4">
+                        <button
+                            onClick={() => router.back()}
+                            className="flex items-center text-muted-foreground hover:text-foreground transition-colors"
+                        >
+                            <ArrowLeft className="w-4 h-4 mr-2" />
+                            Back to Forum
+                        </button>
+
+                        <button
+                            onClick={() => setOpenModel(true)}
+                            className="px-4 py-2 text-sm font-medium rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 transition"
+                        >
+                            Suggest
+                        </button>
+
+                        {openModel && (
+                            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+                                <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
+                                    {/* Header */}
+                                    <div className="flex items-center justify-between mb-4">
+                                        <h2 className="text-lg font-semibold text-gray-900">
+                                            Suggest Diary
+                                        </h2>
+                                        <button
+                                            onClick={() => setOpenModel(false)}
+                                            className="text-gray-400 hover:text-gray-600 text-xl"
+                                        >
+                                            ✕
+                                        </button>
+                                    </div>
+
+                                    {/* Form */}
+                                    <form className="space-y-4" onSubmit={handleSubmitSuggest}>
+                                        {/* Topic */}
+                                        <div>
+                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                                Topic
+                                            </label>
+                                            <input
+                                                type="text"
+                                                value={topic}
+                                                onChange={(e) => setTopic(e.target.value)}
+                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                placeholder="Enter topic"
+                                            />
+                                        </div>
+
+                                        {/* Actions */}
+                                        <div className="flex justify-end gap-3 pt-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setOpenModel(false)}
+                                                className="px-4 py-2 text-sm rounded-lg border text-gray-700 hover:bg-gray-100"
+                                                disabled={loading}
+                                            >
+                                                Cancel
+                                            </button>
+                                            <button
+                                                type="submit"
+                                                disabled={loading}
+                                                className="px-4 py-2 text-sm rounded-lg bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50"
+                                            >
+                                                {loading ? "Submitting..." : "Submit"}
+                                            </button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        )}
+                    </div>
                     <h1 className="text-2xl font-bold text-foreground">
                         Start a New Discussion
                     </h1>
