@@ -38,7 +38,11 @@ export const forumService = {
             const res = await fetch(`${API_URL}/posts/${postId}/post-replies`);
             if (res.ok) {
                 const data = await res.json();
-                return Array.isArray(data.data) ? data.data : Array.isArray(data) ? data : [];
+                return Array.isArray(data.data)
+                    ? data.data
+                    : Array.isArray(data)
+                    ? data
+                    : [];
             }
             // console.error("Failed to fetch replies:");
             return [];
@@ -48,14 +52,18 @@ export const forumService = {
         }
     },
 
-    createReply: async (postId: string, content: string, userId: string): Promise<IPostReply> => {
+    createReply: async (
+        postId: string,
+        content: string,
+        userId: string
+    ): Promise<IPostReply> => {
         const res = await fetch(`${API_URL}/post-replies`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ 
+            body: JSON.stringify({
                 post_id: postId,
                 user_id: userId,
-                content 
+                content,
             }),
         });
         if (!res.ok) {
@@ -65,15 +73,28 @@ export const forumService = {
         return data.data || data;
     },
 
+    updateReply: async (replyId: string, content: string) => {
+        const response = await fetch(`${API_URL}/post-replies/${replyId}`, {
+            method: "PATCH",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ content }),
+        });
+        return response.json();
+    },
+
+    deleteReply: async (replyId: string) => {
+        const response = await fetch(`${API_URL}/post-replies/${replyId}`, {
+            method: "DELETE",
+        });
+        return response.json();
+    },
+
     toggleLike: async (id: string, userId: string) => {
-        const res = await fetch(
-            `${API_URL}/posts/${id}/like`,
-            {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ user_id: userId }),
-            }
-        );
+        const res = await fetch(`${API_URL}/posts/${id}/like`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ user_id: userId }),
+        });
         if (!res.ok) throw new Error("Không thể like");
         return res.json();
     },
