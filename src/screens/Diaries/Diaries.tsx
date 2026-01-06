@@ -106,13 +106,14 @@ export default function Diaries() {
       user_id: shareDiary.user_id,
       title: shareDiary.title,
       content: shareDiary.description,
+      image: shareDiary.main_image_url || shareDiary.images?.[0]?.url,
       tags: "Diary",
       total_likes: 0,
       total_views: 0,
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };
-
+    console.log(post);
     const result = await forumService.create(post);
     if (result) {
       alert("Đăng bài thành công!");
