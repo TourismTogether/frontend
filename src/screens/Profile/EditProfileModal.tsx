@@ -8,9 +8,12 @@ import {
   Phone,
   Image as ImageIcon,
   FileText,
+  Trash2,
+  Upload,
 } from "lucide-react";
 import { Profile } from "@/types/user";
 import { useAuth } from "@/contexts/AuthContext";
+import { uploadFile } from "@/lib/supabase";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -32,6 +35,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     avatar_url: "",
     bio: "",
   });
+  const [avatarFile, setAvatarFile] = useState<{ file: File; url: string } | null>(null);
+  const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,9 +48,20 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
         avatar_url: profile.avatar_url || "",
         bio: profile.bio || "",
       });
+      setExistingAvatarUrl(profile.avatar_url || null);
+      setAvatarFile(null);
       setError(null);
     }
   }, [isOpen, profile]);
+
+  // Cleanup URL object when component unmounts or avatarFile changes
+  useEffect(() => {
+    return () => {
+      if (avatarFile) {
+        URL.revokeObjectURL(avatarFile.url);
+      }
+    };
+  }, [avatarFile]);
 
   if (!isOpen) return null;
 
@@ -61,6 +77,42 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }));
   };
 
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith("image/")) {
+      setError("Please select an image file");
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setError("Image size must be less than 5MB");
+      return;
+    }
+
+    setAvatarFile({
+      file,
+      url: URL.createObjectURL(file),
+    });
+    setError(null);
+  };
+
+  const handleRemoveAvatar = () => {
+    if (avatarFile) {
+      URL.revokeObjectURL(avatarFile.url);
+      setAvatarFile(null);
+    }
+    setExistingAvatarUrl(null);
+    // Mark avatar as removed
+    setFormData((prev) => ({
+      ...prev,
+      avatar_url: "", // Empty string indicates removal
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -73,12 +125,34 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     }
 
     try {
+      // Upload avatar image if a new file is selected
+      let avatarUrl: string | null = existingAvatarUrl;
+      if (avatarFile) {
+        try {
+          avatarUrl = await uploadFile(
+            avatarFile.file,
+            `avatars/${user.id}/${Date.now()}-${avatarFile.file.name}`
+          );
+        } catch (uploadError: any) {
+          setError(uploadError.message || "Failed to upload avatar image");
+          setLoading(false);
+          return;
+        }
+      }
+
       // Update user data (full_name, phone, avatar_url)
       const userUpdatePayload: any = {};
       if (formData.full_name) userUpdatePayload.full_name = formData.full_name;
       if (formData.phone) userUpdatePayload.phone = formData.phone;
-      if (formData.avatar_url !== undefined)
-        userUpdatePayload.avatar_url = formData.avatar_url;
+      
+      // Handle avatar URL: if removed (empty string), set to empty; if uploaded, use new URL; otherwise keep existing
+      if (formData.avatar_url === "" && !avatarFile && !existingAvatarUrl) {
+        // User explicitly removed avatar
+        userUpdatePayload.avatar_url = "";
+      } else if (avatarUrl !== null && avatarUrl !== undefined) {
+        // Use uploaded or existing avatar URL
+        userUpdatePayload.avatar_url = avatarUrl;
+      }
 
       // Update traveller data (bio)
       const travellerUpdatePayload: any = {};
@@ -197,26 +271,62 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             />
           </div>
 
-          {/* Avatar URL */}
+          {/* Avatar Upload */}
           <div>
             <label
-              htmlFor="avatar_url"
+              htmlFor="avatar"
               className="block text-sm font-semibold text-gray-700 mb-2"
             >
               <ImageIcon className="w-4 h-4 inline mr-2" />
-              Avatar URL
+              Profile Picture
             </label>
-            <input
-              id="avatar_url"
-              name="avatar_url"
-              type="url"
-              value={formData.avatar_url}
-              onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
-              placeholder="https://example.com/avatar.jpg"
-            />
-            <p className="mt-1 text-xs text-gray-500">
-              Enter a URL to your profile picture
+            
+            {/* Avatar Preview */}
+            {(avatarFile || existingAvatarUrl) && (
+              <div className="mb-4 relative inline-block">
+                <div className="w-32 h-32 rounded-xl overflow-hidden border-2 border-gray-200 shadow-md">
+                  <img
+                    src={avatarFile?.url || existingAvatarUrl || ""}
+                    alt="Avatar preview"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+                <button
+                  type="button"
+                  onClick={handleRemoveAvatar}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1.5 hover:bg-red-600 transition-colors shadow-lg"
+                  title="Remove avatar"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            )}
+
+            {/* Upload Button */}
+            <div className="flex items-center gap-3">
+              <label
+                htmlFor="avatar"
+                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer font-medium"
+              >
+                <Upload className="w-4 h-4" />
+                {avatarFile || existingAvatarUrl ? "Change Picture" : "Upload Picture"}
+              </label>
+              <input
+                id="avatar"
+                name="avatar"
+                type="file"
+                accept="image/*"
+                onChange={handleAvatarChange}
+                className="hidden"
+              />
+              {!avatarFile && !existingAvatarUrl && (
+                <span className="text-sm text-gray-500">
+                  Select an image file (max 5MB)
+                </span>
+              )}
+            </div>
+            <p className="mt-2 text-xs text-gray-500">
+              Upload a profile picture. Supported formats: JPG, PNG, GIF (max 5MB)
             </p>
           </div>
 
