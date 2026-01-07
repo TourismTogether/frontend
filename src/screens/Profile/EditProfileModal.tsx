@@ -35,8 +35,13 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
     avatar_url: "",
     bio: "",
   });
-  const [avatarFile, setAvatarFile] = useState<{ file: File; url: string } | null>(null);
-  const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<{
+    file: File;
+    url: string;
+  } | null>(null);
+  const [existingAvatarUrl, setExistingAvatarUrl] = useState<string | null>(
+    null
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -144,7 +149,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
       const userUpdatePayload: any = {};
       if (formData.full_name) userUpdatePayload.full_name = formData.full_name;
       if (formData.phone) userUpdatePayload.phone = formData.phone;
-      
+
       // Handle avatar URL: if removed (empty string), set to empty; if uploaded, use new URL; otherwise keep existing
       if (formData.avatar_url === "" && !avatarFile && !existingAvatarUrl) {
         // User explicitly removed avatar
@@ -280,7 +285,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               <ImageIcon className="w-4 h-4 inline mr-2" />
               Profile Picture
             </label>
-            
+
             {/* Avatar Preview */}
             {(avatarFile || existingAvatarUrl) && (
               <div className="mb-4 relative inline-block">
@@ -309,7 +314,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer font-medium"
               >
                 <Upload className="w-4 h-4" />
-                {avatarFile || existingAvatarUrl ? "Change Picture" : "Upload Picture"}
+                {avatarFile || existingAvatarUrl
+                  ? "Change Picture"
+                  : "Upload Picture"}
               </label>
               <input
                 id="avatar"
@@ -326,7 +333,8 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               )}
             </div>
             <p className="mt-2 text-xs text-gray-500">
-              Upload a profile picture. Supported formats: JPG, PNG, GIF (max 5MB)
+              Upload a profile picture. Supported formats: JPG, PNG, GIF (max
+              5MB)
             </p>
           </div>
 

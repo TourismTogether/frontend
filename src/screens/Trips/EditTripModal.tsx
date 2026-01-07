@@ -57,10 +57,36 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
     >
   ) => {
     const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      [name]: type === "number" ? parseFloat(value) || 0 : value,
-    }));
+    
+    setFormData((prev) => {
+      const updatedData = {
+        ...prev,
+        [name]: type === "number" ? parseFloat(value) || 0 : value,
+      };
+
+      // Ép end_date luôn sau start_date
+      if (name === "start_date" && value && updatedData.end_date) {
+        const startDate = new Date(value);
+        const endDate = new Date(updatedData.end_date);
+        if (endDate <= startDate) {
+          // Set end_date = start_date + 1 ngày
+          const nextDay = new Date(startDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          updatedData.end_date = nextDay.toISOString().substring(0, 10);
+        }
+      } else if (name === "end_date" && value && updatedData.start_date) {
+        const startDate = new Date(updatedData.start_date);
+        const endDate = new Date(value);
+        if (endDate <= startDate) {
+          // Set end_date = start_date + 1 ngày
+          const nextDay = new Date(startDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          updatedData.end_date = nextDay.toISOString().substring(0, 10);
+        }
+      }
+
+      return updatedData;
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -257,6 +283,11 @@ export const EditTripModal: React.FC<EditTripModalProps> = ({
                 type="date"
                 value={formData.end_date || ""}
                 onChange={handleChange}
+                min={formData.start_date ? (() => {
+                  const startDate = new Date(formData.start_date);
+                  startDate.setDate(startDate.getDate() + 1);
+                  return startDate.toISOString().substring(0, 10);
+                })() : undefined}
                 required
                 className="w-full p-3 border border-border rounded-lg bg-input text-foreground focus:ring-2 focus:ring-trip focus:border-trip transition-colors"
               />
