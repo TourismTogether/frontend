@@ -160,14 +160,40 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
     >
   ) => {
     const { name, value, type } = e.target;
-    setFormData((prev) => ({
-      ...prev,
-      // Xử lý chuyển đổi sang số cho các trường số (bao gồm total_budget)
-      [name]:
-        name === "total_budget" || name === "distance" || name === "difficult"
-          ? parseFloat(value) || 0 // Đảm bảo giá trị là số
-          : value,
-    }));
+    
+    setFormData((prev) => {
+      const updatedData = {
+        ...prev,
+        // Xử lý chuyển đổi sang số cho các trường số (bao gồm total_budget)
+        [name]:
+          name === "total_budget" || name === "distance" || name === "difficult"
+            ? parseFloat(value) || 0 // Đảm bảo giá trị là số
+            : value,
+      };
+
+      // Ép end_date luôn sau start_date
+      if (name === "start_date" && value && updatedData.end_date) {
+        const startDate = new Date(value);
+        const endDate = new Date(updatedData.end_date);
+        if (endDate <= startDate) {
+          // Set end_date = start_date + 1 ngày
+          const nextDay = new Date(startDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          updatedData.end_date = nextDay.toISOString().substring(0, 10);
+        }
+      } else if (name === "end_date" && value && updatedData.start_date) {
+        const startDate = new Date(updatedData.start_date);
+        const endDate = new Date(value);
+        if (endDate <= startDate) {
+          // Set end_date = start_date + 1 ngày
+          const nextDay = new Date(startDate);
+          nextDay.setDate(nextDay.getDate() + 1);
+          updatedData.end_date = nextDay.toISOString().substring(0, 10);
+        }
+      }
+
+      return updatedData;
+    });
   };
 
   // HÀM MỚI: Xử lý khi click vào các nút gợi ý Budget
@@ -430,6 +456,11 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
                 type="date"
                 value={formData.end_date}
                 onChange={handleChange}
+                min={formData.start_date ? (() => {
+                  const startDate = new Date(formData.start_date);
+                  startDate.setDate(startDate.getDate() + 1);
+                  return startDate.toISOString().substring(0, 10);
+                })() : undefined}
                 required
                 disabled={isFormDisabled}
                 className="w-full p-3 border border-border rounded-lg bg-input text-foreground focus:ring-trip focus:border-trip transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
