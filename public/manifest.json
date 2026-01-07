@@ -1,0 +1,16 @@
+{
+  "name": "Tourism Together",
+  "short_name": "Tourism Together",
+  "description": "A platform to explore and share travel experiences",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "icons": [
+    {
+      "src": "/meta.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}
