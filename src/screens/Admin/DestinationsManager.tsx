@@ -181,7 +181,7 @@ export const DestinationsManager: React.FC = () => {
     if (!confirm("Bạn có chắc muốn xóa destination này?")) return;
 
     try {
-      const res = await fetch(API_ENDPOINTS.DESTINATIONS.DELETE(Number(id)), {
+      const res = await fetch(API_ENDPOINTS.DESTINATIONS.DELETE(String(id)), {
         method: "DELETE",
         credentials: "include",
       });
@@ -232,7 +232,7 @@ export const DestinationsManager: React.FC = () => {
       if (editingDestination) {
         // Update
         response = await fetch(
-          API_ENDPOINTS.DESTINATIONS.UPDATE(Number(editingDestination.id)),
+          API_ENDPOINTS.DESTINATIONS.UPDATE(String(editingDestination.id)),
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },

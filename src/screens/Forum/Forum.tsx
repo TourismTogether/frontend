@@ -134,7 +134,14 @@ export const Forum: React.FC = () => {
             });
             if (userRes.ok) {
               const userData: UserApiResponse = await userRes.json();
-              const userInfo = userData.data || userData;
+              const rawUserInfo = userData.data || userData;
+              const userInfo: UserInfo = {
+                id: (rawUserInfo as UserInfo).id || userId,
+                full_name: (rawUserInfo as UserInfo).full_name,
+                avatar_url: (rawUserInfo as UserInfo).avatar_url,
+                account_id: (rawUserInfo as UserInfo).account_id,
+                phone: (rawUserInfo as UserInfo).phone,
+              };
               return { userId, userData: userInfo };
             }
             return null;
@@ -157,14 +164,18 @@ export const Forum: React.FC = () => {
         const userInfo = userInfoMap[userId] || {};
         const categoryName = post.tags?.split(",")[0]?.trim() || "General";
         return {
-          ...post,
           id: String(post.id || post.uuid || ""),
           user_id: userId,
+          title: post.title,
+          content: post.content,
+          tags: post.tags || "",
           last_activity_at: post.updated_at || post.created_at,
-          reply_count: post.reply_count || 0,
+          reply_count: (post.reply_count || 0) as 0,
           total_views: post.total_views || 0,
           total_likes: post.total_likes || 0,
-          is_pinned: post.is_pinned || false,
+          created_at: post.created_at,
+          updated_at: post.updated_at,
+          is_pinned: (post.is_pinned || false) as false,
           forum_categories: {
             name: categoryName,
             color: getCategoryColor(categoryName),
@@ -172,9 +183,9 @@ export const Forum: React.FC = () => {
           profiles: {
             id: userInfo.id || userId,
             full_name: userInfo.full_name || "User",
-            avatar_url: userInfo.avatar_url || null,
-            account_id: userInfo.account_id,
-            phone: userInfo.phone,
+            avatar_url: userInfo.avatar_url || "",
+            account_id: userInfo.account_id || "",
+            phone: userInfo.phone || "",
           },
         };
       });
@@ -231,7 +242,7 @@ export const Forum: React.FC = () => {
                       profiles: {
                         id: reply.user_id || "",
                         full_name: "User",
-                        avatar_url: null,
+                        avatar_url: "",
                         account_id: "",
                         phone: "",
                       },
@@ -247,11 +258,11 @@ export const Forum: React.FC = () => {
                     return {
                       ...reply,
                       profiles: {
-                        id: userInfo.id || reply.user_id,
-                        full_name: userInfo.full_name || "User",
-                        avatar_url: userInfo.avatar_url || null,
-                        account_id: userInfo.account_id,
-                        phone: userInfo.phone,
+                        id: (userInfo as UserInfo).id || reply.user_id,
+                        full_name: (userInfo as UserInfo).full_name || "User",
+                        avatar_url: (userInfo as UserInfo).avatar_url || "",
+                        account_id: (userInfo as UserInfo).account_id || "",
+                        phone: (userInfo as UserInfo).phone || "",
                       },
                     };
                   }
@@ -263,7 +274,7 @@ export const Forum: React.FC = () => {
                   profiles: {
                     id: reply.user_id,
                     full_name: "User",
-                    avatar_url: null,
+                    avatar_url: "",
                     account_id: "",
                     phone: "",
                   },

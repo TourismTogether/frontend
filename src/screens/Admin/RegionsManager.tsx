@@ -73,7 +73,7 @@ export const RegionsManager: React.FC = () => {
     if (!confirm("Bạn có chắc muốn xóa region này?")) return;
 
     try {
-      const res = await fetch(API_ENDPOINTS.REGIONS.DELETE(Number(id)), {
+      const res = await fetch(API_ENDPOINTS.REGIONS.DELETE(String(id)), {
         method: "DELETE",
         credentials: "include",
       });
@@ -103,7 +103,7 @@ export const RegionsManager: React.FC = () => {
       let response: Response;
       if (editingRegion) {
         // Update
-        response = await fetch(API_ENDPOINTS.REGIONS.UPDATE(Number(editingRegion.id)), {
+        response = await fetch(API_ENDPOINTS.REGIONS.UPDATE(String(editingRegion.id)), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",

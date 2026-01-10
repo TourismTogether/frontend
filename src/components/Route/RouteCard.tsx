@@ -193,19 +193,19 @@ export const RouteCard: React.FC<RouteCardProps> = ({
     <div className={`${COLORS.BACKGROUND.CARD} p-5 rounded-xl shadow-md ${COLORS.BORDER.DEFAULT} border transition-all hover:shadow-lg relative duration-200`}>
       {/* Delete Confirmation Overlay */}
       {showDeleteConfirm && (
-        <div className={`absolute inset-0 ${COLORS.BACKGROUND.DESTRUCTIVE}/10 border-2 ${COLORS.BORDER.DESTRUCTIVE} rounded-xl flex items-center justify-center z-20 backdrop-blur-sm transition-colors duration-200`}>
+        <div className={`absolute inset-0 ${COLORS.DESTRUCTIVE.BACKGROUND}/10 border-2 ${COLORS.DESTRUCTIVE.BORDER} rounded-xl flex items-center justify-center z-20 backdrop-blur-sm transition-colors duration-200`}>
           <div className="text-center p-4">
-            <AlertCircle className={`h-8 w-8 ${COLORS.TEXT.DESTRUCTIVE} mx-auto mb-2 transition-colors duration-200`} />
-            <p className={`text-sm font-semibold ${COLORS.TEXT.DESTRUCTIVE} mb-1 transition-colors duration-200`}>
+            <AlertCircle className={`h-8 w-8 ${COLORS.DESTRUCTIVE.TEXT} mx-auto mb-2 transition-colors duration-200`} />
+            <p className={`text-sm font-semibold ${COLORS.DESTRUCTIVE.TEXT} mb-1 transition-colors duration-200`}>
               Delete this route?
             </p>
-            <p className={`text-xs ${COLORS.TEXT.DESTRUCTIVE}/80 mb-3 transition-colors duration-200`}>
+            <p className={`text-xs ${COLORS.DESTRUCTIVE.TEXT}/80 mb-3 transition-colors duration-200`}>
               This will also delete all associated costs.
             </p>
             <div className="flex gap-2 justify-center">
               <button
                 onClick={handleDeleteClick}
-                className={`px-4 py-1.5 ${COLORS.BACKGROUND.DESTRUCTIVE} text-white text-xs font-semibold rounded-lg ${COLORS.BACKGROUND.DESTRUCTIVE}/90 hover:opacity-90 transition-colors duration-200`}
+                className={`px-4 py-1.5 ${COLORS.DESTRUCTIVE.BACKGROUND} text-white text-xs font-semibold rounded-lg ${COLORS.DESTRUCTIVE.BACKGROUND}/90 hover:opacity-90 transition-colors duration-200`}
               >
                 Confirm Delete
               </button>
@@ -257,7 +257,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
           {onDeleteRoute && route.id && (
             <button
               onClick={handleDeleteClick}
-              className={`p-1.5 ${COLORS.TEXT.DESTRUCTIVE} ${COLORS.DESTRUCTIVE.TEXT_HOVER} ${COLORS.DESTRUCTIVE.BACKGROUND_HOVER} rounded-lg transition-colors duration-200`}
+              className={`p-1.5 ${COLORS.DESTRUCTIVE.TEXT} ${COLORS.DESTRUCTIVE.TEXT_HOVER} ${COLORS.DESTRUCTIVE.BACKGROUND_HOVER} rounded-lg transition-colors duration-200`}
               title="Delete route"
               aria-label="Delete route"
             >
@@ -369,7 +369,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
                   <span className={`col-span-2 truncate ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
                     {cost.description}
                   </span>
-                  <span className={`text-right font-medium ${COLORS.TEXT.DESTRUCTIVE} transition-colors duration-200`}>
+                  <span className={`text-right font-medium ${COLORS.DESTRUCTIVE.TEXT} transition-colors duration-200`}>
                     {formatCurrencyLocal(cost.amount)}
                   </span>
                   <div className="flex justify-center">
@@ -391,7 +391,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
                       onClick={() =>
                         cost.id && route.id && onDeleteCost(route.id, cost.id)
                       }
-                      className={`${COLORS.TEXT.DESTRUCTIVE} ${COLORS.DESTRUCTIVE.TEXT_HOVER} transition-colors duration-200`}
+                      className={`${COLORS.DESTRUCTIVE.TEXT} ${COLORS.DESTRUCTIVE.TEXT_HOVER} transition-colors duration-200`}
                       aria-label={`Xóa chi phí ${cost.description}`}
                     >
                       <Trash2 className="w-3 h-3" />

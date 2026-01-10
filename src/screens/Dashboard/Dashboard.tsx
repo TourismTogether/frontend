@@ -19,7 +19,11 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import dynamic from "next/dynamic";
 import { IRoute, ITrip } from "../../lib/type/interface";
-import { API_ENDPOINTS, getTravelImageUrl, getDestinationImageUrl } from "../../constants/api";
+import {
+  API_ENDPOINTS,
+  getTravelImageUrl,
+  getDestinationImageUrl,
+} from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
@@ -63,8 +67,6 @@ interface RouteResponse {
   lngStart?: number;
   lat_end?: number;
   lng_end?: number;
-  latStart?: number;
-  lngStart?: number;
   latEnd?: number;
   lngEnd?: number;
   details?: string[];
@@ -95,7 +97,7 @@ interface DiaryResponse {
 
 // Helper functions
 const isValidCoordinate = (value: number): boolean => {
-  return !isNaN(value) && isFinite(value) && value !== 0;
+  return !isNaN(value) && isFinite(value);
 };
 
 const isValidLatitude = (lat: number): boolean => {
@@ -107,12 +109,13 @@ const isValidLongitude = (lng: number): boolean => {
 };
 
 const isValidRoute = (route: IRoute): boolean => {
-  return (
-    isValidLatitude(route.latStart) &&
-    isValidLongitude(route.lngStart) &&
-    isValidLatitude(route.latEnd) &&
-    isValidLongitude(route.lngEnd)
-  );
+  // A route is valid if it has at least start OR end coordinates
+  // (some routes might only have start or only end)
+  const hasValidStart =
+    isValidLatitude(route.latStart) && isValidLongitude(route.lngStart);
+  const hasValidEnd =
+    isValidLatitude(route.latEnd) && isValidLongitude(route.lngEnd);
+  return hasValidStart || hasValidEnd;
 };
 
 // Stat Card Component
@@ -131,7 +134,9 @@ const StatCard: React.FC<StatCardProps> = ({
   gradient,
   imageUrl,
 }) => (
-  <div className={`relative bg-card border border-border rounded-xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${ANIMATIONS.FADE.IN_UP}`}>
+  <div
+    className={`relative bg-card border border-border rounded-xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${ANIMATIONS.FADE.IN_UP}`}
+  >
     {imageUrl && (
       <div className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity">
         <Image
@@ -145,7 +150,10 @@ const StatCard: React.FC<StatCardProps> = ({
     )}
     <div className="relative p-6 flex flex-col justify-between min-h-[140px]">
       <div className="flex items-center justify-between mb-4">
-        <PulseGlow variant="glow" className={`p-3 rounded-lg ${gradient} shadow-md ${ANIMATIONS.ROTATE.SLOW}`}>
+        <PulseGlow
+          variant="glow"
+          className={`p-3 rounded-lg ${gradient} shadow-md ${ANIMATIONS.ROTATE.SLOW}`}
+        >
           <Icon className="w-6 h-6 text-white" />
         </PulseGlow>
         {imageUrl && (
@@ -162,7 +170,9 @@ const StatCard: React.FC<StatCardProps> = ({
         )}
       </div>
       <div>
-        <p className="text-sm font-medium text-muted-foreground mb-2">{label}</p>
+        <p className="text-sm font-medium text-muted-foreground mb-2">
+          {label}
+        </p>
         <p className={`text-4xl font-bold ${COLORS.TEXT.PRIMARY}`}>
           {value.toLocaleString()}
         </p>
@@ -191,12 +201,20 @@ const QuickAccessItem: React.FC<QuickAccessItemProps> = ({
       className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border-l-4 ${COLORS.BORDER.PRIMARY} p-4 rounded-lg flex items-center justify-between transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group`}
     >
       <div className="flex items-center gap-3">
-        <div className={`p-2 rounded-lg ${gradient} group-hover:scale-110 transition-all duration-200`}>
+        <div
+          className={`p-2 rounded-lg ${gradient} group-hover:scale-110 transition-all duration-200`}
+        >
           <Icon className="w-5 h-5 text-white transition-colors duration-200" />
         </div>
-        <span className={`font-medium ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>{label}</span>
+        <span
+          className={`font-medium ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}
+        >
+          {label}
+        </span>
       </div>
-      <ChevronRight className={`w-4 h-4 ${COLORS.TEXT.MUTED} group-hover:${COLORS.TEXT.PRIMARY} group-hover:translate-x-1 transition-all duration-200`} />
+      <ChevronRight
+        className={`w-4 h-4 ${COLORS.TEXT.MUTED} group-hover:${COLORS.TEXT.PRIMARY} group-hover:translate-x-1 transition-all duration-200`}
+      />
     </Link>
   );
 };
@@ -236,9 +254,12 @@ export const Dashboard: React.FC = () => {
           tripsData = [];
           setRecentTrips([]);
         } else {
-          const tripsResponse = await fetch(API_ENDPOINTS.USERS.BY_ID(String(user.id)) + "/trips", {
-            credentials: "include",
-          });
+          const tripsResponse = await fetch(
+            API_ENDPOINTS.USERS.BY_ID(String(user.id)) + "/trips",
+            {
+              credentials: "include",
+            }
+          );
 
           if (tripsResponse.ok) {
             const tripsResult = await tripsResponse.json();
@@ -273,21 +294,32 @@ export const Dashboard: React.FC = () => {
           );
           if (routesResponse.ok) {
             const routesResult = await routesResponse.json();
-            let routes: RouteResponse[] = [];
-            if (Array.isArray(routesResult)) {
-              routes = routesResult;
-            } else if (routesResult.data && Array.isArray(routesResult.data)) {
-              routes = routesResult.data;
-            } else if (routesResult.data && !Array.isArray(routesResult.data)) {
-              routes = [routesResult.data];
-            }
+            // Handle different response formats - same as DetailTrip.tsx
+            const rawRoutes = routesResult.data || routesResult || [];
+            const routes: RouteResponse[] = Array.isArray(rawRoutes)
+              ? rawRoutes
+              : [];
+
+            console.log(
+              `[Dashboard] Fetched ${routes.length} routes for trip ${trip.id}:`,
+              routes
+            );
 
             return routes
               .map((r: RouteResponse) => {
-                const latStart = Number(r.latStart ?? r.lat_start);
-                const lngStart = Number(r.lngStart ?? r.lng_start);
-                const latEnd = Number(r.latEnd ?? r.lat_end);
-                const lngEnd = Number(r.lngEnd ?? r.lng_end);
+                // Parse coordinates - handle both camelCase and snake_case, similar to DetailTrip
+                const latStart = Number(r.latStart ?? r.latStart ?? NaN);
+                const lngStart = Number(r.lngStart ?? r.lngStart ?? NaN);
+                const latEnd = Number(r.latEnd ?? r.lat_end ?? NaN);
+                const lngEnd = Number(r.lngEnd ?? r.lng_end ?? NaN);
+
+                console.log(`[Dashboard] Route ${r.id} coordinates:`, {
+                  latStart,
+                  lngStart,
+                  latEnd,
+                  lngEnd,
+                  raw: r,
+                });
 
                 return {
                   id: String(r.id),
@@ -295,17 +327,31 @@ export const Dashboard: React.FC = () => {
                   trip_id: String(r.trip_id || trip.id),
                   title: r.title || "",
                   description: r.description || "",
+                  // Set coordinates - use 0 as fallback (will be validated later)
                   lngStart: isValidLongitude(lngStart) ? lngStart : 0,
                   latStart: isValidLatitude(latStart) ? latStart : 0,
                   lngEnd: isValidLongitude(lngEnd) ? lngEnd : 0,
                   latEnd: isValidLatitude(latEnd) ? latEnd : 0,
                   details: Array.isArray(r.details) ? r.details : [],
                   costs: [],
-                  created_at: r.created_at ? new Date(r.created_at) : new Date(),
-                  updated_at: r.updated_at ? new Date(r.updated_at) : new Date(),
+                  created_at: r.created_at
+                    ? new Date(r.created_at)
+                    : new Date(),
+                  updated_at: r.updated_at
+                    ? new Date(r.updated_at)
+                    : new Date(),
                 } as IRoute;
               })
-              .filter((route: IRoute) => isValidRoute(route));
+              .filter((route: IRoute) => {
+                // Accept route if it has at least valid start OR end coordinates
+                const hasValidStart =
+                  isValidLatitude(route.latStart) &&
+                  isValidLongitude(route.lngStart);
+                const hasValidEnd =
+                  isValidLatitude(route.latEnd) &&
+                  isValidLongitude(route.lngEnd);
+                return hasValidStart || hasValidEnd;
+              });
           } else if (routesResponse.status === 404) {
             return [];
           } else {
@@ -322,7 +368,11 @@ export const Dashboard: React.FC = () => {
 
       const allRoutesArrays = await Promise.all(routesPromises);
       const flattenedRoutes = allRoutesArrays.flat();
+      console.log(
+        `[Dashboard] Total routes before validation: ${flattenedRoutes.length}`
+      );
       const validRoutes = flattenedRoutes.filter(isValidRoute);
+      console.log(`[Dashboard] Total valid routes: ${validRoutes.length}`);
       setAllRoutes(validRoutes);
 
       // Find the nearest trip
@@ -370,7 +420,9 @@ export const Dashboard: React.FC = () => {
             ? postsResult
             : [];
           postsCount = posts.filter(
-            (p: PostResponse) => String(p.user_id) === String(user.id) || String(p.traveller_id) === String(user.id)
+            (p: PostResponse) =>
+              String(p.user_id) === String(user.id) ||
+              String(p.traveller_id) === String(user.id)
           ).length;
         }
       } catch (err) {
@@ -422,7 +474,9 @@ export const Dashboard: React.FC = () => {
   }
 
   return (
-    <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} transition-colors duration-300`}>
+    <div
+      className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} transition-colors duration-300`}
+    >
       {/* Hero Section with Image */}
       <Hero
         title={`Welcome back, ${profile?.username || "Traveller"}! 🌍`}
@@ -434,11 +488,20 @@ export const Dashboard: React.FC = () => {
         {/* Stats Cards Section */}
         <div className="mb-10">
           <div className="flex items-center gap-2 mb-6">
-            <TrendingUp className={`w-6 h-6 ${COLORS.TEXT.PRIMARY} transition-colors duration-200`} />
-            <h2 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>Your Progress Summary</h2>
+            <TrendingUp
+              className={`w-6 h-6 ${COLORS.TEXT.PRIMARY} transition-colors duration-200`}
+            />
+            <h2
+              className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}
+            >
+              Your Progress Summary
+            </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div className={ANIMATIONS.FADE.IN_UP} style={{ animationDelay: "0.1s" }}>
+            <div
+              className={ANIMATIONS.FADE.IN_UP}
+              style={{ animationDelay: "0.1s" }}
+            >
               <StatCard
                 icon={Plane}
                 label="Total Trips"
@@ -447,7 +510,10 @@ export const Dashboard: React.FC = () => {
                 imageUrl={getTravelImageUrl("airplane travel", 400, 300)}
               />
             </div>
-            <div className={ANIMATIONS.FADE.IN_UP} style={{ animationDelay: "0.2s" }}>
+            <div
+              className={ANIMATIONS.FADE.IN_UP}
+              style={{ animationDelay: "0.2s" }}
+            >
               <StatCard
                 icon={MessageSquare}
                 label="Total Posts"
@@ -456,7 +522,10 @@ export const Dashboard: React.FC = () => {
                 imageUrl={getTravelImageUrl("discussion forum", 400, 300)}
               />
             </div>
-            <div className={ANIMATIONS.FADE.IN_UP} style={{ animationDelay: "0.3s" }}>
+            <div
+              className={ANIMATIONS.FADE.IN_UP}
+              style={{ animationDelay: "0.3s" }}
+            >
               <StatCard
                 icon={NotebookPen}
                 label="Total Diaries"
@@ -465,7 +534,10 @@ export const Dashboard: React.FC = () => {
                 imageUrl={getTravelImageUrl("travel journal", 400, 300)}
               />
             </div>
-            <div className={ANIMATIONS.FADE.IN_UP} style={{ animationDelay: "0.4s" }}>
+            <div
+              className={ANIMATIONS.FADE.IN_UP}
+              style={{ animationDelay: "0.4s" }}
+            >
               <StatCard
                 icon={MapPin}
                 label="Total Routes"
@@ -485,13 +557,19 @@ export const Dashboard: React.FC = () => {
               <>
                 <div className="relative h-48 overflow-hidden">
                   <Image
-                    src={getDestinationImageUrl(newestTrip.title || "travel destination", 800, 300)}
+                    src={getDestinationImageUrl(
+                      newestTrip.title || "travel destination",
+                      800,
+                      300
+                    )}
                     alt={newestTrip.title || "Trip"}
                     fill
                     className="object-cover"
                     unoptimized
                   />
-                  <div className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-60`}></div>
+                  <div
+                    className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-60`}
+                  ></div>
                   <div className="absolute inset-0 p-6 flex flex-col justify-end">
                     <div className="flex justify-between items-end">
                       <div>
@@ -503,7 +581,8 @@ export const Dashboard: React.FC = () => {
                         </p>
                         {newestTripRoutes.length > 0 && (
                           <p className="text-sm text-white/80 mt-1">
-                            {newestTripRoutes.length} route{newestTripRoutes.length > 1 ? "s" : ""}
+                            {newestTripRoutes.length} route
+                            {newestTripRoutes.length > 1 ? "s" : ""}
                           </p>
                         )}
                       </div>
@@ -530,8 +609,13 @@ export const Dashboard: React.FC = () => {
                           <h3 className="font-semibold text-foreground line-clamp-1">
                             {route.title || `Route ${(route.index ?? 0) + 1}`}
                           </h3>
-                          <span className={`text-xs px-2 py-1 rounded ${COLORS.PRIMARY.LIGHT}`}>
-                            #{route.index !== undefined ? route.index + 1 : idx + 1}
+                          <span
+                            className={`text-xs px-2 py-1 rounded ${COLORS.PRIMARY.LIGHT}`}
+                          >
+                            #
+                            {route.index !== undefined
+                              ? route.index + 1
+                              : idx + 1}
                           </span>
                         </div>
                         <p className="text-sm text-muted-foreground mb-2 line-clamp-2">
@@ -587,7 +671,9 @@ export const Dashboard: React.FC = () => {
           <div className="lg:col-span-1 bg-card border border-border rounded-xl shadow-lg p-6">
             <div className="flex items-center space-x-2 mb-6">
               <BarChart3 className={`w-5 h-5 ${COLORS.TEXT.PRIMARY}`} />
-              <h2 className="text-xl font-bold text-foreground">Quick Access</h2>
+              <h2 className="text-xl font-bold text-foreground">
+                Quick Access
+              </h2>
             </div>
             <div className="space-y-3">
               <QuickAccessItem
@@ -642,7 +728,9 @@ export const Dashboard: React.FC = () => {
                     <MapPin className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h2 className="text-xl font-bold text-foreground">Nearest Trip Map</h2>
+                    <h2 className="text-xl font-bold text-foreground">
+                      Nearest Trip Map
+                    </h2>
                     {newestTrip.title && (
                       <p className="text-sm text-muted-foreground mt-1">
                         {newestTrip.title}

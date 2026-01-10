@@ -95,10 +95,10 @@ export const API_ENDPOINTS = {
   // Regions
   REGIONS: {
     BASE: `${API_BASE_URL}/regions`,
-    BY_ID: (id: number) => `${API_BASE_URL}/regions/${id}`,
+    BY_ID: (id: string | number) => `${API_BASE_URL}/regions/${id}`,
     CREATE: `${API_BASE_URL}/regions`,
-    UPDATE: (id: number) => `${API_BASE_URL}/regions/${id}`,
-    DELETE: (id: number) => `${API_BASE_URL}/regions/${id}`,
+    UPDATE: (id: string | number) => `${API_BASE_URL}/regions/${id}`,
+    DELETE: (id: string | number) => `${API_BASE_URL}/regions/${id}`,
   },
 
   // Supporters

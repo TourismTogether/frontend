@@ -238,7 +238,7 @@ export const SOSManagement: React.FC = () => {
   const handleResolveEmergency = async (userId: string) => {
     setProcessingId(userId);
     try {
-      const res = await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(Number(userId)), {
+      const res = await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(String(userId)), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -282,7 +282,7 @@ export const SOSManagement: React.FC = () => {
 
       const updatedContacts = [...currentContacts, supporterId];
 
-      const res = await fetch(`${API_URL}/travellers/${userId}`, {
+      const res = await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(userId), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -293,7 +293,7 @@ export const SOSManagement: React.FC = () => {
 
       if (res.ok) {
         // Fetch updated SOS requests
-        const result = await fetch(`${API_URL}/travellers/sos/all`, {
+        const result = await fetch(API_ENDPOINTS.TRAVELLERS.SOS_ALL, {
           credentials: "include",
         });
         const fetchResult = await result.json();
@@ -330,7 +330,7 @@ export const SOSManagement: React.FC = () => {
       const currentContacts = request.emergency_contacts || [];
       const updatedContacts = currentContacts.filter((id) => id !== supporterId);
 
-      const res = await fetch(`${API_URL}/travellers/${userId}`, {
+      const res = await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(userId), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -341,7 +341,7 @@ export const SOSManagement: React.FC = () => {
 
       if (res.ok) {
         // Fetch updated SOS requests
-        const result = await fetch(`${API_URL}/travellers/sos/all`, {
+        const result = await fetch(API_ENDPOINTS.TRAVELLERS.SOS_ALL, {
           credentials: "include",
         });
         const fetchResult = await result.json();

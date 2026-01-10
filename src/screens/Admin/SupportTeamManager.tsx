@@ -67,7 +67,7 @@ export const SupportTeamManager: React.FC = () => {
         const supportersWithUsers = await Promise.all(
           result.data.map(async (supporter: Supporter) => {
             try {
-              const userRes = await fetch(API_ENDPOINTS.USERS.BY_ID(Number(supporter.user_id)), {
+              const userRes = await fetch(API_ENDPOINTS.USERS.BY_ID(String(supporter.user_id)), {
                 credentials: 'include'
               });
               const userResult = await userRes.json();
@@ -122,7 +122,7 @@ export const SupportTeamManager: React.FC = () => {
     if (!confirm('Bạn có chắc muốn xóa supporter này?')) return;
 
     try {
-      const res = await fetch(API_ENDPOINTS.SUPPORTERS.DELETE(Number(userId)), {
+      const res = await fetch(API_ENDPOINTS.SUPPORTERS.DELETE(String(userId)), {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -140,7 +140,7 @@ export const SupportTeamManager: React.FC = () => {
     try {
       if (editingSupporter) {
         // Update
-        await fetch(API_ENDPOINTS.SUPPORTERS.UPDATE(Number(editingSupporter.user_id)), {
+        await fetch(API_ENDPOINTS.SUPPORTERS.UPDATE(String(editingSupporter.user_id)), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -164,7 +164,7 @@ export const SupportTeamManager: React.FC = () => {
 
   const toggleAvailability = async (supporter: Supporter) => {
     try {
-      await fetch(API_ENDPOINTS.SUPPORTERS.UPDATE(Number(supporter.user_id)), {
+      await fetch(API_ENDPOINTS.SUPPORTERS.UPDATE(String(supporter.user_id)), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

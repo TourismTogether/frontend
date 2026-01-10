@@ -229,7 +229,7 @@ export const Trips: React.FC = () => {
       // Try to remove user from trip first
       try {
         const deleteJoinTripResponse = await fetch(
-          `${API_ENDPOINTS.TRIPS.BY_ID(Number(tripId))}/users/${user.id}`,
+          `${API_ENDPOINTS.TRIPS.BY_ID(String(tripId))}/users/${user.id}`,
           {
             method: "DELETE",
             headers: {
