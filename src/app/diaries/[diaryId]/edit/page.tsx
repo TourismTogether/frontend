@@ -3,6 +3,7 @@
 import { Navbar } from "@/components/Layout/Navbar";
 import EditDiary from "@/screens/Diaries/EditDiary";
 import { useParams } from "next/navigation";
+import { COLORS } from "@/constants/colors";
 
 
 export default function Page({ params }: { params: { diaryId: string | string[] } }) {
@@ -11,7 +12,7 @@ export default function Page({ params }: { params: { diaryId: string | string[] 
 
     if (!diaryId) {
         return (
-            <div className="min-h-screen bg-gray-50">
+            <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
                 <Navbar />
                 <div className="max-w-4xl mx-auto px-6 py-8">Missing diary id</div>
             </div>
@@ -19,7 +20,7 @@ export default function Page({ params }: { params: { diaryId: string | string[] 
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
             <Navbar />
             <EditDiary diaryId={diaryId} />
         </div>

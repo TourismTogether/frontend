@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useRef, useState } from "react";
+import { COLORS, GRADIENTS } from "@/constants/colors";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -182,15 +183,15 @@ export default function NewPost() {
 
                         {openModel && (
                             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-                                <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
+                                <div className={`${COLORS.BACKGROUND.CARD} w-full max-w-md rounded-xl shadow-lg p-6`}>
                                     {/* Header */}
                                     <div className="flex items-center justify-between mb-4">
-                                        <h2 className="text-lg font-semibold text-gray-900">
+                                        <h2 className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT}`}>
                                             Suggest Diary
                                         </h2>
                                         <button
                                             onClick={() => setOpenModel(false)}
-                                            className="text-gray-400 hover:text-gray-600 text-xl"
+                                            className={`${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} text-xl`}
                                         >
                                             ✕
                                         </button>
@@ -200,14 +201,14 @@ export default function NewPost() {
                                     <form className="space-y-4" onSubmit={handleSubmitSuggest}>
                                         {/* Topic */}
                                         <div>
-                                            <label className="block text-sm font-medium text-gray-700 mb-1">
+                                            <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                                                 Topic
                                             </label>
                                             <input
                                                 type="text"
                                                 value={topic}
                                                 onChange={(e) => setTopic(e.target.value)}
-                                                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                                className={`w-full rounded-lg border ${COLORS.BORDER.DEFAULT} px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                                                 placeholder="Enter topic"
                                             />
                                         </div>
@@ -217,7 +218,7 @@ export default function NewPost() {
                                             <button
                                                 type="button"
                                                 onClick={() => setOpenModel(false)}
-                                                className="px-4 py-2 text-sm rounded-lg border text-gray-700 hover:bg-gray-100"
+                                                className={`px-4 py-2 text-sm rounded-lg border ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED_HOVER}`}
                                                 disabled={loading}
                                             >
                                                 Cancel
@@ -381,7 +382,7 @@ export default function NewPost() {
                                     title="Click to select a photo"
                                     type="button"
                                     onClick={removeImage}
-                                    className="absolute top-2 right-2 p-1.5 bg-white/90 text-red-500 rounded-full shadow-sm hover:bg-red-50 transition-colors"
+                                    className={`absolute top-2 right-2 p-1.5 ${COLORS.BACKGROUND.CARD}/90 ${COLORS.DESTRUCTIVE.TEXT} rounded-full shadow-sm hover:${COLORS.DESTRUCTIVE.BACKGROUND_HOVER} transition-colors`}
                                 >
                                     <X className="w-4 h-4" />
                                 </button>

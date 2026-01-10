@@ -7,6 +7,7 @@ import { uploadFile } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { Response } from "@/types/response";
+import { COLORS, GRADIENTS } from "@/constants/colors";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -235,7 +236,7 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
     return (
         <>
             <div className="max-w-7xl mx-auto px-4 py-8">
-                <Link href="/diaries" className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors font-medium group">
+                <Link href="/diaries" className={`flex items-center ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} mb-6 transition-colors font-medium group`}>
                     <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
                     Back to Diaries
                 </Link>
@@ -255,7 +256,7 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
 
                 <div className="mb-12">
                     {!mainImage && !existingMainImage && (
-                        <label className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-sm text-gray-500 cursor-pointer hover:border-blue-500 hover:text-blue-600 transition min-h-[200px] bg-gray-50 hover:bg-blue-50">
+                        <label className={`border-2 border-dashed ${COLORS.BORDER.DEFAULT} rounded-xl p-8 flex flex-col items-center justify-center text-sm ${COLORS.TEXT.MUTED} cursor-pointer hover:${COLORS.BORDER.PRIMARY} hover:${COLORS.TEXT.PRIMARY} transition min-h-[200px] ${COLORS.BACKGROUND.MUTED} hover:${COLORS.PRIMARY.LIGHT}`}>
                             <span className="text-4xl mb-3">📷</span>
                             <span className="font-medium text-base">Upload Cover Photo</span>
                             <span className="text-xs mt-2">PNG, JPG up to 10MB</span>
@@ -290,8 +291,8 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
                 </div>
 
                 <div className="mb-12">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-900">Related Trip</h2>
-                    <select onChange={(e) => setTripId(e.target.value)} value={tripId || ""} id="diary-trip" name="trip_id" className="w-full px-4 py-2 border rounded-lg text-gray-500">
+                    <h2 className={`text-xl font-semibold mb-4 ${COLORS.TEXT.DEFAULT}`}>Related Trip</h2>
+                    <select onChange={(e) => setTripId(e.target.value)} value={tripId || ""} id="diary-trip" name="trip_id" className={`w-full px-4 py-2 border ${COLORS.BORDER.DEFAULT} rounded-lg ${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.DEFAULT}`}>
                         <option value="">Related Trip (Optional)</option>
                         {trips && trips.map(function (trip: any) {
                             return (
@@ -303,25 +304,25 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
                 </div>
 
                 <div className="mb-12">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-900">short description</h2>
-                    <div className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition">
-                        <input type="text" value={shortDes} onChange={(e) => setShortDes(e.target.value)} placeholder="Short description" className="w-full text-sm md:text-base font-bold text-gray-900 placeholder-gray-400 bg-transparent outline-none border-none focus:ring-0" />
+                    <h2 className={`text-xl font-semibold mb-4 ${COLORS.TEXT.DEFAULT}`}>short description</h2>
+                    <div className={`border ${COLORS.BORDER.DEFAULT} rounded-lg p-4 ${COLORS.BACKGROUND.MUTED} hover:${COLORS.BACKGROUND.MUTED_HOVER} transition`}>
+                        <input type="text" value={shortDes} onChange={(e) => setShortDes(e.target.value)} placeholder="Short description" className={`w-full text-sm md:text-base font-bold ${COLORS.TEXT.DEFAULT} placeholder:${COLORS.TEXT.MUTED} bg-transparent outline-none border-none focus:ring-0`} />
                     </div>
                     {errors.shortDes && <p className="text-red-600 text-sm mt-1">{errors.shortDes}</p>}
                 </div>
 
                 <div className="mb-12">
-                    <h2 className="text-xl font-semibold mb-4 text-gray-900">Info Cards</h2>
+                    <h2 className={`text-xl font-semibold mb-4 ${COLORS.TEXT.DEFAULT}`}>Info Cards</h2>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {metaItems && metaItems.map((meta: any) => (
-                            <div key={meta.id} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition group relative">
+                            <div key={meta.id} className={`border ${COLORS.BORDER.DEFAULT} rounded-lg p-4 ${COLORS.BACKGROUND.MUTED} hover:${COLORS.BACKGROUND.MUTED_HOVER} transition group relative`}>
                                 <input
                                     value={meta.title}
                                     onChange={(e) =>
                                         handleUpdateMeta(meta.id, "title", e.target.value)
                                     }
                                     placeholder="Title"
-                                    className="w-full text-xs text-gray-500 bg-transparent outline-none font-medium"
+                                    className={`w-full text-xs ${COLORS.TEXT.MUTED} bg-transparent outline-none font-medium`}
                                 />
 
                                 <input
@@ -330,14 +331,14 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
                                         handleUpdateMeta(meta.id, "content", e.target.value)
                                     }
                                     placeholder="Content"
-                                    className="w-full font-semibold text-gray-800 bg-transparent outline-none mt-2"
+                                    className={`w-full font-semibold ${COLORS.TEXT.DEFAULT} bg-transparent outline-none mt-2`}
                                 />
 
                                 {metaItems && metaItems.length > 1 && (
                                     <button
                                         type="button"
                                         onClick={() => handleRemoveMetaItem(meta.id)}
-                                        className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500"
+                                        className={`absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition ${COLORS.TEXT.MUTED} hover:${COLORS.DESTRUCTIVE.TEXT}`}
                                     >
                                         <Trash2 className="w-4 h-4" />
                                     </button>
@@ -348,7 +349,7 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
                         <button
                             type="button"
                             onClick={handleAddMetaItem}
-                            className="flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-lg px-4 py-6 text-gray-600 hover:bg-blue-50 hover:border-blue-500 hover:text-blue-600 transition group"
+                            className={`flex items-center justify-center gap-2 border border-dashed ${COLORS.BORDER.DEFAULT} rounded-lg px-4 py-6 ${COLORS.TEXT.MUTED} hover:${COLORS.PRIMARY.LIGHT} hover:${COLORS.BORDER.PRIMARY} hover:${COLORS.TEXT.PRIMARY} transition group`}
                         >
                             <Plus className="w-5 h-5 group-hover:scale-110 transition" />
                         </button>
@@ -356,20 +357,20 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
                 </div>
 
                 <div className="mb-12">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Content Sections</h2>
+                    <h2 className={`text-xl font-semibold ${COLORS.TEXT.DEFAULT} mb-4`}>Content Sections</h2>
 
                     <div className="grid md:grid-cols-2 gap-6">
 
                         {contentSections && contentSections.map((section: any) => {
                             return (
-                                <div key={section.id} className="border rounded-xl p-6 bg-gray-50 hover:bg-gray-100 transition group relative">
+                                <div key={section.id} className={`border ${COLORS.BORDER.DEFAULT} rounded-xl p-6 ${COLORS.BACKGROUND.MUTED} hover:${COLORS.BACKGROUND.MUTED_HOVER} transition group relative`}>
                                     <input
                                         value={section.title}
                                         onChange={(e) =>
                                             handleUpdateContentSection(section.id, "title", e.target.value)
                                         }
                                         placeholder="Section Title"
-                                        className="w-full text-sm font-semibold text-gray-900 bg-transparent outline-none placeholder-gray-400"
+                                        className={`w-full text-sm font-semibold ${COLORS.TEXT.DEFAULT} bg-transparent outline-none placeholder:${COLORS.TEXT.MUTED}`}
                                     />
 
                                     <textarea
@@ -378,7 +379,7 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
                                             handleUpdateContentSection(section.id, "content", e.target.value)
                                         }
                                         placeholder="Section content..."
-                                        className="w-full text-sm text-gray-700 bg-transparent outline-none mt-3 placeholder-gray-400 resize-none"
+                                        className={`w-full text-sm ${COLORS.TEXT.DEFAULT} bg-transparent outline-none mt-3 placeholder:${COLORS.TEXT.MUTED} resize-none`}
                                         rows={4}
                                     />
 
@@ -386,7 +387,7 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveContentSection(section.id)}
-                                            className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500"
+                                            className={`absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition ${COLORS.TEXT.MUTED} hover:${COLORS.DESTRUCTIVE.TEXT}`}
                                         >
                                             <Trash2 className="w-4 h-4" />
                                         </button>
@@ -395,17 +396,17 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
                             )
                         })}
 
-                        <button onClick={handleAddContentSection} className="flex items-center justify-center border border-dashed rounded-xl p-6 text-gray-500 hover:text-blue-600 hover:border-blue-500 hover:bg-blue-50 transition group">
+                        <button onClick={handleAddContentSection} className={`flex items-center justify-center border border-dashed ${COLORS.BORDER.DEFAULT} rounded-xl p-6 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.PRIMARY} hover:${COLORS.BORDER.PRIMARY} hover:${COLORS.PRIMARY.LIGHT} transition group`}>
                             <Plus className="w-6 h-6 group-hover:scale-110 transition" />
                         </button>
                     </div>
                 </div>
 
                 <div className="mb-12">
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Images</h2>
+                    <h2 className={`text-xl font-semibold ${COLORS.TEXT.DEFAULT} mb-4`}>Images</h2>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-                        <label className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-sm text-gray-500 cursor-pointer hover:border-blue-500 hover:text-blue-600 transition min-h-[140px]">
+                        <label className={`border-2 border-dashed ${COLORS.BORDER.DEFAULT} rounded-xl p-6 flex flex-col items-center justify-center text-sm ${COLORS.TEXT.MUTED} cursor-pointer hover:${COLORS.BORDER.PRIMARY} hover:${COLORS.TEXT.PRIMARY} transition min-h-[140px]`}>
                             <span className="text-2xl mb-1">📷</span>
                             <span className="font-medium">Upload Photos</span>
                             <span className="text-xs mt-1">PNG, JPG up to 10MB</span>
@@ -475,16 +476,16 @@ export default function EditDiary({ diaryId }: { diaryId?: string }) {
                         <span>Make this entry public</span>
                         <label className="relative inline-flex items-center cursor-pointer">
                             <input type="checkbox" onChange={(e) => setPublic(e.target.checked)} checked={is_public} name="is_public" id="diary-public" className="sr-only peer" />
-                            <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-emerald-600 transition-all duration-200" />
-                            <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white border border-gray-300 rounded-full shadow transform peer-checked:translate-x-5 transition-all duration-200" />
+                            <div className={`w-11 h-6 ${COLORS.BACKGROUND.MUTED} rounded-full peer peer-checked:bg-emerald-600 transition-all duration-200`} />
+                            <div className={`absolute left-0.5 top-0.5 w-5 h-5 ${COLORS.BACKGROUND.CARD} border ${COLORS.BORDER.DEFAULT} rounded-full shadow transform peer-checked:translate-x-5 transition-all duration-200`} />
                         </label>
                     </div>
                 </div>
 
                 <div className="flex justify-between items-center">
                     <div className="">
-                        <button className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100 transition cursor-pointer">Save as Draft</button>
-                        <button className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100 transition cursor-pointer">Preview</button>
+                        <button className={`px-4 py-2 border ${COLORS.BORDER.DEFAULT} rounded-lg text-sm hover:${COLORS.BACKGROUND.MUTED_HOVER} transition cursor-pointer ${COLORS.TEXT.DEFAULT}`}>Save as Draft</button>
+                        <button className={`px-4 py-2 border ${COLORS.BORDER.DEFAULT} rounded-lg text-sm hover:${COLORS.BACKGROUND.MUTED_HOVER} transition cursor-pointer ${COLORS.TEXT.DEFAULT}`}>Preview</button>
                     </div>
                     <button onClick={handleUploadDiary} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold cursor-pointer hover:bg-green-700 hover:shadow-md active:scale-95 transition-all">
                         Update Entry

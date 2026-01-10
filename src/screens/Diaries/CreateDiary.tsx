@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Key, useEffect, useState } from "react";
 import PreviewDiary from "./PreviewDiary";
+import { COLORS, GRADIENTS } from "@/constants/colors";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -35,7 +36,7 @@ export default function CreateDiary() {
 
   useEffect(function () {
     getTrips();
-  }, [])
+  }, []);
 
   async function getTrips() {
     let res = await fetch(`${API}/trips`);
@@ -51,15 +52,14 @@ export default function CreateDiary() {
     }
   }
 
-
   function handleMainImageChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setMainImage({
       file,
-      url: URL.createObjectURL(file)
-    })
+      url: URL.createObjectURL(file),
+    });
   }
 
   function handleRemoveMainImage() {
@@ -80,39 +80,46 @@ export default function CreateDiary() {
 
   function handleUpdateMeta(id: number, key: string, value: string) {
     setMetaItems((prev: any[]) =>
-      prev.map(item =>
-        item.id === id ? { ...item, [key]: value } : item
-      )
+      prev.map((item) => (item.id === id ? { ...item, [key]: value } : item))
     );
   }
 
   function handleRemoveMetaItem(id: number) {
-    setMetaItems((prev: any[]) => prev.filter(item => item.id !== id));
+    setMetaItems((prev: any[]) => prev.filter((item) => item.id !== id));
   }
 
-
   function handleAddContentSection() {
-    const newId = (contentSections == null ? 1 : contentSections.length + 1).toString();
+    const newId = (
+      contentSections == null ? 1 : contentSections.length + 1
+    ).toString();
     if (contentSections == null) {
-      setContentSections([{ id: newId, title: "New section", content: "Description about this section..." }]);
+      setContentSections([
+        {
+          id: newId,
+          title: "New section",
+          content: "Description about this section...",
+        },
+      ]);
       return;
     }
     setContentSections((prev: any) => [
       ...prev,
-      { id: newId, title: "New section", content: "Description about this section..." },
+      {
+        id: newId,
+        title: "New section",
+        content: "Description about this section...",
+      },
     ]);
   }
 
   function handleUpdateContentSection(id: number, key: string, value: string) {
     setContentSections((prev: any[]) =>
-      prev.map(item =>
-        item.id === id ? { ...item, [key]: value } : item
-      )
+      prev.map((item) => (item.id === id ? { ...item, [key]: value } : item))
     );
   }
 
   function handleRemoveContentSection(id: number) {
-    setContentSections((prev: any[]) => prev.filter(item => item.id !== id));
+    setContentSections((prev: any[]) => prev.filter((item) => item.id !== id));
   }
 
   function handlePhotosChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -124,12 +131,12 @@ export default function CreateDiary() {
     Array.from(files).forEach((file) => {
       selectedImages.push({
         file,
-        url: URL.createObjectURL(file)
+        url: URL.createObjectURL(file),
       });
     });
 
     setPreviewImages(selectedImages);
-  };
+  }
 
   function removeImage(index: number) {
     setPreviewImages((prev) => {
@@ -137,7 +144,7 @@ export default function CreateDiary() {
       URL.revokeObjectURL(prev[index].url);
       return prev?.filter((_, i) => i !== index);
     });
-  };
+  }
 
   async function getDataDiary() {
     let imageUrls: string[] | null = null;
@@ -154,7 +161,10 @@ export default function CreateDiary() {
 
     let mainImageUrl: string | null = null;
     if (mainImage) {
-      mainImageUrl = await uploadFile(mainImage.file, `diaries/images/${Date.now()}-${mainImage.file.name}`);
+      mainImageUrl = await uploadFile(
+        mainImage.file,
+        `diaries/images/${Date.now()}-${mainImage.file.name}`
+      );
     }
 
     const newErrors: any = {};
@@ -184,8 +194,8 @@ export default function CreateDiary() {
       image_urls: imageUrls,
       main_image_url: mainImageUrl,
       user_id: user?.id,
-      is_public: is_public
-    }
+      is_public: is_public,
+    };
 
     return diary;
   }
@@ -199,8 +209,8 @@ export default function CreateDiary() {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify(diary)
-    })
+      body: JSON.stringify(diary),
+    });
 
     res = await res.json();
 
@@ -222,8 +232,8 @@ export default function CreateDiary() {
         "Content-Type": "application/json",
       },
       credentials: "include",
-      body: JSON.stringify(diary)
-    })
+      body: JSON.stringify(diary),
+    });
 
     res = await res.json();
 
@@ -295,31 +305,37 @@ export default function CreateDiary() {
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 py-8">
-
         <div className="flex items-center justify-between mb-6">
           <Link
             href="/diaries"
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors font-medium group"
+            className={`flex items-center ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} transition-colors font-medium group`}
           >
             <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
             Back to Diaries
           </Link>
 
-          <button onClick={() => setOpenModel(true)} className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition cursor-pointer">
+          <button
+            onClick={() => setOpenModel(true)}
+            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition cursor-pointer"
+          >
             Suggest diary
           </button>
 
           {openModel && (
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-              <div className="bg-white w-full max-w-md rounded-xl shadow-lg p-6">
+              <div
+                className={`${COLORS.BACKGROUND.CARD} w-full max-w-md rounded-xl shadow-lg p-6`}
+              >
                 {/* Header */}
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2
+                    className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT}`}
+                  >
                     Suggest Diary
                   </h2>
                   <button
                     onClick={() => setOpenModel(false)}
-                    className="text-gray-400 hover:text-gray-600 text-xl"
+                    className={`${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} text-xl`}
                   >
                     ✕
                   </button>
@@ -329,42 +345,48 @@ export default function CreateDiary() {
                 <form className="space-y-4" onSubmit={handleSubmit}>
                   {/* Topic */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}
+                    >
                       Topic
                     </label>
                     <input
                       type="text"
                       value={topic}
                       onChange={(e) => setTopic(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full rounded-lg border ${COLORS.BORDER.DEFAULT} px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                       placeholder="Enter topic"
                     />
                   </div>
 
                   {/* Goal */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}
+                    >
                       Goal
                     </label>
                     <textarea
                       rows={3}
                       value={goal}
                       onChange={(e) => setGoal(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full rounded-lg border ${COLORS.BORDER.DEFAULT} px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                       placeholder="What is the goal?"
                     />
                   </div>
 
                   {/* Audience */}
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label
+                      className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}
+                    >
                       Audience
                     </label>
                     <input
                       type="text"
                       value={audience}
                       onChange={(e) => setAudience(e.target.value)}
-                      className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className={`w-full rounded-lg border ${COLORS.BORDER.DEFAULT} px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                       placeholder="Target audience"
                     />
                   </div>
@@ -374,7 +396,7 @@ export default function CreateDiary() {
                     <button
                       type="button"
                       onClick={() => setOpenModel(false)}
-                      className="px-4 py-2 text-sm rounded-lg border text-gray-700 hover:bg-gray-100"
+                      className={`px-4 py-2 text-sm rounded-lg border ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED_HOVER}`}
                       disabled={loading}
                     >
                       Cancel
@@ -400,15 +422,19 @@ export default function CreateDiary() {
               placeholder="Diary title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              className="w-full text-3xl md:text-4xl font-bold text-gray-900 placeholder-gray-400 bg-transparent outline-none border-none focus:ring-0"
+              className={`w-full text-3xl md:text-4xl font-bold ${COLORS.TEXT.DEFAULT} placeholder:${COLORS.TEXT.MUTED} bg-transparent outline-none border-none focus:ring-0`}
             />
-            {errors.title && <p className="text-red-600 text-sm mt-1">{errors.title}</p>}
+            {errors.title && (
+              <p className="text-red-600 text-sm mt-1">{errors.title}</p>
+            )}
           </div>
         </div>
 
         <div className="mb-12">
           {!mainImage && (
-            <label className="border-2 border-dashed border-gray-300 rounded-xl p-8 flex flex-col items-center justify-center text-sm text-gray-500 cursor-pointer hover:border-blue-500 hover:text-blue-600 transition min-h-[200px] bg-gray-50 hover:bg-blue-50">
+            <label
+              className={`border-2 border-dashed ${COLORS.BORDER.DEFAULT} rounded-xl p-8 flex flex-col items-center justify-center text-sm ${COLORS.TEXT.MUTED} cursor-pointer hover:${COLORS.BORDER.PRIMARY} hover:${COLORS.TEXT.PRIMARY} transition min-h-[200px] ${COLORS.BACKGROUND.MUTED} hover:${COLORS.PRIMARY.LIGHT}`}
+            >
               <span className="text-4xl mb-3">📷</span>
               <span className="font-medium text-base">Upload Cover Photo</span>
               <span className="text-xs mt-2">PNG, JPG up to 10MB</span>
@@ -431,7 +457,7 @@ export default function CreateDiary() {
               <button
                 type="button"
                 onClick={handleRemoveMainImage}
-                className="absolute top-3 right-3 bg-white text-gray-700 text-sm w-8 h-8 flex items-center justify-center rounded-full shadow opacity-0 group-hover:opacity-100 transition hover:bg-red-500 hover:text-white"
+                className={`absolute top-3 right-3 ${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} text-sm w-8 h-8 flex items-center justify-center rounded-full shadow opacity-0 group-hover:opacity-100 transition hover:${COLORS.DESTRUCTIVE.BACKGROUND} hover:text-white`}
               >
                 ✕
               </button>
@@ -440,65 +466,95 @@ export default function CreateDiary() {
         </div>
 
         <div className="mb-12">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">Related Trip</h2>
-          <select onChange={(e) => setTripId(e.target.value)} id="diary-trip" name="trip_id" className="w-full px-4 py-2 border rounded-lg text-gray-500">
+          <h2 className={`text-xl font-semibold mb-4 ${COLORS.TEXT.DEFAULT}`}>
+            Related Trip
+          </h2>
+          <select
+            onChange={(e) => setTripId(e.target.value)}
+            id="diary-trip"
+            name="trip_id"
+            className={`w-full px-4 py-2 border ${COLORS.BORDER.DEFAULT} rounded-lg ${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.DEFAULT}`}
+          >
             <option>Related Trip (Optional)</option>
-            {trips && trips.map(function (trip: any) {
-              return (
-                <option key={trip.id} value={trip.id}>{trip.title}</option>
-              )
-            })}
+            {trips &&
+              trips.map(function (trip: any) {
+                return (
+                  <option key={trip.id} value={trip.id}>
+                    {trip.title}
+                  </option>
+                );
+              })}
           </select>
-          {errors.tripId && <p className="text-red-600 text-sm mt-1">{errors.tripId}</p>}
+          {errors.tripId && (
+            <p className="text-red-600 text-sm mt-1">{errors.tripId}</p>
+          )}
         </div>
 
         <div className="mb-12">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">short description</h2>
-          <div className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition">
-            <input type="text" value={shortDes} onChange={(e) => setShortDes(e.target.value)} placeholder="Short description" className="w-full text-sm md:text-base font-bold text-gray-900 placeholder-gray-400 bg-transparent outline-none border-none focus:ring-0" />
+          <h2 className={`text-xl font-semibold mb-4 ${COLORS.TEXT.DEFAULT}`}>
+            short description
+          </h2>
+          <div
+            className={`border ${COLORS.BORDER.DEFAULT} rounded-lg p-4 ${COLORS.BACKGROUND.MUTED} hover:${COLORS.BACKGROUND.MUTED_HOVER} transition`}
+          >
+            <input
+              type="text"
+              value={shortDes}
+              onChange={(e) => setShortDes(e.target.value)}
+              placeholder="Short description"
+              className={`w-full text-sm md:text-base font-bold ${COLORS.TEXT.DEFAULT} placeholder:${COLORS.TEXT.MUTED} bg-transparent outline-none border-none focus:ring-0`}
+            />
           </div>
-          {errors.shortDes && <p className="text-red-600 text-sm mt-1">{errors.shortDes}</p>}
+          {errors.shortDes && (
+            <p className="text-red-600 text-sm mt-1">{errors.shortDes}</p>
+          )}
         </div>
 
         <div className="mb-12">
-          <h2 className="text-xl font-semibold mb-4 text-gray-900">Info Cards</h2>
+          <h2 className={`text-xl font-semibold mb-4 ${COLORS.TEXT.DEFAULT}`}>
+            Info Cards
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {metaItems && metaItems.map((meta: any, index: any) => (
-              <div key={index} className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition group relative">
-                <input
-                  value={meta.title}
-                  onChange={(e) =>
-                    handleUpdateMeta(meta.id, "title", e.target.value)
-                  }
-                  placeholder="Title"
-                  className="w-full text-xs text-gray-500 bg-transparent outline-none font-medium"
-                />
+            {metaItems &&
+              metaItems.map((meta: any, index: any) => (
+                <div
+                  key={index}
+                  className={`border ${COLORS.BORDER.DEFAULT} rounded-lg p-4 ${COLORS.BACKGROUND.MUTED} hover:${COLORS.BACKGROUND.MUTED_HOVER} transition group relative`}
+                >
+                  <input
+                    value={meta.title}
+                    onChange={(e) =>
+                      handleUpdateMeta(meta.id, "title", e.target.value)
+                    }
+                    placeholder="Title"
+                    className={`w-full text-xs ${COLORS.TEXT.MUTED} bg-transparent outline-none font-medium`}
+                  />
 
-                <input
-                  value={meta.content}
-                  onChange={(e) =>
-                    handleUpdateMeta(meta.id, "content", e.target.value)
-                  }
-                  placeholder="Content"
-                  className="w-full font-semibold text-gray-800 bg-transparent outline-none mt-2"
-                />
+                  <input
+                    value={meta.content}
+                    onChange={(e) =>
+                      handleUpdateMeta(meta.id, "content", e.target.value)
+                    }
+                    placeholder="Content"
+                    className={`w-full font-semibold ${COLORS.TEXT.DEFAULT} bg-transparent outline-none mt-2`}
+                  />
 
-                {metaItems && metaItems.length > 1 && (
-                  <button
-                    type="button"
-                    onClick={() => handleRemoveMetaItem(meta.id)}
-                    className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition text-gray-400 hover:text-red-500"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            ))}
+                  {metaItems && metaItems.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleRemoveMetaItem(meta.id)}
+                      className={`absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition ${COLORS.TEXT.MUTED} hover:${COLORS.DESTRUCTIVE.TEXT}`}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              ))}
 
             <button
               type="button"
               onClick={handleAddMetaItem}
-              className="flex items-center justify-center gap-2 border border-dashed border-gray-300 rounded-lg px-4 py-6 text-gray-600 hover:bg-blue-50 hover:border-blue-500 hover:text-blue-600 transition group"
+              className={`flex items-center justify-center gap-2 border border-dashed ${COLORS.BORDER.DEFAULT} rounded-lg px-4 py-6 ${COLORS.TEXT.MUTED} hover:${COLORS.PRIMARY.LIGHT} hover:${COLORS.BORDER.PRIMARY} hover:${COLORS.TEXT.PRIMARY} transition group`}
             >
               <Plus className="w-5 h-5 group-hover:scale-110 transition" />
             </button>
@@ -506,53 +562,73 @@ export default function CreateDiary() {
         </div>
 
         <div className="mb-12">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Content Sections</h2>
+          <h2 className={`text-xl font-semibold ${COLORS.TEXT.DEFAULT} mb-4`}>
+            Content Sections
+          </h2>
 
           <div className="grid md:grid-cols-2 gap-6">
+            {contentSections &&
+              contentSections.map((section: any) => {
+                return (
+                  <div
+                    key={section.id}
+                    className={`border ${COLORS.BORDER.DEFAULT} rounded-xl p-6 group relative transition ${COLORS.BACKGROUND.CARD}`}
+                  >
+                    <div className="flex items-center gap-2 mb-4">
+                      <input
+                        type="text"
+                        value={section.title}
+                        onChange={(e) =>
+                          handleUpdateContentSection(
+                            section.id,
+                            "title",
+                            e.target.value
+                          )
+                        }
+                        placeholder="Section title"
+                        className={`font-semibold text-lg ${COLORS.TEXT.DEFAULT} bg-transparent outline-none border-none focus:ring-0 w-full`}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveContentSection(section.id)}
+                        className={`ml-auto opacity-0 group-hover:opacity-100 transition ${COLORS.TEXT.MUTED} hover:${COLORS.DESTRUCTIVE.TEXT}`}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
 
-            {contentSections && contentSections.map((section: any) => {
-              return (
-                <div
-                  key={section.id}
-                  className={`border rounded-xl p-6 group relative transition`}
-                >
-                  <div className="flex items-center gap-2 mb-4">
-                    <input
-                      type="text"
-                      value={section.title}
-                      onChange={(e) => handleUpdateContentSection(section.id, "title", e.target.value)}
-                      placeholder="Section title"
-                      className="font-semibold text-lg text-gray-900 bg-transparent outline-none border-none focus:ring-0 w-full"
+                    <textarea
+                      value={section.content}
+                      onChange={(e) =>
+                        handleUpdateContentSection(
+                          section.id,
+                          "content",
+                          e.target.value
+                        )
+                      }
+                      className={`w-full h-40 ${COLORS.BACKGROUND.CARD}/50 backdrop-blur border ${COLORS.BORDER.DEFAULT} rounded-lg p-4 outline-none focus:ring-2 focus:ring-accent ${COLORS.TEXT.DEFAULT} resize-none`}
                     />
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveContentSection(section.id)}
-                      className="ml-auto opacity-0 group-hover:opacity-100 transition text-current hover:opacity-80"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
                   </div>
+                );
+              })}
 
-                  <textarea
-                    value={section.content}
-                    onChange={(e) => handleUpdateContentSection(section.id, "content", e.target.value)}
-                    className="w-full h-40 bg-white/50 backdrop-blur border rounded-lg p-4 outline-none focus:ring-2 focus:ring-current text-gray-700 resize-none"
-                  />
-                </div>
-              )
-            })}
-
-            <button onClick={handleAddContentSection} className="flex items-center justify-center border border-dashed rounded-xl p-6 text-gray-500 hover:text-blue-600 hover:border-blue-500 hover:bg-blue-50 transition group">
+            <button
+              onClick={handleAddContentSection}
+              className={`flex items-center justify-center border border-dashed ${COLORS.BORDER.DEFAULT} rounded-xl p-6 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.PRIMARY} hover:${COLORS.BORDER.PRIMARY} hover:${COLORS.PRIMARY.LIGHT} transition group`}
+            >
               <Plus className="w-6 h-6 group-hover:scale-110 transition" />
             </button>
           </div>
         </div>
 
         <div className="mb-12">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Images</h2>
+          <h2 className={`text-xl font-semibold ${COLORS.TEXT.DEFAULT} mb-4`}>
+            Images
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-
-            <label className="border-2 border-dashed rounded-xl p-6 flex flex-col items-center justify-center text-sm text-gray-500 cursor-pointer hover:border-blue-500 hover:text-blue-600 transition min-h-[140px]">
+            <label
+              className={`border-2 border-dashed ${COLORS.BORDER.DEFAULT} rounded-xl p-6 flex flex-col items-center justify-center text-sm ${COLORS.TEXT.MUTED} cursor-pointer hover:${COLORS.BORDER.PRIMARY} hover:${COLORS.TEXT.PRIMARY} transition min-h-[140px]`}
+            >
               <span className="text-2xl mb-1">📷</span>
               <span className="font-medium">Upload Photos</span>
               <span className="text-xs mt-1">PNG, JPG up to 10MB</span>
@@ -584,7 +660,7 @@ export default function CreateDiary() {
                   <button
                     type="button"
                     onClick={() => removeImage(index)}
-                    className="absolute top-2 right-2 bg-white text-gray-700 text-xs w-7 h-7 flex items-center justify-center rounded-full shadow opacity-0 group-hover:opacity-100 transition hover:bg-red-500 hover:text-white"
+                    className={`absolute top-2 right-2 ${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} text-xs w-7 h-7 flex items-center justify-center rounded-full shadow opacity-0 group-hover:opacity-100 transition hover:${COLORS.DESTRUCTIVE.BACKGROUND} hover:text-white`}
                   >
                     ✕
                   </button>
@@ -597,7 +673,13 @@ export default function CreateDiary() {
           <div className="flex justify-between items-center">
             <span>Make this entry public</span>
             <label className="relative inline-flex items-center cursor-pointer">
-              <input type="checkbox" onChange={(e) => setPublic(e.target.checked)} name="is_public" id="diary-public" className="sr-only peer" />
+              <input
+                type="checkbox"
+                onChange={(e) => setPublic(e.target.checked)}
+                name="is_public"
+                id="diary-public"
+                className="sr-only peer"
+              />
               <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-emerald-600 transition-all duration-200" />
               <div className="absolute left-0.5 top-0.5 w-5 h-5 bg-white border border-gray-300 rounded-full shadow transform peer-checked:translate-x-5 transition-all duration-200" />
             </label>
@@ -606,10 +688,23 @@ export default function CreateDiary() {
 
         <div className="flex justify-between items-center">
           <div className="flex gap-2">
-            <button onClick={handleSaveDraftDiary} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100 transition cursor-pointer">Save as Draft</button>
-            <button onClick={handlePreviewDiary} className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100 transition cursor-pointer">Preview</button>
+            <button
+              onClick={handleSaveDraftDiary}
+              className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100 transition cursor-pointer"
+            >
+              Save as Draft
+            </button>
+            <button
+              onClick={handlePreviewDiary}
+              className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100 transition cursor-pointer"
+            >
+              Preview
+            </button>
           </div>
-          <button onClick={handleUploadDiariy} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold cursor-pointer hover:bg-green-700 hover:shadow-md active:scale-95 transition-all">
+          <button
+            onClick={handleUploadDiariy}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-semibold cursor-pointer hover:bg-green-700 hover:shadow-md active:scale-95 transition-all"
+          >
             Publish Entry
           </button>
         </div>
@@ -629,19 +724,10 @@ export default function CreateDiary() {
             </div>
           </div>
         )}
-
       </div>
     </>
-  )
+  );
 }
-
-
-
-
-
-
-
-
 
 // import Link from "next/link";
 // import { useEffect, useState } from "react";
@@ -652,7 +738,6 @@ export default function CreateDiary() {
 // import { useAuth } from "@/contexts/AuthContext";
 
 // const API = process.env.NEXT_PUBLIC_API_URL;
-
 
 // export default function CreateDiary() {
 //   const { user } = useAuth();
@@ -914,8 +999,6 @@ export default function CreateDiary() {
 //             </div>
 //           </div>
 
-
-
 //           <div className="bg-white border rounded-xl p-6 mb-6">
 //             <h2 className="font-semibold mb-2">Write your experience</h2>
 //             <p className="text-sm text-gray-500 mb-3">
@@ -932,7 +1015,6 @@ export default function CreateDiary() {
 //               <input type="text" id="diary-tag" name="tags" placeholder="Tags (comma separated: hiking, mountain, adventure)" className="w-full px-4 py-2 border rounded-lg" />
 //             </div>
 //           </div>
-
 
 //           <div className="bg-white border rounded-xl p-6 mb-6">
 //             <h2 className="font-semibold mb-4">Media</h2>
@@ -1029,7 +1111,6 @@ export default function CreateDiary() {
 //             />
 //           </div>
 
-
 //           <div className="bg-white border rounded-xl p-6 mb-6">
 //             <h2 className="font-semibold mb-4">Additional Details</h2>
 //             <div className="space-y-3">
@@ -1052,7 +1133,6 @@ export default function CreateDiary() {
 //                 </label>
 //               </div>
 
-
 //               <div className="flex justify-between items-center">
 //                 <span>Allow comments</span>
 //                 <label className="relative inline-flex items-center cursor-pointer">
@@ -1064,7 +1144,6 @@ export default function CreateDiary() {
 //             </div>
 //           </div>
 
-
 //           <div className="flex justify-between items-center">
 //             <div className="flex gap-2">
 //               <button className="px-4 py-2 border rounded-lg text-sm hover:bg-gray-100 transition cursor-pointer">Save as Draft</button>
@@ -1074,7 +1153,6 @@ export default function CreateDiary() {
 //               </button>
 //             </div>
 //           </div>
-
 
 //         </form>
 //       </div >

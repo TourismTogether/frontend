@@ -3,6 +3,7 @@
 import { MapPin } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { COLORS, GRADIENTS } from "@/constants/colors";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -32,12 +33,12 @@ export default function PreviewDiary({ diary }: { diary: any }) {
 
     return (
         <>
-            <h1 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+            <h1 className={`text-3xl md:text-4xl font-bold ${COLORS.TEXT.DEFAULT} mb-6`}>
                 {diary.title}
             </h1>
 
             <div className="mb-12">
-                <div className="rounded-xl overflow-hidden border shadow-md">
+                <div className={`rounded-xl overflow-hidden border ${COLORS.BORDER.DEFAULT} shadow-md`}>
                     <img
                         src={diary.main_image_url}
                         alt="cover"
@@ -48,13 +49,11 @@ export default function PreviewDiary({ diary }: { diary: any }) {
 
             {trip && (
                 <div className="mb-10">
-                    <h2 className="text-xl font-semibold mb-2">Related Trip</h2>
+                    <h2 className={`text-xl font-semibold mb-2 ${COLORS.TEXT.DEFAULT}`}>Related Trip</h2>
                     {trip && (
                         <Link
                             href={`/trips/${diary.trip_id}`}
-                            className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full
-                            bg-blue-50 text-blue-700 text-sm font-medium
-                            hover:bg-blue-100 transition"
+                            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full ${COLORS.PRIMARY.LIGHT} ${COLORS.TEXT.PRIMARY} text-sm font-medium hover:${COLORS.PRIMARY.LIGHT} transition`}
                         >
                             <MapPin className="w-4 h-4" />
                             <span>{trip.title}</span>
@@ -64,23 +63,23 @@ export default function PreviewDiary({ diary }: { diary: any }) {
             )}
 
             <div className="mb-12">
-                <h2 className="text-xl font-semibold mb-2">Short Description</h2>
-                <p className="text-gray-700 leading-relaxed">
+                <h2 className={`text-xl font-semibold mb-2 ${COLORS.TEXT.DEFAULT}`}>Short Description</h2>
+                <p className={`${COLORS.TEXT.DEFAULT} leading-relaxed`}>
                     {diary.description}
                 </p>
             </div>
 
             {diary.metadata && (
                 <div className="mb-12">
-                    <h2 className="text-xl font-semibold mb-4">Info Cards</h2>
+                    <h2 className={`text-xl font-semibold mb-4 ${COLORS.TEXT.DEFAULT}`}>Info Cards</h2>
                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                         {diary.metadata.map((item: any) => (
                             <div
                                 key={item.id}
-                                className="border rounded-lg p-4 bg-gray-50"
+                                className={`border ${COLORS.BORDER.DEFAULT} rounded-lg p-4 ${COLORS.BACKGROUND.MUTED}`}
                             >
-                                <p className="text-xs text-gray-500 font-medium">{item.title}</p>
-                                <p className="mt-2 font-semibold text-gray-800">
+                                <p className={`text-xs ${COLORS.TEXT.MUTED} font-medium`}>{item.title}</p>
+                                <p className={`mt-2 font-semibold ${COLORS.TEXT.DEFAULT}`}>
                                     {item.content}
                                 </p>
                             </div>
@@ -91,18 +90,18 @@ export default function PreviewDiary({ diary }: { diary: any }) {
 
             {diary.content_sections && (
                 <div className="mb-12">
-                    <h2 className="text-xl font-semibold mb-4">Content</h2>
+                    <h2 className={`text-xl font-semibold mb-4 ${COLORS.TEXT.DEFAULT}`}>Content</h2>
 
                     <div className="grid md:grid-cols-2 gap-6">
                         {diary.content_sections.map((section: any) => (
                             <div
                                 key={section.id}
-                                className="border rounded-xl p-6 bg-white"
+                                className={`border ${COLORS.BORDER.DEFAULT} rounded-xl p-6 ${COLORS.BACKGROUND.CARD}`}
                             >
-                                <h3 className="font-semibold text-lg mb-3">
+                                <h3 className={`font-semibold text-lg mb-3 ${COLORS.TEXT.DEFAULT}`}>
                                     {section.title}
                                 </h3>
-                                <p className="text-gray-700 leading-relaxed whitespace-pre-line">
+                                <p className={`${COLORS.TEXT.DEFAULT} leading-relaxed whitespace-pre-line`}>
                                     {section.content}
                                 </p>
                             </div>
@@ -113,13 +112,13 @@ export default function PreviewDiary({ diary }: { diary: any }) {
 
             {diary.image_urls && (
                 <div className="mb-12">
-                    <h2 className="text-xl font-semibold mb-4">Images</h2>
+                    <h2 className={`text-xl font-semibold mb-4 ${COLORS.TEXT.DEFAULT}`}>Images</h2>
 
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                         {diary.image_urls.map((img: any, idx: number) => (
                             <div
                                 key={idx}
-                                className="border rounded-xl overflow-hidden"
+                                className={`border ${COLORS.BORDER.DEFAULT} rounded-xl overflow-hidden`}
                             >
                                 <img
                                     src={img}
