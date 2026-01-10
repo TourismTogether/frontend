@@ -8,6 +8,7 @@ import { forumService } from "@/services/forumService";
 import { IPost } from "@/types/forum";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { COLORS } from "@/constants/colors";
 
 export default function PostDetailPage() {
     const router = useRouter();
@@ -50,9 +51,9 @@ export default function PostDetailPage() {
 
     if (!post) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className={`min-h-screen flex items-center justify-center ${COLORS.BACKGROUND.DEFAULT}`}>
                 <div className="text-center">
-                    <h2 className="text-2xl font-bold">
+                    <h2 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
                         Không tìm thấy bài viết
                     </h2>
                 </div>
@@ -61,7 +62,7 @@ export default function PostDetailPage() {
     }
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
             <Navbar />
             <PostDetail postData={post} />
             {/* <CommentSection /> */}

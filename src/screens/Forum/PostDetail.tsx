@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { COLORS, GRADIENTS } from "@/constants/colors";
 
 interface PostDetailProps {
     postData: IPost;
@@ -322,15 +323,15 @@ export default function PostDetail({ postData }: PostDetailProps) {
     const categoryColor = getCategoryColor(categoryName);
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 pt-8 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className={`min-h-screen bg-background pt-8 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-300`}>
             <div className="max-w-5xl mx-auto min-w-7xl">
                 {/* Header Section */}
                 <div className="mb-6">
                     <button
                         onClick={() => router.back()}
-                        className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors font-semibold group"
+                        className={`flex items-center ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} mb-6 transition-all duration-200 font-semibold group`}
                     >
-                        <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+                        <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
                         <span>Back to Forum</span>
                     </button>
 
@@ -357,7 +358,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                 </div>
 
                 {/* Main Post Card */}
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-6">
+                <div className={`${COLORS.BACKGROUND.CARD} rounded-2xl shadow-xl ${COLORS.BORDER.DEFAULT} overflow-hidden mb-6 transition-all duration-300`}>
                     {/* Post Image Header */}
                     {postData.image && (
                         <div className="w-full h-64 sm:h-80 overflow-hidden bg-linear-to-br from-blue-100 to-indigo-100">
@@ -381,7 +382,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                     onChange={(e) =>
                                         setEditTitle(e.target.value)
                                     }
-                                    className="text-3xl sm:text-4xl font-bold w-full p-4 border-2 border-gray-300 rounded-xl mb-4 outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50"
+                                    className={`text-3xl sm:text-4xl font-bold w-full p-4 border-2 ${COLORS.BORDER.DEFAULT} rounded-xl mb-4 outline-none focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.MUTED}`}
                                 />
                             ) : (
                                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold bg-linear-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-4 leading-tight">
@@ -411,9 +412,9 @@ export default function PostDetail({ postData }: PostDetailProps) {
                         </div>
 
                         {/* Post Meta Info */}
-                        <div className="flex flex-wrap items-center gap-4 text-sm mb-6 pb-6 border-b border-gray-200">
-                            <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg">
-                                <div className="w-10 h-10 rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-white shadow-md">
+                        <div className={`flex flex-wrap items-center gap-4 text-sm mb-6 pb-6 border-b ${COLORS.BORDER.LIGHT} transition-colors duration-200`}>
+                            <div className={`flex items-center gap-2 ${COLORS.BACKGROUND.MUTED} px-4 py-2 rounded-lg transition-colors duration-200`}>
+                                <div className={`w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 ${COLORS.BACKGROUND.CARD} shadow-md transition-colors duration-200`}>
                                     {postAuthor?.avatar_url ||
                                     postData.profiles?.avatar_url ? (
                                         <img
@@ -433,35 +434,35 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                     )}
                                 </div>
                                 <div>
-                                    <div className="font-bold text-gray-900">
+                                    <div className={`font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
                                         {postAuthor?.full_name ||
                                             postData.profiles?.full_name ||
                                             "User"}
                                     </div>
-                                    <div className="text-xs text-gray-500 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
+                                    <div className={`text-xs ${COLORS.TEXT.MUTED} flex items-center gap-1 transition-colors duration-200`}>
+                                        <Clock className="w-3 h-3 transition-colors duration-200" />
                                         {formatTimeAgo(postData.created_at)}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg">
-                                <Calendar className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700">
+                            <div className={`flex items-center gap-2 ${COLORS.BACKGROUND.MUTED} px-4 py-2 rounded-lg transition-colors duration-200`}>
+                                <Calendar className={`w-4 h-4 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
+                                <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                                     {formatDate(postData.created_at)}
                                 </span>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg">
-                                <Eye className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700 font-medium">
+                            <div className={`flex items-center gap-2 ${COLORS.BACKGROUND.MUTED} px-4 py-2 rounded-lg transition-colors duration-200`}>
+                                <Eye className={`w-4 h-4 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
+                                <span className={`${COLORS.TEXT.MUTED} font-medium transition-colors duration-200`}>
                                     {postData.total_views || 0} views
                                 </span>
                             </div>
                         </div>
 
                         {/* Post Content */}
-                        <div className="prose max-w-none text-gray-700 mb-8">
+                        <div className={`prose max-w-none ${COLORS.TEXT.MUTED} mb-8 transition-colors duration-200`}>
                             {isEditingMode ? (
                                 <textarea
                                     id="edit-content"
@@ -471,10 +472,10 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                     onChange={(e) =>
                                         setEditContent(e.target.value)
                                     }
-                                    className="w-full p-4 border-2 border-gray-300 rounded-xl min-h-[300px] outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none bg-gray-50"
+                                    className={`w-full p-4 border-2 ${COLORS.BORDER.DEFAULT} rounded-xl min-h-[300px] outline-none focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} resize-none ${COLORS.BACKGROUND.MUTED} transition-all duration-200`}
                                 />
                             ) : (
-                                <div className="text-base sm:text-lg leading-relaxed text-gray-800">
+                                <div className={`text-base sm:text-lg leading-relaxed ${COLORS.TEXT.DEFAULT}`}>
                                     {(postData.content || "")
                                         .split("\n\n")
                                         .map((paragraph, index) => (
@@ -499,7 +500,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                             tag.trim() && (
                                                 <span
                                                     key={idx}
-                                                    className="px-3 py-1.5 bg-linear-to-r from-gray-100 to-gray-50 text-gray-700 rounded-full text-xs font-semibold border border-gray-200 hover:from-gray-200 hover:to-gray-100 transition-all"
+                                                    className={`px-3 py-1.5 ${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.DEFAULT} rounded-full text-xs font-semibold ${COLORS.BORDER.DEFAULT} hover:${COLORS.BACKGROUND.MUTED_HOVER} transition-all`}
                                                 >
                                                     #{tag.trim()}
                                                 </span>
@@ -519,7 +520,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                 </button>
                                 <button
                                     onClick={() => setIsEditingMode(false)}
-                                    className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-200 font-semibold"
+                                    className={`${COLORS.BACKGROUND.MUTED} ${COLORS.BACKGROUND.MUTED_HOVER} ${COLORS.TEXT.DEFAULT} px-8 py-3 rounded-xl hover:shadow-lg transition-all duration-200 font-semibold`}
                                 >
                                     Cancel
                                 </button>
@@ -527,13 +528,13 @@ export default function PostDetail({ postData }: PostDetailProps) {
                         )}
 
                         {/* Actions Bar */}
-                        <div className="flex items-center gap-4 py-6 border-t border-b border-gray-200 mb-8 bg-linear-to-r from-gray-50 to-blue-50/30 rounded-xl px-6">
+                        <div className={`flex items-center gap-4 py-6 border-t border-b ${COLORS.BORDER.DEFAULT} mb-8 ${COLORS.BACKGROUND.MUTED} rounded-xl px-6`}>
                             <button
                                 onClick={handleToggleLike}
                                 className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-200 font-semibold transform hover:scale-105 ${
                                     isLiked
                                         ? "text-red-600 bg-red-50 hover:bg-red-100 shadow-md"
-                                        : "text-gray-600 hover:bg-white shadow-sm"
+                                        : `${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.CARD} shadow-sm`
                                 }`}
                             >
                                 <Heart
@@ -546,7 +547,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                 </span>
                                 <span className="text-sm">Likes</span>
                             </button>
-                            <div className="flex items-center gap-2 text-gray-600 px-6 py-3 rounded-xl bg-white shadow-sm">
+                            <div className={`flex items-center gap-2 ${COLORS.TEXT.MUTED} px-6 py-3 rounded-xl ${COLORS.BACKGROUND.CARD} shadow-sm`}>
                                 <MessageCircle className="w-5 h-5 text-blue-600" />
                                 <span className="font-bold text-lg">
                                     {replies.length ||
@@ -561,7 +562,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                             </div>
                             <button
                                 onClick={handleShare}
-                                className="flex items-center gap-2 text-gray-600 px-6 py-3 rounded-xl bg-white shadow-sm hover:bg-gray-50 transition-all duration-200 cursor-pointer transform hover:scale-105"
+                                className={`flex items-center gap-2 ${COLORS.TEXT.MUTED} px-6 py-3 rounded-xl ${COLORS.BACKGROUND.CARD} shadow-sm hover:${COLORS.BACKGROUND.MUTED_HOVER} transition-all duration-200 cursor-pointer transform hover:scale-105`}
                             >
                                 <Share2 className="w-5 h-5" />
                                 <span className="text-sm font-semibold">
@@ -571,9 +572,9 @@ export default function PostDetail({ postData }: PostDetailProps) {
                         </div>
 
                         {/* Comments Section */}
-                        <div className="border border-gray-200 rounded-2xl p-6 sm:p-8 bg-linear-to-br from-white to-gray-50/50 shadow-lg">
+                        <div className={`border ${COLORS.BORDER.DEFAULT} rounded-2xl p-6 sm:p-8 ${COLORS.BACKGROUND.CARD} shadow-lg`}>
                             <div className="flex items-center justify-between mb-6">
-                                <h3 className="text-2xl font-bold text-gray-900 flex items-center">
+                                <h3 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT} flex items-center`}>
                                     <MessageCircle className="w-6 h-6 mr-3 text-blue-600" />
                                     Comments
                                     <span className="ml-3 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
@@ -586,21 +587,21 @@ export default function PostDetail({ postData }: PostDetailProps) {
 
                             {/* Comment Input Box */}
                             <div className="mb-8">
-                                <div className="border-2 border-gray-200 rounded-2xl bg-white p-5 focus-within:ring-2 focus-within:ring-blue-500 focus-within:border-blue-500 transition-all shadow-sm">
+                                <div className={`border-2 ${COLORS.BORDER.DEFAULT} rounded-2xl ${COLORS.BACKGROUND.CARD} p-5 focus-within:ring-2 focus-within:ring-accent focus-within:${COLORS.BORDER.PRIMARY} transition-all shadow-sm`}>
                                     <div className="flex gap-3 mb-3">
                                         {user?.avatar_url ? (
                                             <img
                                                 src={user.avatar_url}
                                                 alt={user.full_name || "You"}
-                                                className="w-10 h-10 rounded-full object-cover border-2 border-gray-200"
+                                                className={`w-10 h-10 rounded-full object-cover border-2 ${COLORS.BORDER.DEFAULT}`}
                                             />
                                         ) : (
-                                            <div className="w-10 h-10 rounded-full bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-gray-200">
+                                            <div className={`w-10 h-10 rounded-full ${GRADIENTS.PRIMARY} flex items-center justify-center border-2 ${COLORS.BORDER.DEFAULT}`}>
                                                 <UserIcon className="w-5 h-5 text-white" />
                                             </div>
                                         )}
                                         <div className="flex-1">
-                                            <div className="text-sm font-semibold text-gray-700 mb-1">
+                                            <div className={`text-sm font-semibold ${COLORS.TEXT.DEFAULT} mb-1`}>
                                                 {user?.full_name || "Guest"}
                                             </div>
                                         </div>
@@ -615,12 +616,12 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                 ? "Share your thoughts..."
                                                 : "Please login to comment"
                                         }
-                                        className="w-full bg-transparent border-none focus:outline-none resize-none min-h-[120px] text-gray-900 placeholder:text-gray-400 text-base"
+                                        className={`w-full bg-transparent border-none focus:outline-none resize-none min-h-[120px] ${COLORS.TEXT.DEFAULT} ${COLORS.TEXT.MUTED} placeholder:${COLORS.TEXT.MUTED} text-base`}
                                         maxLength={2000}
                                         disabled={!user}
                                     />
-                                    <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-200">
-                                        <span className="text-xs text-gray-500">
+                                    <div className={`flex justify-between items-center mt-4 pt-4 border-t ${COLORS.BORDER.DEFAULT}`}>
+                                        <span className={`text-xs ${COLORS.TEXT.MUTED}`}>
                                             {replyText.length}/2000 characters
                                         </span>
                                         <button
@@ -639,12 +640,12 @@ export default function PostDetail({ postData }: PostDetailProps) {
 
                             {/* Comments List */}
                             {replies.length === 0 ? (
-                                <div className="bg-linear-to-br from-gray-50 to-blue-50/30 rounded-2xl p-16 text-center border-2 border-dashed border-gray-300">
-                                    <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                                    <h4 className="text-lg font-bold text-gray-900 mb-2">
+                                <div className={`${COLORS.BACKGROUND.MUTED} rounded-2xl p-16 text-center border-2 border-dashed ${COLORS.BORDER.DEFAULT}`}>
+                                    <MessageCircle className={`w-16 h-16 ${COLORS.TEXT.MUTED} mx-auto mb-4`} />
+                                    <h4 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-2`}>
                                         No comments yet
                                     </h4>
-                                    <p className="text-gray-600 font-medium">
+                                    <p className={`${COLORS.TEXT.MUTED} font-medium`}>
                                         Be the first to share your thoughts!
                                     </p>
                                 </div>
@@ -694,13 +695,13 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                     <div
                                                         className={`relative p-4 rounded-2xl shadow-sm border transition-all duration-200 ${
                                                             isMyReply
-                                                                ? "bg-white border-blue-100 hover:border-blue-200"
-                                                                : "bg-gray-50 border-gray-100"
+                                                                ? `${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.PRIMARY} hover:${COLORS.BORDER.PRIMARY}`
+                                                                : `${COLORS.BACKGROUND.MUTED} ${COLORS.BORDER.DEFAULT}`
                                                         }`}
                                                     >
                                                         <div className="flex justify-between items-center mb-2">
                                                             <div className="flex items-center gap-2">
-                                                                <span className="font-bold text-gray-900 text-sm">
+                                                                <span className={`font-bold ${COLORS.TEXT.DEFAULT} text-sm`}>
                                                                     {reply
                                                                         .profiles
                                                                         ?.full_name ||
@@ -711,7 +712,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                                         You
                                                                     </span>
                                                                 )}
-                                                                <span className="text-xs text-gray-400 font-medium flex items-center gap-1">
+                                                                <span className={`text-xs ${COLORS.TEXT.MUTED} font-medium flex items-center gap-1`}>
                                                                     <span className="text-[8px]">
                                                                         ●
                                                                     </span>
@@ -733,7 +734,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                                                     reply.content
                                                                                 );
                                                                             }}
-                                                                            className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                                                                            className={`p-1.5 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.PRIMARY} hover:${COLORS.PRIMARY.LIGHT} rounded-lg transition-all`}
                                                                             title="Edit comment"
                                                                         >
                                                                             <Edit3 className="w-4 h-4" />
@@ -744,7 +745,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                                                     reply.id
                                                                                 )
                                                                             }
-                                                                            className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
+                                                                            className={`p-1.5 ${COLORS.TEXT.MUTED} hover:${COLORS.DESTRUCTIVE.TEXT} hover:${COLORS.DESTRUCTIVE.BACKGROUND_HOVER} rounded-lg transition-all`}
                                                                             title="Delete comment"
                                                                         >
                                                                             <Trash2 className="w-4 h-4" />
@@ -769,7 +770,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                                                 .value
                                                                         )
                                                                     }
-                                                                    className="w-full p-3 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white text-gray-800 text-sm min-h-[100px] resize-none"
+                                                                    className={`w-full p-3 border-2 ${COLORS.BORDER.PRIMARY} rounded-xl focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} outline-none ${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} text-sm min-h-[100px] resize-none`}
                                                                 />
                                                                 <div className="flex justify-end gap-2">
                                                                     <button
@@ -778,7 +779,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                                                 null
                                                                             )
                                                                         }
-                                                                        className="px-4 py-1.5 text-xs font-bold text-gray-500 hover:bg-gray-100 rounded-lg transition-colors"
+                                                                        className={`px-4 py-1.5 text-xs font-bold ${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.MUTED_HOVER} rounded-lg transition-colors`}
                                                                     >
                                                                         Cancel
                                                                     </button>
@@ -801,7 +802,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <p className="text-gray-700 leading-relaxed text-sm whitespace-pre-wrap">
+                                                            <p className={`${COLORS.TEXT.DEFAULT} leading-relaxed text-sm whitespace-pre-wrap`}>
                                                                 {reply.content}
                                                             </p>
                                                         )}

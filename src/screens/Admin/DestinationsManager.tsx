@@ -25,7 +25,9 @@ const LocationPicker = dynamic(
   { ssr: false }
 );
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+import Image from "next/image";
+import { API_ENDPOINTS, getDestinationImageUrl } from "../../constants/api";
+import { COLORS, GRADIENTS } from "../../constants/colors";
 
 interface Destination {
   id: string;
@@ -91,7 +93,7 @@ export const DestinationsManager: React.FC = () => {
   const fetchDestinations = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/destinations`, {
+      const res = await fetch(API_ENDPOINTS.DESTINATIONS.BASE, {
         credentials: "include",
       });
       const result = await res.json();
@@ -107,7 +109,7 @@ export const DestinationsManager: React.FC = () => {
 
   const fetchRegions = async () => {
     try {
-      const res = await fetch(`${API_URL}/regions`, {
+      const res = await fetch(API_ENDPOINTS.REGIONS.BASE, {
         credentials: "include",
       });
       const result = await res.json();
@@ -140,7 +142,7 @@ export const DestinationsManager: React.FC = () => {
   const handleEdit = async (destination: Destination) => {
     setEditingDestination(destination);
     // Refresh regions list before editing
-    const res = await fetch(`${API_URL}/regions`, {
+    const res = await fetch(API_ENDPOINTS.REGIONS.BASE, {
       credentials: "include",
     });
     const result = await res.json();
@@ -179,7 +181,7 @@ export const DestinationsManager: React.FC = () => {
     if (!confirm("Bạn có chắc muốn xóa destination này?")) return;
 
     try {
-      const res = await fetch(`${API_URL}/destinations/${id}`, {
+      const res = await fetch(API_ENDPOINTS.DESTINATIONS.DELETE(String(id)), {
         method: "DELETE",
         credentials: "include",
       });
@@ -202,7 +204,18 @@ export const DestinationsManager: React.FC = () => {
       }
 
       // Prepare destination data
-      const destinationData: any = {
+      const destinationData: {
+        name: string;
+        country: string;
+        description: string;
+        latitude: number;
+        longitude: number;
+        category: string;
+        best_season: string;
+        images: string[];
+        rating: number;
+        region_id: string;
+      } = {
         name: formData.name,
         country: formData.country || "",
         description: formData.description || "",
@@ -219,7 +232,7 @@ export const DestinationsManager: React.FC = () => {
       if (editingDestination) {
         // Update
         response = await fetch(
-          `${API_URL}/destinations/${editingDestination.id}`,
+          API_ENDPOINTS.DESTINATIONS.UPDATE(String(editingDestination.id)),
           {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
@@ -229,7 +242,7 @@ export const DestinationsManager: React.FC = () => {
         );
       } else {
         // Create
-        response = await fetch(`${API_URL}/destinations`, {
+        response = await fetch(API_ENDPOINTS.DESTINATIONS.CREATE, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -262,7 +275,7 @@ export const DestinationsManager: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className={`w-8 h-8 animate-spin ${COLORS.TEXT.PRIMARY}`} />
       </div>
     );
   }
@@ -272,19 +285,19 @@ export const DestinationsManager: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Destinations</h2>
-          <p className="text-gray-500 text-sm">Quản lý các điểm đến du lịch</p>
+          <h2 className={`text-xl font-bold ${COLORS.TEXT.DEFAULT}`}>Destinations</h2>
+          <p className={`${COLORS.TEXT.MUTED} text-sm`}>Quản lý các điểm đến du lịch</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={fetchDestinations}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className={`p-2 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
           >
             <RefreshCw className="w-5 h-5" />
           </button>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
+            className={`flex items-center gap-2 ${GRADIENTS.PRIMARY} text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity`}
           >
             <Plus className="w-4 h-4" />
             Thêm Destination
@@ -293,36 +306,41 @@ export const DestinationsManager: React.FC = () => {
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className={`relative mb-6 ${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl p-4`}>
+        <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${COLORS.TEXT.MUTED}`} />
         <input
           type="text"
           placeholder="Tìm kiếm theo tên, quốc gia hoặc danh mục..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+          className={`w-full pl-10 pr-4 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
         />
       </div>
 
       {/* Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {filteredDestinations.length === 0 ? (
-          <div className="col-span-full text-center py-12 text-gray-500">
+          <div className={`col-span-full text-center py-12 ${COLORS.TEXT.MUTED}`}>
             Chưa có destination nào
           </div>
         ) : (
           filteredDestinations.map((destination) => (
             <div
               key={destination.id}
-              className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-md transition-shadow"
+              className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all`}
             >
               {/* Image */}
-              <div className="h-40 bg-linear-to-br from-green-400 to-blue-500 flex items-center justify-center">
+              <div className={`h-40 ${GRADIENTS.PRIMARY} flex items-center justify-center relative overflow-hidden`}>
                 {destination.images?.[0] ? (
-                  <img
+                  <Image
                     src={destination.images[0]}
                     alt={destination.name}
-                    className="w-full h-full object-cover"
+                    fill
+                    className="object-cover"
+                    unoptimized
+                    onError={(e) => {
+                      e.currentTarget.style.display = "none";
+                    }}
                   />
                 ) : (
                   <MapPin className="w-12 h-12 text-white/80" />
@@ -333,49 +351,49 @@ export const DestinationsManager: React.FC = () => {
               <div className="p-4">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h3 className="font-semibold text-gray-900">
+                    <h3 className={`font-semibold ${COLORS.TEXT.DEFAULT}`}>
                       {destination.name}
                     </h3>
-                    <p className="text-sm text-gray-500">
+                    <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
                       {destination.country}{" "}
                       {destination.region_name &&
                         `• ${destination.region_name}`}
                     </p>
                   </div>
                   {destination.category && (
-                    <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                    <span className={`px-2 py-1 ${COLORS.PRIMARY.LIGHT} ${COLORS.TEXT.PRIMARY} text-xs rounded-full`}>
                       {destination.category}
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center justify-between text-sm text-gray-600 mb-4">
+                <div className={`flex items-center justify-between text-sm ${COLORS.TEXT.MUTED} mb-4`}>
                   <div className="flex items-center">
                     <Star className="w-4 h-4 text-yellow-400 fill-current mr-1" />
                     <span>
                       {destination.average_rating?.toFixed(1) || "0.0"}
                     </span>
-                    <span className="text-gray-400 ml-1">
+                    <span className={`${COLORS.TEXT.MUTED} ml-1`}>
                       ({destination.total_reviews || 0} reviews)
                     </span>
                   </div>
                   {destination.best_season && (
-                    <span className="text-gray-400">
+                    <span className={COLORS.TEXT.MUTED}>
                       {destination.best_season}
                     </span>
                   )}
                 </div>
 
-                <div className="flex items-center justify-end space-x-2 pt-3 border-t">
+                <div className={`flex items-center justify-end space-x-2 pt-3 border-t ${COLORS.BORDER.DEFAULT}`}>
                   <button
                     onClick={() => handleEdit(destination)}
-                    className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                    className={`p-2 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.PRIMARY} hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
                   >
                     <Pencil className="w-4 h-4" />
                   </button>
                   <button
                     onClick={() => handleDelete(destination.id)}
-                    className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className={`p-2 ${COLORS.TEXT.MUTED} hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -388,17 +406,17 @@ export const DestinationsManager: React.FC = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl my-8">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-semibold">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-2xl w-full max-w-3xl my-8`}>
+            <div className={`flex items-center justify-between p-4 border-b ${COLORS.BORDER.DEFAULT}`}>
+              <h3 className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT}`}>
                 {editingDestination
                   ? "Chỉnh sửa Destination"
                   : "Thêm Destination mới"}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className={`p-2 hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -408,7 +426,7 @@ export const DestinationsManager: React.FC = () => {
               className="p-4 space-y-4 max-h-[70vh] overflow-y-auto"
             >
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                   Tên điểm đến *
                 </label>
                 <input
@@ -417,14 +435,14 @@ export const DestinationsManager: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  className={`w-full px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                     Quốc gia
                   </label>
                   <input
@@ -433,17 +451,17 @@ export const DestinationsManager: React.FC = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, country: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                     Vùng/Khu vực *
                   </label>
                   <select
                     value={formData.region_id}
                     onChange={(e) => handleRegionChange(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                     required
                   >
                     <option value="">-- Chọn khu vực --</option>
@@ -454,7 +472,7 @@ export const DestinationsManager: React.FC = () => {
                     ))}
                   </select>
                   {regions.length === 0 && (
-                    <p className="text-xs text-gray-500 mt-1">
+                    <p className={`text-xs ${COLORS.TEXT.MUTED} mt-1`}>
                       Chưa có region nào. Vui lòng tạo region trước.
                     </p>
                   )}
@@ -462,7 +480,7 @@ export const DestinationsManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                   Mô tả
                 </label>
                 <textarea
@@ -471,7 +489,7 @@ export const DestinationsManager: React.FC = () => {
                     setFormData({ ...formData, description: e.target.value })
                   }
                   rows={4}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                  className={`w-full px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                   placeholder="Nhập mô tả về điểm đến..."
                 />
               </div>
@@ -500,7 +518,7 @@ export const DestinationsManager: React.FC = () => {
               {/* Manual Coordinate Input */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                     Latitude
                   </label>
                   <input
@@ -514,11 +532,11 @@ export const DestinationsManager: React.FC = () => {
                         latitude: lat,
                       });
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                     Longitude
                   </label>
                   <input
@@ -532,14 +550,14 @@ export const DestinationsManager: React.FC = () => {
                         longitude: lng,
                       });
                     }}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                   />
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                     Danh mục
                   </label>
                   <select
@@ -547,7 +565,7 @@ export const DestinationsManager: React.FC = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, category: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                   >
                     <option value="">-- Chọn danh mục --</option>
                     {CATEGORIES.map((cat) => (
@@ -558,7 +576,7 @@ export const DestinationsManager: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                     Mùa tốt nhất
                   </label>
                   <select
@@ -566,7 +584,7 @@ export const DestinationsManager: React.FC = () => {
                     onChange={(e) =>
                       setFormData({ ...formData, best_season: e.target.value })
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`w-full px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                   >
                     <option value="">-- Chọn mùa --</option>
                     {SEASONS.map((season) => (
@@ -579,11 +597,11 @@ export const DestinationsManager: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                   URL Hình ảnh (cách nhau bằng dấu phẩy)
                 </label>
                 <div className="flex items-center space-x-2">
-                  <ImageIcon className="w-5 h-5 text-gray-400" />
+                  <ImageIcon className={`w-5 h-5 ${COLORS.TEXT.MUTED}`} />
                   <input
                     type="text"
                     value={formData.images.join(", ")}
@@ -597,7 +615,7 @@ export const DestinationsManager: React.FC = () => {
                       })
                     }
                     placeholder="https://example.com/image1.jpg, https://example.com/image2.jpg"
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    className={`flex-1 px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                   />
                 </div>
               </div>
@@ -606,13 +624,13 @@ export const DestinationsManager: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className={`px-4 py-2 ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                  className={`flex items-center gap-2 ${GRADIENTS.PRIMARY} text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity`}
                 >
                   <Save className="w-4 h-4" />
                   {editingDestination ? "Cập nhật" : "Thêm mới"}

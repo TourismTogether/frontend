@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from "next/image";
 import {
   Plus,
   Pencil,
@@ -16,7 +17,8 @@ import {
   RefreshCw
 } from 'lucide-react';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+import { API_ENDPOINTS } from "../../constants/api";
+import { COLORS, GRADIENTS } from "../../constants/colors";
 
 interface Supporter {
   user_id: string;
@@ -56,7 +58,7 @@ export const SupportTeamManager: React.FC = () => {
   const fetchSupporters = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/supporters`, {
+      const res = await fetch(API_ENDPOINTS.SUPPORTERS.BASE, {
         credentials: 'include'
       });
       const result = await res.json();
@@ -65,7 +67,7 @@ export const SupportTeamManager: React.FC = () => {
         const supportersWithUsers = await Promise.all(
           result.data.map(async (supporter: Supporter) => {
             try {
-              const userRes = await fetch(`${API_URL}/users/${supporter.user_id}`, {
+              const userRes = await fetch(API_ENDPOINTS.USERS.BY_ID(String(supporter.user_id)), {
                 credentials: 'include'
               });
               const userResult = await userRes.json();
@@ -89,7 +91,7 @@ export const SupportTeamManager: React.FC = () => {
 
   const fetchUsers = async () => {
     try {
-      const res = await fetch(`${API_URL}/users`, {
+      const res = await fetch(API_ENDPOINTS.USERS.BASE, {
         credentials: 'include'
       });
       const result = await res.json();
@@ -120,7 +122,7 @@ export const SupportTeamManager: React.FC = () => {
     if (!confirm('Bạn có chắc muốn xóa supporter này?')) return;
 
     try {
-      const res = await fetch(`${API_URL}/supporters/${userId}`, {
+      const res = await fetch(API_ENDPOINTS.SUPPORTERS.DELETE(String(userId)), {
         method: 'DELETE',
         credentials: 'include'
       });
@@ -138,7 +140,7 @@ export const SupportTeamManager: React.FC = () => {
     try {
       if (editingSupporter) {
         // Update
-        await fetch(`${API_URL}/supporters/${editingSupporter.user_id}`, {
+        await fetch(API_ENDPOINTS.SUPPORTERS.UPDATE(String(editingSupporter.user_id)), {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -146,7 +148,7 @@ export const SupportTeamManager: React.FC = () => {
         });
       } else {
         // Create
-        await fetch(`${API_URL}/supporters`, {
+        await fetch(API_ENDPOINTS.SUPPORTERS.CREATE, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -162,7 +164,7 @@ export const SupportTeamManager: React.FC = () => {
 
   const toggleAvailability = async (supporter: Supporter) => {
     try {
-      await fetch(`${API_URL}/supporters/${supporter.user_id}`, {
+      await fetch(API_ENDPOINTS.SUPPORTERS.UPDATE(String(supporter.user_id)), {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
@@ -186,7 +188,7 @@ export const SupportTeamManager: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className={`w-8 h-8 animate-spin ${COLORS.TEXT.PRIMARY}`} />
       </div>
     );
   }
@@ -196,19 +198,19 @@ export const SupportTeamManager: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Support Team</h2>
-          <p className="text-gray-500 text-sm">Quản lý đội hỗ trợ SOS</p>
+          <h2 className={`text-xl font-bold ${COLORS.TEXT.DEFAULT}`}>Support Team</h2>
+          <p className={`${COLORS.TEXT.MUTED} text-sm`}>Quản lý đội hỗ trợ SOS</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={fetchSupporters}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className={`p-2 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
           >
             <RefreshCw className="w-5 h-5" />
           </button>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+            className={`flex items-center gap-2 ${GRADIENTS.PRIMARY} text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity`}
           >
             <Plus className="w-4 h-4" />
             Thêm Supporter
@@ -217,71 +219,74 @@ export const SupportTeamManager: React.FC = () => {
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className={`relative mb-6 ${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl p-4`}>
+        <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${COLORS.TEXT.MUTED}`} />
         <input
           type="text"
           placeholder="Tìm kiếm theo tên hoặc số điện thoại..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className={`w-full pl-10 pr-4 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
         />
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg overflow-hidden`}>
         <table className="w-full">
-          <thead className="bg-gray-50 border-b border-gray-200">
+          <thead className={`${COLORS.BACKGROUND.MUTED} border-b ${COLORS.BORDER.DEFAULT}`}>
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium ${COLORS.TEXT.MUTED} uppercase tracking-wider`}>
                 Supporter
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium ${COLORS.TEXT.MUTED} uppercase tracking-wider`}>
                 Số điện thoại
               </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-left text-xs font-medium ${COLORS.TEXT.MUTED} uppercase tracking-wider`}>
                 Trạng thái
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+              <th className={`px-6 py-3 text-right text-xs font-medium ${COLORS.TEXT.MUTED} uppercase tracking-wider`}>
                 Hành động
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody className={`divide-y ${COLORS.BORDER.DEFAULT}`}>
             {filteredSupporters.length === 0 ? (
               <tr>
-                <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                <td colSpan={4} className={`px-6 py-12 text-center ${COLORS.TEXT.MUTED}`}>
                   Chưa có supporter nào
                 </td>
               </tr>
             ) : (
               filteredSupporters.map((supporter) => (
-                <tr key={supporter.user_id} className="hover:bg-gray-50">
+                <tr key={supporter.user_id} className={`hover:${COLORS.BACKGROUND.MUTED}`}>
                   <td className="px-6 py-4">
                     <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                      <div className={`w-10 h-10 ${COLORS.PRIMARY.LIGHT} rounded-full flex items-center justify-center`}>
                         {supporter.user?.avatar_url ? (
-                          <img
+                          <Image
                             src={supporter.user.avatar_url}
                             alt=""
-                            className="w-10 h-10 rounded-full object-cover"
+                            width={40}
+                            height={40}
+                            className="rounded-full object-cover"
+                            unoptimized
                           />
                         ) : (
-                          <User className="w-5 h-5 text-indigo-600" />
+                          <User className={`w-5 h-5 ${COLORS.TEXT.PRIMARY}`} />
                         )}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">
+                        <p className={`font-medium ${COLORS.TEXT.DEFAULT}`}>
                           {supporter.user?.full_name || 'Unknown'}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
                           ID: {supporter.user_id.slice(0, 8)}...
                         </p>
                       </div>
                     </div>
                   </td>
                   <td className="px-6 py-4">
-                    <div className="flex items-center text-gray-600">
+                    <div className={`flex items-center ${COLORS.TEXT.MUTED}`}>
                       <Phone className="w-4 h-4 mr-2" />
                       {supporter.user?.phone || 'N/A'}
                     </div>
@@ -291,7 +296,7 @@ export const SupportTeamManager: React.FC = () => {
                       onClick={() => toggleAvailability(supporter)}
                       className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                         supporter.is_available
-                          ? 'bg-green-100 text-green-700'
+                          ? `${COLORS.PRIMARY.LIGHT} ${COLORS.TEXT.PRIMARY}`
                           : 'bg-red-100 text-red-700'
                       }`}
                     >
@@ -312,13 +317,13 @@ export const SupportTeamManager: React.FC = () => {
                     <div className="flex items-center justify-end space-x-2">
                       <button
                         onClick={() => handleEdit(supporter)}
-                        className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className={`p-2 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.PRIMARY} hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
                       >
                         <Pencil className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => handleDelete(supporter.user_id)}
-                        className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className={`p-2 ${COLORS.TEXT.MUTED} hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors`}
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -333,15 +338,15 @@ export const SupportTeamManager: React.FC = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-semibold">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-2xl w-full max-w-md`}>
+            <div className={`flex items-center justify-between p-4 border-b ${COLORS.BORDER.DEFAULT}`}>
+              <h3 className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT}`}>
                 {editingSupporter ? 'Chỉnh sửa Supporter' : 'Thêm Supporter mới'}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className={`p-2 hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
               >
                 <X className="w-5 h-5" />
               </button>
@@ -349,13 +354,13 @@ export const SupportTeamManager: React.FC = () => {
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               {!editingSupporter && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                     Chọn User
                   </label>
                   <select
                     value={formData.user_id}
                     onChange={(e) => setFormData({ ...formData, user_id: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                    className={`w-full px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                     required
                   >
                     <option value="">-- Chọn user --</option>
@@ -369,7 +374,7 @@ export const SupportTeamManager: React.FC = () => {
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                   Trạng thái
                 </label>
                 <div className="flex items-center space-x-4">
@@ -380,7 +385,7 @@ export const SupportTeamManager: React.FC = () => {
                       onChange={() => setFormData({ ...formData, is_available: true })}
                       className="mr-2"
                     />
-                    <span className="text-green-600">Online</span>
+                    <span className={COLORS.TEXT.PRIMARY}>Online</span>
                   </label>
                   <label className="flex items-center">
                     <input
@@ -398,13 +403,13 @@ export const SupportTeamManager: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className={`px-4 py-2 ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  className={`flex items-center gap-2 ${GRADIENTS.PRIMARY} text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity`}
                 >
                   <Save className="w-4 h-4" />
                   {editingSupporter ? 'Cập nhật' : 'Thêm mới'}

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import {
   Cloud,
   Sun,
@@ -23,6 +24,12 @@ import {
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
 import { useAuth } from "../../contexts/AuthContext";
+import { getTravelImageUrl } from "../../constants/api";
+import { COLORS, GRADIENTS } from "../../constants/colors";
+import Loading from "../../components/Loading/Loading";
+import Hero from "../../components/Hero/Hero";
+import { ANIMATIONS } from "../../constants/animations";
+import PulseGlow from "../../components/Animations/PulseGlow";
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(
@@ -67,7 +74,25 @@ interface City {
   lng: number;
 }
 
-// Danh sách các tỉnh thành phố ở Việt Nam
+interface WeatherApiResponse {
+  current: {
+    temperature_2m: number;
+    apparent_temperature: number;
+    relative_humidity_2m: number;
+    wind_speed_10m: number;
+    visibility?: number;
+    weather_code: number;
+  };
+}
+
+interface GeoApiResponse {
+  address?: {
+    city?: string;
+    town?: string;
+    village?: string;
+  };
+}
+
 const VIETNAM_CITIES: City[] = [
   { name: "Hồ Chí Minh", lat: 10.762880383009653, lng: 106.6824797006774 },
   { name: "Hà Nội", lat: 21.0285, lng: 105.8542 },
@@ -199,14 +224,11 @@ export const Weather: React.FC = () => {
   const [selectedCity, setSelectedCity] = useState<string>("current");
   const [isLocationFromProfile, setIsLocationFromProfile] = useState(false);
 
-  // Default coordinates (Ho Chi Minh City)
   const DEFAULT_LAT = 10.762880383009653;
   const DEFAULT_LNG = 106.6824797006774;
 
-  // Get user's current location
   useEffect(() => {
     const getUserLocation = async () => {
-      // First, try to get location from profile
       if (profile?.latitude && profile?.longitude) {
         const lat = typeof profile.latitude === 'string' ? parseFloat(profile.latitude) : profile.latitude;
         const lng = typeof profile.longitude === 'string' ? parseFloat(profile.longitude) : profile.longitude;
@@ -219,7 +241,6 @@ export const Weather: React.FC = () => {
         }
       }
 
-      // If no profile location, try geolocation API
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -231,7 +252,6 @@ export const Weather: React.FC = () => {
             setSelectedCity("current");
           },
           () => {
-            // Fallback to default coordinates
             setLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
             setIsLocationFromProfile(false);
             setSelectedCity("current");
@@ -239,7 +259,6 @@ export const Weather: React.FC = () => {
           { enableHighAccuracy: true, timeout: 10000 }
         );
       } else {
-        // Geolocation not supported, use default
         setLocation({ lat: DEFAULT_LAT, lng: DEFAULT_LNG });
         setIsLocationFromProfile(false);
         setSelectedCity("current");
@@ -262,18 +281,15 @@ export const Weather: React.FC = () => {
 
       if (!response.ok) throw new Error("Weather API error");
 
-      const data = await response.json();
+      const data: WeatherApiResponse = await response.json();
       const current = data.current;
 
       const geoResponse = await fetch(
         `https://nominatim.openstreetmap.org/reverse?lat=${location.lat}&lon=${location.lng}&format=json`
       );
-      const geoData = await geoResponse.json();
+      const geoData: GeoApiResponse = await geoResponse.json();
 
-      // Map weather code to description
-      const weatherCodeMap: {
-        [key: number]: { main: string; description: string };
-      } = {
+      const weatherCodeMap: Record<number, { main: string; description: string }> = {
         0: { main: "Clear", description: "clear sky" },
         1: { main: "Clear", description: "mainly clear" },
         2: { main: "Clouds", description: "partly cloudy" },
@@ -300,14 +316,8 @@ export const Weather: React.FC = () => {
         85: { main: "Snow", description: "slight snow showers" },
         86: { main: "Snow", description: "heavy snow showers" },
         95: { main: "Thunderstorm", description: "thunderstorm" },
-        96: {
-          main: "Thunderstorm",
-          description: "thunderstorm with slight hail",
-        },
-        99: {
-          main: "Thunderstorm",
-          description: "thunderstorm with heavy hail",
-        },
+        96: { main: "Thunderstorm", description: "thunderstorm with slight hail" },
+        99: { main: "Thunderstorm", description: "thunderstorm with heavy hail" },
       };
 
       const weatherInfo = weatherCodeMap[current.weather_code] || {
@@ -319,10 +329,10 @@ export const Weather: React.FC = () => {
         temp: Math.round(current.temperature_2m),
         feels_like: Math.round(current.apparent_temperature),
         humidity: current.relative_humidity_2m,
-        wind_speed: Math.round(current.wind_speed_10m * 3.6), // Convert m/s to km/h
+        wind_speed: Math.round(current.wind_speed_10m * 3.6),
         visibility: current.visibility
           ? Math.round(current.visibility / 1000)
-          : 10, // Convert m to km
+          : 10,
         description: weatherInfo.description,
         icon: weatherInfo.main.toLowerCase(),
         main: weatherInfo.main,
@@ -332,7 +342,7 @@ export const Weather: React.FC = () => {
           geoData.address?.village ||
           "Unknown Location",
       });
-    } catch (err: unknown) {
+    } catch (err) {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to fetch weather data";
       setError(errorMessage);
@@ -348,30 +358,32 @@ export const Weather: React.FC = () => {
   }, [location, fetchWeather]);
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-12 h-12 animate-spin text-indigo-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading weather information...</p>
-        </div>
-      </div>
-    );
+    return <Loading type="default" message="Loading weather information..." />;
   }
 
   if (error || !weather) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-          <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">
+      <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} flex items-center justify-center p-4`}>
+        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-xl p-8 max-w-md w-full text-center`}>
+          <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden">
+            <Image
+              src={getTravelImageUrl("weather error", 200, 200)}
+              alt="Error"
+              fill
+              className="object-cover opacity-50"
+              unoptimized
+            />
+          </div>
+          <AlertTriangle className={`w-16 h-16 text-red-500 mx-auto mb-4`} />
+          <h2 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT} mb-2`}>
             Weather Error
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className={`${COLORS.TEXT.MUTED} mb-6`}>
             {error || "Unable to fetch weather data"}
           </p>
           <button
             onClick={fetchWeather}
-            className="bg-indigo-600 text-white px-6 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+            className={`${GRADIENTS.PRIMARY} text-white px-6 py-2 rounded-lg hover:opacity-90 transition-opacity`}
           >
             <RefreshCw className="w-4 h-4 inline mr-2" />
             Retry
@@ -385,7 +397,6 @@ export const Weather: React.FC = () => {
     setSelectedCity(cityName);
     
     if (cityName === "current") {
-      // Reset to user's current location
       if (profile?.latitude && profile?.longitude) {
         const lat = typeof profile.latitude === 'string' ? parseFloat(profile.latitude) : profile.latitude;
         const lng = typeof profile.longitude === 'string' ? parseFloat(profile.longitude) : profile.longitude;
@@ -396,7 +407,6 @@ export const Weather: React.FC = () => {
         }
       }
       
-      // Try geolocation
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
           (position) => {
@@ -417,7 +427,6 @@ export const Weather: React.FC = () => {
         setIsLocationFromProfile(false);
       }
     } else {
-      // Set location from selected city
       const city = VIETNAM_CITIES.find(c => c.name === cityName);
       if (city) {
         setLocation({ lat: city.lat, lng: city.lng });
@@ -433,19 +442,27 @@ export const Weather: React.FC = () => {
   );
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-indigo-50 to-purple-50 py-8 px-4">
+    <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} py-8 px-4`}>
+      {/* Hero Section */}
+      <Hero
+        title="Weather Forecast 🌤️"
+        description="Plan your trips with accurate weather information"
+        imageKeyword="weather forecast sky"
+        height="small"
+      />
+
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}
         <button
           onClick={() => router.push("/dashboard")}
-          className="mb-6 flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+          className={`mb-6 flex items-center text-sm font-medium ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} transition-colors`}
         >
           <ArrowLeft className="mr-2 h-4 w-4" /> Back to Dashboard
         </button>
 
         {/* City Selector */}
-        <div className="mb-6 bg-white rounded-xl shadow-lg p-4">
-          <label className="block text-sm font-semibold text-gray-700 mb-2">
+        <div className={`mb-6 ${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-4`}>
+          <label className={`block text-sm font-semibold ${COLORS.TEXT.DEFAULT} mb-2`}>
             <MapPin className="w-4 h-4 inline mr-1" />
             Chọn địa điểm xem thời tiết
           </label>
@@ -453,7 +470,7 @@ export const Weather: React.FC = () => {
             <select
               value={selectedCity}
               onChange={(e) => handleCityChange(e.target.value)}
-              className="w-full px-4 py-3 pr-10 bg-white border-2 border-gray-200 rounded-lg text-gray-900 font-medium focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 appearance-none cursor-pointer transition-all"
+              className={`w-full px-4 py-3 pr-10 ${COLORS.BACKGROUND.DEFAULT} ${COLORS.BORDER.DEFAULT} border-2 rounded-lg ${COLORS.TEXT.DEFAULT} font-medium focus:outline-none focus:ring-2 focus:${COLORS.BORDER.PRIMARY} appearance-none cursor-pointer transition-all`}
             >
               <option value="current">
                 📍 Vị trí hiện tại {isLocationFromProfile ? "(từ hồ sơ)" : ""}
@@ -464,25 +481,25 @@ export const Weather: React.FC = () => {
                 </option>
               ))}
             </select>
-            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 pointer-events-none" />
+            <ChevronDown className={`absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 ${COLORS.TEXT.MUTED} pointer-events-none`} />
           </div>
         </div>
 
         {/* Main Weather Card */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-2xl overflow-hidden ${ANIMATIONS.FADE.IN_UP}`}>
           {/* Header */}
-          <div className="bg-linear-to-r from-indigo-600 to-purple-600 p-8 text-white">
+          <div className={`${GRADIENTS.PRIMARY} p-8 text-white ${ANIMATIONS.PULSE.GENTLE}`}>
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center mb-2">
-                  <MapPin className="w-5 h-5 mr-2" />
+                  <MapPin className={`w-5 h-5 mr-2 ${ANIMATIONS.BOUNCE.SOFT}`} />
                   <span className="text-lg font-semibold">{weather.city}</span>
                 </div>
-                <p className="text-indigo-100 text-sm">Current Weather</p>
+                <p className="text-white/80 text-sm">Current Weather</p>
               </div>
               <button
                 onClick={fetchWeather}
-                className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                className={`p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors ${ANIMATIONS.ROTATE.MEDIUM}`}
                 title="Refresh weather"
               >
                 <RefreshCw className="w-5 h-5" />
@@ -493,19 +510,21 @@ export const Weather: React.FC = () => {
           {/* Weather Content */}
           <div className="p-8">
             {/* Main Weather Display */}
-            <div className="flex flex-col md:flex-row items-center justify-between mb-8 pb-8 border-b border-gray-200">
+            <div className={`flex flex-col md:flex-row items-center justify-between mb-8 pb-8 border-b ${COLORS.BORDER.DEFAULT}`}>
               <div className="flex items-center space-x-6 mb-6 md:mb-0">
-                <div className="text-indigo-600">
-                  {getWeatherIcon(weather.main, weather.description)}
-                </div>
+                <PulseGlow variant="glow" className={COLORS.TEXT.PRIMARY}>
+                  <div className={ANIMATIONS.ROTATE.SLOW}>
+                    {getWeatherIcon(weather.main, weather.description)}
+                  </div>
+                </PulseGlow>
                 <div>
-                  <div className="text-6xl font-bold text-gray-900 mb-2">
+                  <div className={`text-6xl font-bold ${COLORS.TEXT.DEFAULT} mb-2 ${ANIMATIONS.FADE.IN_UP}`}>
                     {weather.temp}°C
                   </div>
-                  <div className="text-xl text-gray-600 capitalize">
+                  <div className={`text-xl ${COLORS.TEXT.MUTED} capitalize ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.1s" }}>
                     {weather.description}
                   </div>
-                  <div className="text-sm text-gray-500 mt-1">
+                  <div className={`text-sm ${COLORS.TEXT.MUTED} mt-1 ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.2s" }}>
                     Feels like {weather.feels_like}°C
                   </div>
                 </div>
@@ -513,54 +532,54 @@ export const Weather: React.FC = () => {
             </div>
 
             {/* Weather Description */}
-            <div className="bg-linear-to-r from-blue-50 to-indigo-50 rounded-xl p-6 mb-8">
-              <h3 className="text-lg font-semibold text-gray-900 mb-3 flex items-center">
-                <Cloud className="w-5 h-5 mr-2 text-indigo-600" />
+            <div className={`${COLORS.PRIMARY.LIGHT} rounded-xl p-6 mb-8`}>
+              <h3 className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT} mb-3 flex items-center`}>
+                <Cloud className={`w-5 h-5 mr-2 ${COLORS.TEXT.PRIMARY}`} />
                 Weather Description
               </h3>
-              <p className="text-gray-700 leading-relaxed text-lg">
+              <p className={`${COLORS.TEXT.DEFAULT} leading-relaxed text-lg`}>
                 {weatherDescription}
               </p>
             </div>
 
             {/* Weather Details Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4 ${ANIMATIONS.FADE.IN_UP} hover:shadow-lg transition-all duration-300 hover:-translate-y-1`} style={{ animationDelay: "0.1s" }}>
                 <div className="flex items-center mb-2">
-                  <Droplets className="w-5 h-5 text-blue-500 mr-2" />
-                  <span className="text-sm text-gray-600">Humidity</span>
+                  <Droplets className={`w-5 h-5 text-blue-500 mr-2 ${ANIMATIONS.PULSE.GENTLE}`} />
+                  <span className={`text-sm ${COLORS.TEXT.MUTED}`}>Humidity</span>
                 </div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
                   {weather.humidity}%
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4 ${ANIMATIONS.FADE.IN_UP} hover:shadow-lg transition-all duration-300 hover:-translate-y-1`} style={{ animationDelay: "0.2s" }}>
                 <div className="flex items-center mb-2">
-                  <Wind className="w-5 h-5 text-green-500 mr-2" />
-                  <span className="text-sm text-gray-600">Wind Speed</span>
+                  <Wind className={`w-5 h-5 ${COLORS.TEXT.PRIMARY} mr-2 ${ANIMATIONS.ROTATE.SLOW}`} />
+                  <span className={`text-sm ${COLORS.TEXT.MUTED}`}>Wind Speed</span>
                 </div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
                   {weather.wind_speed} km/h
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4 ${ANIMATIONS.FADE.IN_UP} hover:shadow-lg transition-all duration-300 hover:-translate-y-1`} style={{ animationDelay: "0.3s" }}>
                 <div className="flex items-center mb-2">
-                  <Eye className="w-5 h-5 text-purple-500 mr-2" />
-                  <span className="text-sm text-gray-600">Visibility</span>
+                  <Eye className={`w-5 h-5 text-purple-500 mr-2 ${ANIMATIONS.PULSE.GENTLE}`} />
+                  <span className={`text-sm ${COLORS.TEXT.MUTED}`}>Visibility</span>
                 </div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
                   {weather.visibility} km
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-4">
+              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4 ${ANIMATIONS.FADE.IN_UP} hover:shadow-lg transition-all duration-300 hover:-translate-y-1`} style={{ animationDelay: "0.4s" }}>
                 <div className="flex items-center mb-2">
-                  <Thermometer className="w-5 h-5 text-red-500 mr-2" />
-                  <span className="text-sm text-gray-600">Feels Like</span>
+                  <Thermometer className={`w-5 h-5 text-red-500 mr-2 ${ANIMATIONS.PULSE.GLOW}`} />
+                  <span className={`text-sm ${COLORS.TEXT.MUTED}`}>Feels Like</span>
                 </div>
-                <div className="text-2xl font-bold text-gray-900">
+                <div className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
                   {weather.feels_like}°C
                 </div>
               </div>
@@ -569,12 +588,12 @@ export const Weather: React.FC = () => {
             {/* Location Map */}
             {location && typeof window !== "undefined" && (
               <div className="mt-8">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
-                  <MapPin className="w-5 h-5 mr-2 text-indigo-600" />
+                <h3 className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT} mb-4 flex items-center`}>
+                  <MapPin className={`w-5 h-5 mr-2 ${COLORS.TEXT.PRIMARY}`} />
                   Location Map
                 </h3>
                 <div
-                  className="rounded-xl overflow-hidden border border-gray-200"
+                  className={`rounded-xl overflow-hidden ${COLORS.BORDER.DEFAULT} border`}
                   style={{ height: "400px" }}
                 >
                   <MapContainer

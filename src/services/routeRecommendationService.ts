@@ -85,8 +85,11 @@ async function fetchAllRoutes(
     await Promise.all(
       otherTrips.map(async (trip: any) => {
         try {
+          if (!trip.id || trip.id === "NaN" || trip.id === "undefined") {
+            return;
+          }
           const routesResponse = await fetch(
-            `${API_URL}/trips/${trip.id}/routes`,
+            `${API_URL}/trips/${String(trip.id)}/routes`,
             {
               method: "GET",
               headers: { "Content-Type": "application/json" },

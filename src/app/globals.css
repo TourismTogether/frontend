@@ -78,39 +78,39 @@
   --popover: #ffffff;
   --popover-foreground: #0f172a;
 
-  --primary: #2563eb; /* blue-600 - adventure blue */
+  --primary: #16a34a; /* green-600 - nature green (main theme) */
   --primary-foreground: #ffffff;
 
-  --secondary: #f1f5f9; /* slate-100 */
-  --secondary-foreground: #0f172a;
+  --secondary: #f0fdf4; /* green-50 */
+  --secondary-foreground: #166534; /* green-800 */
 
-  --muted: #f8fafc;
+  --muted: #f7fafc;
   --muted-foreground: #64748b; /* slate-500 */
 
-  --accent: #10b981; /* emerald-500 - nature green */
+  --accent: #22c55e; /* green-500 - vibrant green */
   --accent-foreground: #ffffff;
 
   --destructive: #ef4444; /* red-500 */
   --border: #e2e8f0; /* slate-200 */
   --input: #e2e8f0;
-  --ring: #2563eb;
+  --ring: #16a34a; /* green-600 */
 
-  /* Chart colors - vibrant & clear */
-  --chart-1: #3b82f6; /* blue */
-  --chart-2: #10b981; /* green */
-  --chart-3: #f59e0b; /* amber */
-  --chart-4: #8b5cf6; /* purple */
-  --chart-5: #ec4899; /* pink */
+  /* Chart colors - vibrant & clear (green theme) */
+  --chart-1: #22c55e; /* green-500 */
+  --chart-2: #10b981; /* emerald-500 */
+  --chart-3: #84cc16; /* lime-500 */
+  --chart-4: #14b8a6; /* teal-500 */
+  --chart-5: #16a34a; /* green-600 */
 
   /* Sidebar clean */
   --sidebar: #ffffff;
   --sidebar-foreground: #0f172a;
-  --sidebar-primary: #2563eb;
+  --sidebar-primary: #16a34a; /* green-600 */
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #2563eb;
+  --sidebar-accent: #f0fdf4; /* green-50 */
+  --sidebar-accent-foreground: #166534; /* green-800 */
+  --sidebar-border: #bbf7d0; /* green-200 */
+  --sidebar-ring: #16a34a; /* green-600 */
 
   /* Entity Colors - Đồng bộ với schema.sql (Light Mode) */
   /* USERS & ACCOUNT - Blue (người dùng cơ bản) */
@@ -166,39 +166,39 @@
   --popover: #1e293b;
   --popover-foreground: #f8fafc;
 
-  --primary: #3b82f6; /* blue-500 */
+  --primary: #22c55e; /* green-500 */
   --primary-foreground: #ffffff;
 
-  --secondary: #334155; /* slate-700 */
-  --secondary-foreground: #f8fafc;
+  --secondary: #14532d; /* green-900 */
+  --secondary-foreground: #dcfce7; /* green-100 */
 
   --muted: #1e293b;
   --muted-foreground: #94a3b8; /* slate-400 */
 
-  --accent: #10b981; /* emerald-500 */
+  --accent: #16a34a; /* green-600 */
   --accent-foreground: #ffffff;
 
   --destructive: #ef4444; /* red-500 */
   --border: #334155; /* slate-700 */
   --input: #334155;
-  --ring: #3b82f6;
+  --ring: #22c55e; /* green-500 */
 
-  /* Chart colors - dark optimized */
-  --chart-1: #60a5fa; /* blue-400 */
-  --chart-2: #34d399; /* green-400 */
-  --chart-3: #fbbf24; /* amber-400 */
-  --chart-4: #a78bfa; /* purple-400 */
-  --chart-5: #f472b6; /* pink-400 */
+  /* Chart colors - dark optimized (green theme) */
+  --chart-1: #4ade80; /* green-400 */
+  --chart-2: #34d399; /* emerald-400 */
+  --chart-3: #a3e635; /* lime-400 */
+  --chart-4: #2dd4bf; /* teal-400 */
+  --chart-5: #22c55e; /* green-500 */
 
   /* Sidebar dark */
   --sidebar: #1e293b;
   --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #3b82f6;
+  --sidebar-primary: #22c55e; /* green-500 */
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #334155;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #334155;
-  --sidebar-ring: #3b82f6;
+  --sidebar-accent: #14532d; /* green-900 */
+  --sidebar-accent-foreground: #dcfce7; /* green-100 */
+  --sidebar-border: #166534; /* green-800 */
+  --sidebar-ring: #22c55e; /* green-500 */
 
   /* Entity Colors - Đồng bộ với schema.sql (Dark Mode) */
   /* USERS & ACCOUNT - Blue (lighter for dark mode) */
@@ -482,4 +482,306 @@ html {
 
 .animate-fade-in {
   animation: fade-in 0.5s ease-out;
+}
+
+/* Travel-themed Animations */
+
+/* Floating animations */
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-20px) translateX(10px);
+  }
+}
+
+@keyframes float-medium {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-30px) translateX(15px);
+  }
+}
+
+@keyframes float-fast {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(-40px) translateX(20px);
+  }
+}
+
+@keyframes float-reverse {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  50% {
+    transform: translateY(20px) translateX(-10px);
+  }
+}
+
+.animate-float-slow {
+  animation: float-slow 6s ease-in-out infinite;
+}
+
+.animate-float-medium {
+  animation: float-medium 4s ease-in-out infinite;
+}
+
+.animate-float-fast {
+  animation: float-fast 3s ease-in-out infinite;
+}
+
+.animate-float-reverse {
+  animation: float-reverse 5s ease-in-out infinite;
+}
+
+/* Pulse animations */
+@keyframes pulse-gentle {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.3);
+  }
+  50% {
+    opacity: 0.9;
+    box-shadow: 0 0 40px rgba(34, 197, 94, 0.6);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.7;
+  }
+}
+
+.animate-pulse-gentle {
+  animation: pulse-gentle 3s ease-in-out infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-pulse-soft {
+  animation: pulse-soft 4s ease-in-out infinite;
+}
+
+/* Rotation animations */
+@keyframes rotate-slow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes rotate-medium {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 20s linear infinite;
+}
+
+.animate-rotate-medium {
+  animation: rotate-medium 10s linear infinite;
+}
+
+/* Slide animations */
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-left {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes slide-right {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out;
+}
+
+.animate-slide-down {
+  animation: slide-down 0.6s ease-out;
+}
+
+.animate-slide-left {
+  animation: slide-left 0.6s ease-out;
+}
+
+.animate-slide-right {
+  animation: slide-right 0.6s ease-out;
+}
+
+/* Fade animations */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-down {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out;
+}
+
+.animate-fade-in-down {
+  animation: fade-in-down 0.6s ease-out;
+}
+
+/* Bounce animations */
+@keyframes bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes bounce-soft {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+.animate-bounce-soft {
+  animation: bounce-soft 3s ease-in-out infinite;
+}
+
+/* Shimmer effect */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 3s infinite;
+}
+
+/* Wave animation */
+@keyframes wave {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-10px) rotate(5deg);
+  }
+  75% {
+    transform: translateY(10px) rotate(-5deg);
+  }
+}
+
+.animate-wave {
+  animation: wave 2s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+/* Gradient animation */
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 5s ease infinite;
 }

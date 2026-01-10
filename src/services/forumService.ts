@@ -1,12 +1,11 @@
 import { IPost, IPostReply } from "@/types/forum";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+import { API_ENDPOINTS } from "@/constants/api";
 
 export const forumService = {
-    getAll: () => fetch(`${API_URL}/posts`).then((res) => res.json()),
+    getAll: () => fetch(API_ENDPOINTS.FORUM.POSTS.BASE, { credentials: "include" }).then((res) => res.json()),
 
     getById: async (id: string): Promise<IPost> => {
-        const res = await fetch(`${API_URL}/posts/${id}`);
+        const res = await fetch(API_ENDPOINTS.FORUM.POSTS.BY_ID(id), { credentials: "include" });
         if (!res.ok) {
             throw new Error(`Failed to fetch post: ${res.status}`);
         }
@@ -15,27 +14,34 @@ export const forumService = {
     },
 
     create: (post: Partial<IPost>) =>
-        fetch(`${API_URL}/posts`, {
+        fetch(API_ENDPOINTS.FORUM.POSTS.CREATE, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify(post),
         }).then((res) => res.json()),
 
     update: (id: string, post: Partial<IPost>) =>
-        fetch(`${API_URL}/posts/${id}`, {
+        fetch(API_ENDPOINTS.FORUM.POSTS.UPDATE(id), {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify(post),
         }).then((res) => res.json()),
 
     delete: (id: string) =>
-        fetch(`${API_URL}/posts/${id}`, {
+        fetch(API_ENDPOINTS.FORUM.POSTS.DELETE(id), {
             method: "DELETE",
+            credentials: "include",
         }).then((res) => res.ok),
 
     getReplies: async (postId: string): Promise<IPostReply[]> => {
         try {
-            const res = await fetch(`${API_URL}/posts/${postId}/post-replies`);
+            if (!postId || postId === "NaN" || postId === "undefined") {
+                console.error("Invalid postId:", postId);
+                return [];
+            }
+            const res = await fetch(`${API_ENDPOINTS.FORUM.POSTS.BY_ID(postId)}/post-replies`, { credentials: "include" });
             if (res.ok) {
                 const data = await res.json();
                 return Array.isArray(data.data)
@@ -44,7 +50,6 @@ export const forumService = {
                     ? data
                     : [];
             }
-            // console.error("Failed to fetch replies:");
             return [];
         } catch (error) {
             console.error("Error fetching replies:", error);
@@ -57,9 +62,10 @@ export const forumService = {
         content: string,
         userId: string
     ): Promise<IPostReply> => {
-        const res = await fetch(`${API_URL}/post-replies`, {
+        const res = await fetch(API_ENDPOINTS.FORUM.REPLIES.CREATE, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({
                 post_id: postId,
                 user_id: userId,
@@ -74,25 +80,28 @@ export const forumService = {
     },
 
     updateReply: async (replyId: string, content: string) => {
-        const response = await fetch(`${API_URL}/post-replies/${replyId}`, {
+        const response = await fetch(API_ENDPOINTS.FORUM.REPLIES.UPDATE(replyId), {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({ content }),
         });
         return response.json();
     },
 
     deleteReply: async (replyId: string) => {
-        const response = await fetch(`${API_URL}/post-replies/${replyId}`, {
+        const response = await fetch(API_ENDPOINTS.FORUM.REPLIES.DELETE(replyId), {
             method: "DELETE",
+            credentials: "include",
         });
         return response.json();
     },
 
     toggleLike: async (id: string, userId: string) => {
-        const res = await fetch(`${API_URL}/posts/${id}/like`, {
+        const res = await fetch(`${API_ENDPOINTS.FORUM.POSTS.BY_ID(id)}/like`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
+            credentials: "include",
             body: JSON.stringify({ user_id: userId }),
         });
         if (!res.ok) throw new Error("Không thể like");

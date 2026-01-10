@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { IRoute } from "@/lib/type/interface";
 import { AIGeneratedRoute } from "@/services/aiRoutePlannerService";
+import { COLORS, GRADIENTS } from "@/constants/colors";
 
 interface RouteRecommendationModalProps {
   isOpen: boolean;
@@ -68,34 +69,37 @@ export const RouteRecommendationModal: React.FC<
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
       onClick={onClose}
     >
       <div
-        className="w-full max-w-5xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+        className={`w-full max-w-5xl max-h-[90vh] ${COLORS.BACKGROUND.CARD} rounded-2xl shadow-2xl overflow-hidden flex flex-col transition-colors duration-200`}
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-linear-to-r from-purple-50 via-pink-50 to-indigo-50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-linear-to-br from-purple-100 to-pink-100 rounded-lg">
-              <Wand2 className="h-6 w-6 text-purple-600" />
+        <div className={`flex items-center justify-between p-6 ${COLORS.BORDER.DEFAULT} border-b ${GRADIENTS.PRIMARY_LIGHT} opacity-80 transition-colors duration-200 relative`}>
+          {/* Dark overlay for better text contrast */}
+          <div className="absolute inset-0 bg-black/20 dark:bg-black/40 pointer-events-none"></div>
+          
+          <div className="flex items-center gap-3 relative z-10">
+            <div className={`p-2 ${COLORS.PRIMARY.LIGHT} rounded-lg transition-colors duration-200 backdrop-blur-sm bg-white/10 dark:bg-white/5`}>
+              <Wand2 className={`h-6 w-6 text-white drop-shadow-lg transition-colors duration-200`} />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-gray-900">
+              <h2 className={`text-2xl font-bold text-white drop-shadow-lg transition-colors duration-200`}>
                 Lộ Trình AI Đề Xuất
               </h2>
-              <p className="text-sm text-gray-600 mt-1">
+              <p className={`text-sm text-white/95 drop-shadow-md mt-1 transition-colors duration-200`}>
                 Lộ trình hoàn chỉnh được AI tính toán để buổi đi chơi trọn vẹn
                 nhất
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 relative z-10">
             {aiGeneratedRoutes.length > 0 && onSelectAllRoutes && (
               <button
                 onClick={handleSelectAll}
-                className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg"
+                className={`flex items-center gap-2 px-4 py-2 ${COLORS.PRIMARY.DEFAULT} ${COLORS.PRIMARY.HOVER} text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg backdrop-blur-sm`}
               >
                 <CheckCircle className="h-4 w-4" />
                 <span>Thêm Tất Cả ({aiGeneratedRoutes.length})</span>
@@ -103,10 +107,10 @@ export const RouteRecommendationModal: React.FC<
             )}
             <button
               onClick={onClose}
-              className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              className={`p-2 bg-white/20 hover:bg-white/30 dark:bg-white/10 dark:hover:bg-white/20 rounded-lg transition-colors duration-200 backdrop-blur-sm`}
               aria-label="Close"
             >
-              <X className="h-5 w-5 text-gray-600" />
+              <X className={`h-5 w-5 text-white drop-shadow-md transition-colors duration-200`} />
             </button>
           </div>
         </div>
@@ -115,32 +119,34 @@ export const RouteRecommendationModal: React.FC<
         <div className="flex-1 overflow-y-auto p-6">
           {loading ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <Loader2 className="h-12 w-12 animate-spin text-purple-600 mb-4" />
-              <p className="text-gray-600 font-medium text-lg mb-2">
+              <Loader2 className={`h-12 w-12 animate-spin ${COLORS.TEXT.PRIMARY} mb-4 transition-colors duration-200`} />
+              <p className={`${COLORS.TEXT.MUTED} font-medium text-lg mb-2 transition-colors duration-200`}>
                 AI đang tính toán lộ trình...
               </p>
-              <p className="text-gray-500 text-sm text-center max-w-md">
+              <p className={`${COLORS.TEXT.MUTED} text-sm text-center max-w-md transition-colors duration-200`}>
                 Đang phân tích destination, thời gian, ngân sách và tạo lộ trình
                 tối ưu cho bạn
               </p>
             </div>
           ) : aiGeneratedRoutes.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16">
-              <div className="p-4 bg-gray-100 rounded-full mb-4">
-                <MapPin className="h-10 w-10 text-gray-400" />
+              <div className={`p-4 ${COLORS.BACKGROUND.MUTED} rounded-full mb-4 transition-colors duration-200`}>
+                <MapPin className={`h-10 w-10 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
               </div>
-              <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <h3 className={`text-xl font-bold ${COLORS.TEXT.DEFAULT} mb-2 transition-colors duration-200`}>
                 Không thể tạo lộ trình
               </h3>
-              <p className="text-gray-600 text-center max-w-md">
+              <p className={`${COLORS.TEXT.MUTED} text-center max-w-md transition-colors duration-200`}>
                 Không thể tạo lộ trình AI tại thời điểm này. Vui lòng thử lại
                 sau hoặc tạo lộ trình thủ công.
               </p>
             </div>
           ) : (
             <div className="space-y-4">
-              <div className="mb-4 p-4 bg-linear-to-r from-purple-50 to-pink-50 rounded-lg border border-purple-200">
-                <p className="text-sm text-gray-700">
+              <div className={`mb-4 p-4 ${COLORS.PRIMARY.LIGHT} rounded-lg ${COLORS.BORDER.PRIMARY} border transition-colors duration-200 relative`}>
+                {/* Dark overlay for better text contrast */}
+                <div className="absolute inset-0 bg-black/10 dark:bg-black/20 rounded-lg pointer-events-none"></div>
+                <p className={`text-sm ${COLORS.TEXT.DEFAULT} relative z-10 font-medium transition-colors duration-200`}>
                   <span className="font-semibold">
                     ✨ AI đã tạo ra {aiGeneratedRoutes.length} chặng
                   </span>{" "}
@@ -158,8 +164,8 @@ export const RouteRecommendationModal: React.FC<
                     key={index}
                     className={`border-2 rounded-xl p-5 transition-all duration-200 ${
                       isSelected
-                        ? "border-purple-400 bg-purple-50"
-                        : "border-gray-200 bg-white hover:shadow-lg"
+                        ? `${COLORS.BORDER.PRIMARY} ${COLORS.PRIMARY.LIGHT}`
+                        : `${COLORS.BORDER.DEFAULT} ${COLORS.BACKGROUND.CARD} hover:shadow-lg`
                     }`}
                   >
                     <div className="flex items-start justify-between gap-4">
@@ -167,19 +173,19 @@ export const RouteRecommendationModal: React.FC<
                         {/* Route Number and Title */}
                         <div className="flex items-center gap-3 mb-3">
                           <div
-                            className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm ${
+                            className={`flex items-center justify-center w-8 h-8 rounded-full font-bold text-sm transition-colors duration-200 ${
                               isSelected
-                                ? "bg-purple-600 text-white"
-                                : "bg-linear-to-br from-purple-100 to-pink-100 text-purple-700"
+                                ? `${COLORS.PRIMARY.DEFAULT} text-white`
+                                : `${COLORS.PRIMARY.LIGHT} ${COLORS.TEXT.PRIMARY}`
                             }`}
                           >
                             {index + 1}
                           </div>
-                          <h3 className="text-lg font-bold text-gray-900">
+                          <h3 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
                             {route.title}
                           </h3>
                           {isSelected && (
-                            <span className="px-2 py-1 bg-green-100 text-green-700 text-xs font-semibold rounded-full flex items-center gap-1">
+                            <span className={`px-2 py-1 ${COLORS.GREEN[100]} ${COLORS.GREEN.TEXT_700} text-xs font-semibold rounded-full flex items-center gap-1 transition-colors duration-200`}>
                               <CheckCircle className="h-3 w-3" />
                               Đã thêm
                             </span>
@@ -188,34 +194,34 @@ export const RouteRecommendationModal: React.FC<
 
                         {/* Description */}
                         {route.description && (
-                          <p className="text-sm text-gray-600 mb-3">
+                          <p className={`text-sm ${COLORS.TEXT.MUTED} mb-3 transition-colors duration-200`}>
                             {route.description}
                           </p>
                         )}
 
                         {/* AI Reasoning */}
                         {aiRoute.reasoning && (
-                          <div className="mb-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                            <p className="text-xs font-semibold text-blue-700 mb-1">
+                          <div className={`mb-3 p-3 ${COLORS.BACKGROUND.MUTED} ${COLORS.BORDER.DEFAULT} border rounded-lg transition-colors duration-200`}>
+                            <p className={`text-xs font-semibold ${COLORS.TEXT.PRIMARY} mb-1 transition-colors duration-200`}>
                               💡 Lý do AI đề xuất:
                             </p>
-                            <p className="text-xs text-blue-600">
+                            <p className={`text-xs ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                               {aiRoute.reasoning}
                             </p>
                           </div>
                         )}
 
                         {/* Coordinates */}
-                        <div className="flex items-center gap-4 text-xs text-gray-500 mb-3">
+                        <div className={`flex items-center gap-4 text-xs ${COLORS.TEXT.MUTED} mb-3 transition-colors duration-200`}>
                           <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3 text-green-500" />
+                            <MapPin className={`h-3 w-3 ${COLORS.GREEN.TEXT_500} transition-colors duration-200`} />
                             <span>
                               Bắt đầu: {route.latStart.toFixed(4)},{" "}
                               {route.lngStart.toFixed(4)}
                             </span>
                           </div>
                           <div className="flex items-center gap-1">
-                            <MapPin className="h-3 w-3 text-red-500" />
+                            <MapPin className={`h-3 w-3 ${COLORS.DESTRUCTIVE.TEXT} transition-colors duration-200`} />
                             <span>
                               Kết thúc: {route.latEnd.toFixed(4)},{" "}
                               {route.lngEnd.toFixed(4)}
@@ -226,14 +232,14 @@ export const RouteRecommendationModal: React.FC<
                         {/* Activities */}
                         {route.details && route.details.length > 0 && (
                           <div className="mb-3">
-                            <p className="text-xs font-semibold text-gray-500 mb-2">
+                            <p className={`text-xs font-semibold ${COLORS.TEXT.MUTED} mb-2 transition-colors duration-200`}>
                               Hoạt động:
                             </p>
                             <div className="flex flex-wrap gap-2">
                               {route.details.map((detail, idx) => (
                                 <span
                                   key={idx}
-                                  className="px-2 py-1 bg-gray-100 text-xs text-gray-700 rounded-md border border-gray-200"
+                                  className={`px-2 py-1 ${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.DEFAULT} text-xs rounded-md ${COLORS.BORDER.DEFAULT} border transition-colors duration-200`}
                                 >
                                   {detail}
                                 </span>
@@ -247,7 +253,7 @@ export const RouteRecommendationModal: React.FC<
                       {!isSelected && (
                         <button
                           onClick={() => handleSelectRoute(route, index)}
-                          className="flex items-center gap-2 px-4 py-2 bg-linear-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 shrink-0"
+                          className={`flex items-center gap-2 px-4 py-2 ${COLORS.PRIMARY.DEFAULT} ${COLORS.PRIMARY.HOVER} text-white rounded-lg font-semibold text-sm transition-all duration-200 shadow-md hover:shadow-lg transform hover:scale-105 shrink-0`}
                         >
                           <Plus className="h-4 w-4" />
                           <span>Thêm</span>
@@ -262,8 +268,8 @@ export const RouteRecommendationModal: React.FC<
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-gray-200 bg-gray-50">
-          <p className="text-xs text-gray-500 text-center">
+        <div className={`p-4 ${COLORS.BORDER.DEFAULT} border-t ${COLORS.BACKGROUND.MUTED} transition-colors duration-200`}>
+          <p className={`text-xs ${COLORS.TEXT.MUTED} text-center transition-colors duration-200`}>
             Lộ trình được AI tính toán dựa trên destination, thời gian, ngân
             sách và độ khó của trip. Bạn có thể chỉnh sửa sau khi thêm vào trip.
           </p>
