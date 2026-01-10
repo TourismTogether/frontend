@@ -11,6 +11,7 @@ import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
+import { ANIMATIONS } from "../../constants/animations";
 
 // Interface definitions
 export interface IDestination {
@@ -342,8 +343,12 @@ export const Trips: React.FC = () => {
         {/* Trips Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {trips.length > 0 ? (
-            trips.map((trip) => (
-              <div key={trip.id} className="relative group">
+            trips.map((trip, index) => (
+              <div
+                key={trip.id}
+                className={`relative group ${ANIMATIONS.FADE.IN_UP}`}
+                style={{ animationDelay: `${index * 0.1}s` }}
+              >
                 {trip.id && (
                   <TripCard
                     trip={trip}
@@ -365,8 +370,8 @@ export const Trips: React.FC = () => {
                     unoptimized
                   />
                 </div>
-                <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${COLORS.PRIMARY.LIGHT} mb-6`}>
-                  <Plane className={`w-10 h-10 ${COLORS.TEXT.PRIMARY}`} />
+                <div className={`inline-flex items-center justify-center w-20 h-20 rounded-full ${COLORS.PRIMARY.LIGHT} mb-6 ${ANIMATIONS.BOUNCE.GENTLE}`}>
+                  <Plane className={`w-10 h-10 ${COLORS.TEXT.PRIMARY} ${ANIMATIONS.ROTATE.SLOW}`} />
                 </div>
                 <h3 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT} mb-3`}>
                   No trips yet
@@ -377,9 +382,9 @@ export const Trips: React.FC = () => {
                 </p>
                 <button
                   onClick={handleOpenAddModal}
-                  className={`inline-flex items-center justify-center space-x-2 ${GRADIENTS.PRIMARY} text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold`}
+                  className={`inline-flex items-center justify-center space-x-2 ${GRADIENTS.PRIMARY} text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold ${ANIMATIONS.PULSE.GLOW}`}
                 >
-                  <Plus className="w-5 h-5" />
+                  <Plus className={`w-5 h-5 ${ANIMATIONS.ROTATE.MEDIUM}`} />
                   <span>Create Your First Trip</span>
                 </button>
               </div>

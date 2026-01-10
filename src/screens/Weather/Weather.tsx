@@ -28,6 +28,8 @@ import { getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
+import { ANIMATIONS } from "../../constants/animations";
+import PulseGlow from "../../components/Animations/PulseGlow";
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(
@@ -484,20 +486,20 @@ export const Weather: React.FC = () => {
         </div>
 
         {/* Main Weather Card */}
-        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-2xl overflow-hidden`}>
+        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-2xl overflow-hidden ${ANIMATIONS.FADE.IN_UP}`}>
           {/* Header */}
-          <div className={`${GRADIENTS.PRIMARY} p-8 text-white`}>
+          <div className={`${GRADIENTS.PRIMARY} p-8 text-white ${ANIMATIONS.PULSE.GENTLE}`}>
             <div className="flex items-center justify-between">
               <div>
                 <div className="flex items-center mb-2">
-                  <MapPin className="w-5 h-5 mr-2" />
+                  <MapPin className={`w-5 h-5 mr-2 ${ANIMATIONS.BOUNCE.SOFT}`} />
                   <span className="text-lg font-semibold">{weather.city}</span>
                 </div>
                 <p className="text-white/80 text-sm">Current Weather</p>
               </div>
               <button
                 onClick={fetchWeather}
-                className="p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors"
+                className={`p-2 rounded-full bg-white/20 hover:bg-white/30 transition-colors ${ANIMATIONS.ROTATE.MEDIUM}`}
                 title="Refresh weather"
               >
                 <RefreshCw className="w-5 h-5" />
@@ -510,17 +512,19 @@ export const Weather: React.FC = () => {
             {/* Main Weather Display */}
             <div className={`flex flex-col md:flex-row items-center justify-between mb-8 pb-8 border-b ${COLORS.BORDER.DEFAULT}`}>
               <div className="flex items-center space-x-6 mb-6 md:mb-0">
-                <div className={COLORS.TEXT.PRIMARY}>
-                  {getWeatherIcon(weather.main, weather.description)}
-                </div>
+                <PulseGlow variant="glow" className={COLORS.TEXT.PRIMARY}>
+                  <div className={ANIMATIONS.ROTATE.SLOW}>
+                    {getWeatherIcon(weather.main, weather.description)}
+                  </div>
+                </PulseGlow>
                 <div>
-                  <div className={`text-6xl font-bold ${COLORS.TEXT.DEFAULT} mb-2`}>
+                  <div className={`text-6xl font-bold ${COLORS.TEXT.DEFAULT} mb-2 ${ANIMATIONS.FADE.IN_UP}`}>
                     {weather.temp}°C
                   </div>
-                  <div className={`text-xl ${COLORS.TEXT.MUTED} capitalize`}>
+                  <div className={`text-xl ${COLORS.TEXT.MUTED} capitalize ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.1s" }}>
                     {weather.description}
                   </div>
-                  <div className={`text-sm ${COLORS.TEXT.MUTED} mt-1`}>
+                  <div className={`text-sm ${COLORS.TEXT.MUTED} mt-1 ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.2s" }}>
                     Feels like {weather.feels_like}°C
                   </div>
                 </div>
@@ -540,9 +544,9 @@ export const Weather: React.FC = () => {
 
             {/* Weather Details Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4`}>
+              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4 ${ANIMATIONS.FADE.IN_UP} hover:shadow-lg transition-all duration-300 hover:-translate-y-1`} style={{ animationDelay: "0.1s" }}>
                 <div className="flex items-center mb-2">
-                  <Droplets className="w-5 h-5 text-blue-500 mr-2" />
+                  <Droplets className={`w-5 h-5 text-blue-500 mr-2 ${ANIMATIONS.PULSE.GENTLE}`} />
                   <span className={`text-sm ${COLORS.TEXT.MUTED}`}>Humidity</span>
                 </div>
                 <div className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
@@ -550,9 +554,9 @@ export const Weather: React.FC = () => {
                 </div>
               </div>
 
-              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4`}>
+              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4 ${ANIMATIONS.FADE.IN_UP} hover:shadow-lg transition-all duration-300 hover:-translate-y-1`} style={{ animationDelay: "0.2s" }}>
                 <div className="flex items-center mb-2">
-                  <Wind className={`w-5 h-5 ${COLORS.TEXT.PRIMARY} mr-2`} />
+                  <Wind className={`w-5 h-5 ${COLORS.TEXT.PRIMARY} mr-2 ${ANIMATIONS.ROTATE.SLOW}`} />
                   <span className={`text-sm ${COLORS.TEXT.MUTED}`}>Wind Speed</span>
                 </div>
                 <div className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
@@ -560,9 +564,9 @@ export const Weather: React.FC = () => {
                 </div>
               </div>
 
-              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4`}>
+              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4 ${ANIMATIONS.FADE.IN_UP} hover:shadow-lg transition-all duration-300 hover:-translate-y-1`} style={{ animationDelay: "0.3s" }}>
                 <div className="flex items-center mb-2">
-                  <Eye className="w-5 h-5 text-purple-500 mr-2" />
+                  <Eye className={`w-5 h-5 text-purple-500 mr-2 ${ANIMATIONS.PULSE.GENTLE}`} />
                   <span className={`text-sm ${COLORS.TEXT.MUTED}`}>Visibility</span>
                 </div>
                 <div className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
@@ -570,9 +574,9 @@ export const Weather: React.FC = () => {
                 </div>
               </div>
 
-              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4`}>
+              <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl p-4 ${ANIMATIONS.FADE.IN_UP} hover:shadow-lg transition-all duration-300 hover:-translate-y-1`} style={{ animationDelay: "0.4s" }}>
                 <div className="flex items-center mb-2">
-                  <Thermometer className="w-5 h-5 text-red-500 mr-2" />
+                  <Thermometer className={`w-5 h-5 text-red-500 mr-2 ${ANIMATIONS.PULSE.GLOW}`} />
                   <span className={`text-sm ${COLORS.TEXT.MUTED}`}>Feels Like</span>
                 </div>
                 <div className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>

@@ -12,6 +12,8 @@ import {
 } from "lucide-react";
 import { ITrip } from "./Trips";
 import { COLORS } from "../../constants/colors";
+import { ANIMATIONS } from "../../constants/animations";
+import ShimmerCard from "../../components/Animations/ShimmerCard";
 
 interface TripCardProps {
   trip: ITrip;
@@ -74,7 +76,10 @@ export const TripCard: React.FC<TripCardProps> = ({
   const isDifficult = difficultLevel >= 3;
 
   return (
-    <div className={`${COLORS.BACKGROUND.CARD} rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 ${COLORS.BORDER.DEFAULT} hover:${COLORS.BORDER.PRIMARY} block relative group overflow-hidden`}>
+    <ShimmerCard
+      className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 block relative group"
+      shimmer={false}
+    >
       {/* Header Section with Title and Actions */}
       <div className="relative p-5 pb-4">
         {/* Action Buttons - Better positioned */}
@@ -120,7 +125,7 @@ export const TripCard: React.FC<TripCardProps> = ({
             <span
               className={`ml-auto text-xs px-2.5 py-1 rounded-full font-semibold ${getStatusColor(
                 trip.status
-              )}`}
+              )} ${ANIMATIONS.PULSE.SOFT}`}
             >
               {(trip.status || "UNKNOWN").toUpperCase()}
             </span>
@@ -202,6 +207,6 @@ export const TripCard: React.FC<TripCardProps> = ({
           )}
         </div>
       </Link>
-    </div>
+    </ShimmerCard>
   );
 };

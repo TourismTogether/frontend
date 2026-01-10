@@ -20,6 +20,8 @@ import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
+import { ANIMATIONS } from "../../constants/animations";
+import PulseGlow from "../../components/Animations/PulseGlow";
 
 interface ProfileStats {
   totalRoutes: number;
@@ -332,8 +334,8 @@ export const Profile: React.FC = () => {
               <div className="flex flex-col sm:flex-row items-start sm:items-end justify-between -mt-20 gap-6">
                 <div className="flex flex-col sm:flex-row items-start sm:items-end gap-6 flex-1">
                   {/* Avatar */}
-                  <div className="relative">
-                    <div className={`w-36 h-36 ${GRADIENTS.PRIMARY} rounded-2xl border-4 border-card shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300 overflow-hidden`}>
+                  <div className={`relative ${ANIMATIONS.FADE.IN_UP}`}>
+                    <PulseGlow variant="glow" className={`w-36 h-36 ${GRADIENTS.PRIMARY} rounded-2xl border-4 border-card shadow-2xl flex items-center justify-center transform hover:scale-105 transition-transform duration-300 overflow-hidden`}>
                       {avatarUrl ? (
                         <Image
                           src={avatarUrl}
@@ -348,14 +350,14 @@ export const Profile: React.FC = () => {
                           {displayName.charAt(0).toUpperCase()}
                         </span>
                       )}
-                    </div>
-                    <div className={`absolute -bottom-2 -right-2 w-10 h-10 ${COLORS.PRIMARY.DEFAULT} rounded-full border-4 border-card shadow-lg flex items-center justify-center`}>
+                    </PulseGlow>
+                    <div className={`absolute -bottom-2 -right-2 w-10 h-10 ${COLORS.PRIMARY.DEFAULT} rounded-full border-4 border-card shadow-lg flex items-center justify-center ${ANIMATIONS.PULSE.GENTLE}`}>
                       <div className="w-3 h-3 bg-white rounded-full"></div>
                     </div>
                   </div>
 
                   {/* User Info */}
-                  <div className="pb-2">
+                  <div className={`pb-2 ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.2s" }}>
                     <h1 className={`text-4xl sm:text-5xl font-extrabold ${COLORS.TEXT.DEFAULT} mb-2`}>
                       {displayName}
                     </h1>
@@ -387,9 +389,9 @@ export const Profile: React.FC = () => {
                 {/* Edit Button */}
                 <button
                   onClick={() => setIsEditModalOpen(true)}
-                  className={`flex items-center space-x-2 ${GRADIENTS.PRIMARY} text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold group`}
+                  className={`flex items-center space-x-2 ${GRADIENTS.PRIMARY} text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold group ${ANIMATIONS.PULSE.GLOW}`}
                 >
-                  <Edit2 className="w-4 h-4 group-hover:rotate-12 transition-transform" />
+                  <Edit2 className={`w-4 h-4 group-hover:rotate-12 transition-transform ${ANIMATIONS.ROTATE.MEDIUM}`} />
                   <span>Edit Profile</span>
                 </button>
               </div>
@@ -407,11 +409,11 @@ export const Profile: React.FC = () => {
 
           {/* Statistics Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group`}>
+            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.1s" }}>
               <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 ${GRADIENTS.PRIMARY} rounded-xl group-hover:scale-110 transition-transform`}>
+                <PulseGlow variant="glow" className={`p-3 ${GRADIENTS.PRIMARY} rounded-xl group-hover:scale-110 transition-transform ${ANIMATIONS.ROTATE.SLOW}`}>
                   <Route className="w-6 h-6 text-white" />
-                </div>
+                </PulseGlow>
                 <div className="text-right">
                   <p className={`text-3xl font-extrabold ${COLORS.TEXT.PRIMARY} mb-0`}>
                     {stats.totalRoutes}
@@ -422,11 +424,11 @@ export const Profile: React.FC = () => {
               <p className={`text-xs ${COLORS.TEXT.MUTED} mt-1`}>Total routes planned</p>
             </div>
 
-            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group`}>
+            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.2s" }}>
               <div className="flex items-center justify-between mb-4">
-                <div className={`p-3 ${GRADIENTS.PRIMARY} rounded-xl group-hover:scale-110 transition-transform`}>
+                <PulseGlow variant="glow" className={`p-3 ${GRADIENTS.PRIMARY} rounded-xl group-hover:scale-110 transition-transform ${ANIMATIONS.ROTATE.SLOW}`}>
                   <Map className="w-6 h-6 text-white" />
-                </div>
+                </PulseGlow>
                 <div className="text-right">
                   <p className={`text-3xl font-extrabold ${COLORS.TEXT.PRIMARY} mb-0`}>
                     {stats.totalTrips}
@@ -437,11 +439,11 @@ export const Profile: React.FC = () => {
               <p className={`text-xs ${COLORS.TEXT.MUTED} mt-1`}>All your adventures</p>
             </div>
 
-            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group`}>
+            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.3s" }}>
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl group-hover:scale-110 transition-transform">
+                <PulseGlow variant="glow" className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl group-hover:scale-110 transition-transform">
                   <MessageSquare className="w-6 h-6 text-white" />
-                </div>
+                </PulseGlow>
                 <div className="text-right">
                   <p className="text-3xl font-extrabold text-purple-700 mb-0">
                     {stats.totalPosts}
@@ -452,11 +454,11 @@ export const Profile: React.FC = () => {
               <p className={`text-xs ${COLORS.TEXT.MUTED} mt-1`}>Share your stories</p>
             </div>
 
-            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group`}>
+            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 group ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.4s" }}>
               <div className="flex items-center justify-between mb-4">
-                <div className="p-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl group-hover:scale-110 transition-transform">
+                <PulseGlow variant="glow" className="p-3 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl group-hover:scale-110 transition-transform">
                   <BookOpen className="w-6 h-6 text-white" />
-                </div>
+                </PulseGlow>
                 <div className="text-right">
                   <p className="text-3xl font-extrabold text-orange-700 mb-0">
                     {stats.totalDiaries}

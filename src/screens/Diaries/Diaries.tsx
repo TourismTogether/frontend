@@ -20,6 +20,8 @@ import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import Loading, { SkeletonGrid } from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
+import { ANIMATIONS } from "../../constants/animations";
+import ShimmerCard from "../../components/Animations/ShimmerCard";
 
 interface IDiary {
   id: string | number;
@@ -349,88 +351,98 @@ export default function Diaries() {
                 return (
                   <div
                     key={diary.id}
-                    className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg hover:shadow-xl transition-all overflow-hidden cursor-pointer group`}
+                    className={`${ANIMATIONS.FADE.IN_UP} hover:-translate-y-1`}
+                    style={{
+                      animationDelay: `${(diaries.indexOf(diary) % 6) * 0.1}s`,
+                    }}
                   >
-                    <Link href={`/diaries/${diary.id}`} className="block">
-                      <div className="h-48 relative overflow-hidden">
-                        <Image
-                          src={imageUrl}
-                          alt={diary.title}
-                          fill
-                          className="object-cover group-hover:scale-110 transition-transform duration-500"
-                          unoptimized
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
-                        {diary.is_public && (
-                          <span
-                            className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm`}
-                          >
-                            Public
-                          </span>
-                        )}
-                        {diary.is_draft && (
-                          <span className="absolute top-3 right-3 bg-gray-600 px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm">
-                            Draft
-                          </span>
-                        )}
-                      </div>
-                    </Link>
-
-                    <div className="p-4">
-                      <div className="flex justify-between items-start mb-2">
-                        <div className="flex-1">
-                          <h3
-                            className={`font-bold text-lg ${COLORS.TEXT.DEFAULT} mb-1 line-clamp-1`}
-                          >
-                            {diary.title}
-                          </h3>
-                          <p className={`text-xs ${COLORS.TEXT.MUTED} mt-1`}>
-                            {new Date(diary.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-
-                        <div className="flex items-center gap-2 ml-2">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              openShareModal(diary);
+                    <ShimmerCard
+                      className="overflow-hidden cursor-pointer group h-full"
+                      shimmer={false}
+                    >
+                      <Link href={`/diaries/${diary.id}`} className="block">
+                        <div className="h-48 relative overflow-hidden">
+                          <Image
+                            src={imageUrl}
+                            alt={diary.title}
+                            fill
+                            className="object-cover group-hover:scale-110 transition-transform duration-500"
+                            unoptimized
+                            onError={(e) => {
+                              e.currentTarget.style.display = "none";
                             }}
-                            className={`text-sm px-3 py-1 ${COLORS.BORDER.DEFAULT} border rounded-md ${COLORS.TEXT.PRIMARY} hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
-                          >
-                            <Share2 className="w-4 h-4" />
-                          </button>
-                          {String(diary.user_id) === String(user?.id) && (
-                            <>
-                              <Link
-                                href={`/diaries/${diary.id}/edit`}
-                                className={`text-sm px-3 py-1 ${COLORS.BORDER.DEFAULT} border rounded-md ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
-                              >
-                                <Edit className="w-4 h-4" />
-                              </Link>
-                              <button
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  handleDelete(diary.id);
-                                }}
-                                className={`text-sm px-3 py-1 ${COLORS.BORDER.DEFAULT} border rounded-md text-red-600 hover:bg-red-50 transition-colors`}
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </>
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                          {diary.is_public && (
+                            <span
+                              className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm ${ANIMATIONS.BOUNCE.SOFT}`}
+                            >
+                              Public
+                            </span>
+                          )}
+                          {diary.is_draft && (
+                            <span
+                              className={`absolute top-3 right-3 bg-gray-600 px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm ${ANIMATIONS.PULSE.SOFT}`}
+                            >
+                              Draft
+                            </span>
                           )}
                         </div>
-                      </div>
+                      </Link>
 
-                      <p
-                        className={`text-sm ${COLORS.TEXT.MUTED} mt-2 line-clamp-2`}
-                      >
-                        {diary.description}
-                      </p>
-                    </div>
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div className="flex-1">
+                            <h3
+                              className={`font-bold text-lg ${COLORS.TEXT.DEFAULT} mb-1 line-clamp-1`}
+                            >
+                              {diary.title}
+                            </h3>
+                            <p className={`text-xs ${COLORS.TEXT.MUTED} mt-1`}>
+                              {new Date(diary.created_at).toLocaleDateString()}
+                            </p>
+                          </div>
+
+                          <div className="flex items-center gap-2 ml-2">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                openShareModal(diary);
+                              }}
+                              className={`text-sm px-3 py-1 ${COLORS.BORDER.DEFAULT} border rounded-md ${COLORS.TEXT.PRIMARY} hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
+                            >
+                              <Share2 className="w-4 h-4" />
+                            </button>
+                            {String(diary.user_id) === String(user?.id) && (
+                              <>
+                                <Link
+                                  href={`/diaries/${diary.id}/edit`}
+                                  className={`text-sm px-3 py-1 ${COLORS.BORDER.DEFAULT} border rounded-md ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
+                                >
+                                  <Edit className="w-4 h-4" />
+                                </Link>
+                                <button
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    handleDelete(diary.id);
+                                  }}
+                                  className={`text-sm px-3 py-1 ${COLORS.BORDER.DEFAULT} border rounded-md text-red-600 hover:bg-red-50 transition-colors`}
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </div>
+
+                        <p
+                          className={`text-sm ${COLORS.TEXT.MUTED} mt-2 line-clamp-2`}
+                        >
+                          {diary.description}
+                        </p>
+                      </div>
+                    </ShimmerCard>
                   </div>
                 );
               })

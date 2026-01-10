@@ -21,6 +21,8 @@ import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
+import { ANIMATIONS } from "../../constants/animations";
+import ShimmerCard from "../../components/Animations/ShimmerCard";
 
 export interface ICategory {
   id: string;
@@ -361,9 +363,9 @@ export const Forum: React.FC = () => {
           </div>
           <Link
             href="/forum/new"
-            className={`flex items-center space-x-2 ${GRADIENTS.PRIMARY} text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold`}
+            className={`flex items-center space-x-2 ${GRADIENTS.PRIMARY} text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold ${ANIMATIONS.PULSE.GLOW}`}
           >
-            <Plus className="w-5 h-5" />
+            <Plus className={`w-5 h-5 ${ANIMATIONS.ROTATE.MEDIUM}`} />
             <span>New Post</span>
           </Link>
         </div>
@@ -457,16 +459,21 @@ export const Forum: React.FC = () => {
                 )}
               </div>
             ) : (
-              filteredPosts.map((post) => (
+              filteredPosts.map((post, index) => (
                 <Link
                   key={post.id}
                   href={`/forum/${post.id}`}
-                  className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:${COLORS.BORDER.PRIMARY} hover:-translate-y-1 block group overflow-hidden`}
+                  className={`${ANIMATIONS.FADE.IN_UP} block`}
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
+                  <ShimmerCard
+                    className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group overflow-hidden"
+                    shimmer={false}
+                  >
                   <div className="p-6">
                     <div className="flex items-start gap-4">
                       {/* Avatar */}
-                      <div className={`w-14 h-14 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white group-hover:ring-accent/50 transition-all`}>
+                      <div className={`w-14 h-14 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white group-hover:ring-accent/50 transition-all ${ANIMATIONS.PULSE.GENTLE}`}>
                         {post.profiles?.avatar_url ? (
                           <Image
                             src={post.profiles.avatar_url}
@@ -617,6 +624,7 @@ export const Forum: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                  </ShimmerCard>
                 </Link>
               ))
             )}

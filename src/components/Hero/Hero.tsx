@@ -4,6 +4,8 @@ import React from "react";
 import Image from "next/image";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import { getTravelImageUrl, getDestinationImageUrl } from "../../constants/api";
+import FloatingElements from "../Animations/FloatingElements";
+import { ANIMATIONS, ANIMATION_DELAYS } from "../../constants/animations";
 
 interface HeroProps {
   title: string;
@@ -58,32 +60,35 @@ export const Hero: React.FC<HeroProps> = ({
         <div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
       </div>
 
+      {/* Floating Elements */}
+      <FloatingElements count={6} />
+
       {/* Content */}
       <div className="relative z-10 h-full flex flex-col justify-center">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <div className="flex flex-col items-start">
             {/* Icon/Emoji */}
             {icon && (
-              <div className="mb-4 transform transition-transform duration-300 hover:scale-110">
+              <div className={`mb-4 transform transition-transform duration-300 hover:scale-110 ${ANIMATIONS.BOUNCE.GENTLE}`}>
                 {icon}
               </div>
             )}
 
             {/* Title */}
-            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 drop-shadow-2xl leading-tight">
+            <h1 className={`text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold text-white mb-3 drop-shadow-2xl leading-tight ${ANIMATIONS.FADE.IN_UP}`}>
               {title}
             </h1>
 
             {/* Description */}
             {description && (
-              <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-white/95 drop-shadow-lg mb-2 max-w-3xl leading-relaxed">
+              <p className={`text-base sm:text-lg md:text-xl lg:text-2xl text-white/95 drop-shadow-lg mb-2 max-w-3xl leading-relaxed ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.2s" }}>
                 {description}
               </p>
             )}
 
             {/* Subtitle */}
             {subtitle && (
-              <p className="text-sm sm:text-base md:text-lg text-white/85 drop-shadow-md mt-1">
+              <p className={`text-sm sm:text-base md:text-lg text-white/85 drop-shadow-md mt-1 ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.4s" }}>
                 {subtitle}
               </p>
             )}

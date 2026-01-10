@@ -23,6 +23,8 @@ import { API_ENDPOINTS, getTravelImageUrl, getDestinationImageUrl } from "../../
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
+import { ANIMATIONS } from "../../constants/animations";
+import PulseGlow from "../../components/Animations/PulseGlow";
 
 // Dynamically import RouteMap to avoid SSR issues
 const RouteMap = dynamic(
@@ -129,7 +131,7 @@ const StatCard: React.FC<StatCardProps> = ({
   gradient,
   imageUrl,
 }) => (
-  <div className="relative bg-card border border-border rounded-xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300">
+  <div className={`relative bg-card border border-border rounded-xl shadow-lg overflow-hidden group hover:shadow-xl transition-all duration-300 hover:-translate-y-1 ${ANIMATIONS.FADE.IN_UP}`}>
     {imageUrl && (
       <div className="absolute inset-0 opacity-10 group-hover:opacity-15 transition-opacity">
         <Image
@@ -143,9 +145,9 @@ const StatCard: React.FC<StatCardProps> = ({
     )}
     <div className="relative p-6 flex flex-col justify-between min-h-[140px]">
       <div className="flex items-center justify-between mb-4">
-        <div className={`p-3 rounded-lg ${gradient} shadow-md`}>
+        <PulseGlow variant="glow" className={`p-3 rounded-lg ${gradient} shadow-md ${ANIMATIONS.ROTATE.SLOW}`}>
           <Icon className="w-6 h-6 text-white" />
-        </div>
+        </PulseGlow>
         {imageUrl && (
           <div className="w-16 h-16 rounded-lg overflow-hidden opacity-20">
             <Image
@@ -436,34 +438,42 @@ export const Dashboard: React.FC = () => {
             <h2 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>Your Progress Summary</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <StatCard
-              icon={Plane}
-              label="Total Trips"
-              value={stats.totalTrips}
-              gradient={GRADIENTS.PRIMARY}
-              imageUrl={getTravelImageUrl("airplane travel", 400, 300)}
-            />
-            <StatCard
-              icon={MessageSquare}
-              label="Total Posts"
-              value={stats.totalPosts}
-              gradient="bg-gradient-to-r from-blue-500 to-cyan-500"
-              imageUrl={getTravelImageUrl("discussion forum", 400, 300)}
-            />
-            <StatCard
-              icon={NotebookPen}
-              label="Total Diaries"
-              value={stats.totalDiaries}
-              gradient="bg-gradient-to-r from-amber-500 to-orange-500"
-              imageUrl={getTravelImageUrl("travel journal", 400, 300)}
-            />
-            <StatCard
-              icon={MapPin}
-              label="Total Routes"
-              value={stats.totalRoutes}
-              gradient={GRADIENTS.PRIMARY}
-              imageUrl={getTravelImageUrl("travel route map", 400, 300)}
-            />
+            <div className={ANIMATIONS.FADE.IN_UP} style={{ animationDelay: "0.1s" }}>
+              <StatCard
+                icon={Plane}
+                label="Total Trips"
+                value={stats.totalTrips}
+                gradient={GRADIENTS.PRIMARY}
+                imageUrl={getTravelImageUrl("airplane travel", 400, 300)}
+              />
+            </div>
+            <div className={ANIMATIONS.FADE.IN_UP} style={{ animationDelay: "0.2s" }}>
+              <StatCard
+                icon={MessageSquare}
+                label="Total Posts"
+                value={stats.totalPosts}
+                gradient="bg-gradient-to-r from-blue-500 to-cyan-500"
+                imageUrl={getTravelImageUrl("discussion forum", 400, 300)}
+              />
+            </div>
+            <div className={ANIMATIONS.FADE.IN_UP} style={{ animationDelay: "0.3s" }}>
+              <StatCard
+                icon={NotebookPen}
+                label="Total Diaries"
+                value={stats.totalDiaries}
+                gradient="bg-gradient-to-r from-amber-500 to-orange-500"
+                imageUrl={getTravelImageUrl("travel journal", 400, 300)}
+              />
+            </div>
+            <div className={ANIMATIONS.FADE.IN_UP} style={{ animationDelay: "0.4s" }}>
+              <StatCard
+                icon={MapPin}
+                label="Total Routes"
+                value={stats.totalRoutes}
+                gradient={GRADIENTS.PRIMARY}
+                imageUrl={getTravelImageUrl("travel route map", 400, 300)}
+              />
+            </div>
           </div>
         </div>
 

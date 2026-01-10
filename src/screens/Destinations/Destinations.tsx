@@ -10,6 +10,8 @@ import { API_ENDPOINTS, getDestinationImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
+import { ANIMATIONS } from "../../constants/animations";
+import ShimmerCard from "../../components/Animations/ShimmerCard";
 
 // Interface definitions
 export interface IDestination {
@@ -203,7 +205,7 @@ export const Destinations: React.FC = () => {
 
         {/* Destinations Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredDestinations.map((dest) => {
+          {filteredDestinations.map((dest, index) => {
             const images = dest.images || [];
             const firstImageObj =
               Array.isArray(images) && images.length > 0 ? images[0] : null;
@@ -224,8 +226,13 @@ export const Destinations: React.FC = () => {
               <Link
                 key={destinationId}
                 href={`/destinations/${destinationId}`}
-                className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group`}
+                className={ANIMATIONS.FADE.IN_UP}
+                style={{ animationDelay: `${index * 0.1}s` }}
               >
+                <ShimmerCard
+                  className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
+                  shimmer={false}
+                >
                 {/* Image */}
                 <div className="h-48 relative overflow-hidden">
                   <Image
@@ -243,14 +250,14 @@ export const Destinations: React.FC = () => {
 
                   {/* Category Badge */}
                   {dest.category && (
-                    <div className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm`}>
+                    <div className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm ${ANIMATIONS.BOUNCE.SOFT}`}>
                       {dest.category}
                     </div>
                   )}
 
                   {/* Rating Badge */}
                   {(dest.average_rating || dest.rating) > 0 && (
-                    <div className="absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1">
+                    <div className={`absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1 ${ANIMATIONS.PULSE.GENTLE}`}>
                       <Star className="w-3 h-3 text-yellow-400 fill-current" />
                       <span className="text-white text-xs font-bold">
                         {Number(dest.average_rating || dest.rating).toFixed(1)}
@@ -293,6 +300,7 @@ export const Destinations: React.FC = () => {
                     )}
                   </div>
                 </div>
+                </ShimmerCard>
               </Link>
             );
           })}

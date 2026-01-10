@@ -18,9 +18,12 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import CreateReviewModal from "./CreateReviewModal";
-import { COLORS } from "../../constants/colors";
+import { COLORS, GRADIENTS } from "../../constants/colors";
 import { API_ENDPOINTS } from "../../constants/api";
 import Loading from "../../components/Loading/Loading";
+import { ANIMATIONS } from "../../constants/animations";
+import PulseGlow from "../../components/Animations/PulseGlow";
+import Hero from "../../components/Hero/Hero";
 
 // Giao diện IDestinationDetail (Giữ nguyên)
 interface IDestinationDetail {
@@ -318,7 +321,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
           <div className="lg:col-span-2 space-y-8">
             {/* Image Gallery */}
             <div
-              className={`${COLORS.BACKGROUND.CARD} rounded-3xl overflow-hidden shadow-2xl ${COLORS.BORDER.DEFAULT} relative group transition-all duration-300`}
+              className={`${COLORS.BACKGROUND.CARD} rounded-3xl overflow-hidden shadow-2xl ${COLORS.BORDER.DEFAULT} relative group transition-all duration-300 ${ANIMATIONS.FADE.IN_UP}`}
             >
               <div
                 className={`h-[450px] md:h-[600px] relative ${COLORS.BACKGROUND.MUTED} transition-colors duration-300`}
@@ -340,10 +343,12 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                               prev > 0 ? prev - 1 : images.length - 1
                             )
                           }
-                          className={`absolute left-4 top-1/2 -translate-y-1/2 ${COLORS.BACKGROUND.CARD}/90 hover:${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} p-3 rounded-2xl shadow-xl transition-all duration-200 hover:scale-110 hidden md:flex`}
+                          className={`absolute left-4 top-1/2 -translate-y-1/2 ${COLORS.BACKGROUND.CARD}/90 hover:${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} p-3 rounded-2xl shadow-xl transition-all duration-200 hover:scale-110 hidden md:flex ${ANIMATIONS.PULSE.GENTLE}`}
                           aria-label="Previous image"
                         >
-                          <ChevronLeft className="w-6 h-6 transition-colors duration-200" />
+                          <ChevronLeft
+                            className={`w-6 h-6 transition-colors duration-200 ${ANIMATIONS.BOUNCE.SOFT}`}
+                          />
                         </button>
                         <button
                           onClick={() =>
@@ -351,10 +356,12 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                               prev < images.length - 1 ? prev + 1 : 0
                             )
                           }
-                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${COLORS.BACKGROUND.CARD}/90 hover:${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} p-3 rounded-2xl shadow-xl transition-all duration-200 hover:scale-110 hidden md:flex`}
+                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${COLORS.BACKGROUND.CARD}/90 hover:${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} p-3 rounded-2xl shadow-xl transition-all duration-200 hover:scale-110 hidden md:flex ${ANIMATIONS.PULSE.GENTLE}`}
                           aria-label="Next image"
                         >
-                          <ChevronRight className="w-6 h-6" />
+                          <ChevronRight
+                            className={`w-6 h-6 ${ANIMATIONS.BOUNCE.SOFT}`}
+                          />
                         </button>
                         <div className="absolute top-5 right-5 bg-black/55 backdrop-blur-sm text-white px-4 py-2 rounded-2xl text-sm font-semibold">
                           {currentImageIndex + 1} / {images.length}
@@ -391,7 +398,8 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
 
             {/* Description */}
             <div
-              className={`${COLORS.BACKGROUND.CARD} p-8 sm:p-10 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300`}
+              className={`${COLORS.BACKGROUND.CARD} p-8 sm:p-10 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300 ${ANIMATIONS.FADE.IN_UP}`}
+              style={{ animationDelay: "0.2s" }}
             >
               <div className="flex items-center gap-4 mb-8">
                 <div
@@ -418,7 +426,8 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
           <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-8">
             {/* Title & Rating */}
             <div
-              className={`${COLORS.BACKGROUND.CARD} p-8 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300`}
+              className={`${COLORS.BACKGROUND.CARD} p-8 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300 ${ANIMATIONS.FADE.IN_UP}`}
+              style={{ animationDelay: "0.3s" }}
             >
               <div className="flex flex-wrap gap-2 mb-6">
                 {destination.category && (
@@ -462,13 +471,18 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                 </span>
               </div>
 
-              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-6 border border-amber-100 dark:border-amber-800 shadow-inner transition-colors duration-300">
+              <div
+                className={`bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-6 border border-amber-100 dark:border-amber-800 shadow-inner transition-colors duration-300 ${ANIMATIONS.PULSE.GENTLE}`}
+              >
                 <div className="flex items-center gap-5">
-                  <div
+                  <PulseGlow
+                    variant="glow"
                     className={`flex items-center justify-center w-16 h-16 ${COLORS.BACKGROUND.CARD} rounded-2xl shadow-lg ring-4 ring-amber-100 dark:ring-amber-800 transition-all duration-200`}
                   >
-                    <Star className="w-8 h-8 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400 transition-colors duration-200" />
-                  </div>
+                    <Star
+                      className={`w-8 h-8 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400 transition-colors duration-200 ${ANIMATIONS.ROTATE.SLOW}`}
+                    />
+                  </PulseGlow>
                   <div>
                     <div
                       className={`text-4xl font-black ${COLORS.TEXT.DEFAULT} leading-none mb-1 transition-colors duration-200`}
@@ -510,63 +524,91 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
 
             {/* Quick Facts */}
             <div
-              className={`${COLORS.BACKGROUND.CARD} p-8 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300`}
+              className={`${COLORS.BACKGROUND.CARD} p-8 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300 ${ANIMATIONS.FADE.IN_UP}`}
+              style={{ animationDelay: "0.4s" }}
             >
               <h3
                 className={`text-xl font-black ${COLORS.TEXT.DEFAULT} mb-6 flex items-center transition-colors duration-200`}
               >
-                <TrendingUp
-                  className={`w-6 h-6 mr-3 ${COLORS.TEXT.PRIMARY} transition-colors duration-200`}
-                />
+                <PulseGlow variant="glow">
+                  <TrendingUp
+                    className={`w-6 h-6 mr-3 ${COLORS.TEXT.PRIMARY} transition-colors duration-200 ${ANIMATIONS.ROTATE.SLOW}`}
+                  />
+                </PulseGlow>
                 Quick Facts
               </h3>
               <dl className="space-y-6">
-                <FactItem
-                  icon={Globe}
-                  title="Category"
-                  value={destination.category}
-                  color="text-blue-600"
-                />
-                <FactItem
-                  icon={Sun}
-                  title="Best Season"
-                  value={destination.best_season}
-                  color="text-amber-500"
-                />
-                <FactItem
-                  icon={MapPin}
-                  title="Region"
-                  value={destination.region_name || destination.country}
-                  color="text-indigo-500"
-                />
-                <FactItem
-                  icon={Calendar}
-                  title="Added On"
-                  value={
-                    destination.created_at
-                      ? new Date(destination.created_at).toLocaleDateString()
-                      : "N/A"
-                  }
-                  color="text-emerald-500"
-                />
+                <div
+                  className={ANIMATIONS.FADE.IN_UP}
+                  style={{ animationDelay: "0.5s" }}
+                >
+                  <FactItem
+                    icon={Globe}
+                    title="Category"
+                    value={destination.category}
+                    color="text-blue-600"
+                  />
+                </div>
+                <div
+                  className={ANIMATIONS.FADE.IN_UP}
+                  style={{ animationDelay: "0.6s" }}
+                >
+                  <FactItem
+                    icon={Sun}
+                    title="Best Season"
+                    value={destination.best_season}
+                    color="text-amber-500"
+                  />
+                </div>
+                <div
+                  className={ANIMATIONS.FADE.IN_UP}
+                  style={{ animationDelay: "0.7s" }}
+                >
+                  <FactItem
+                    icon={MapPin}
+                    title="Region"
+                    value={destination.region_name || destination.country}
+                    color="text-indigo-500"
+                  />
+                </div>
+                <div
+                  className={ANIMATIONS.FADE.IN_UP}
+                  style={{ animationDelay: "0.8s" }}
+                >
+                  <FactItem
+                    icon={Calendar}
+                    title="Added On"
+                    value={
+                      destination.created_at
+                        ? new Date(destination.created_at).toLocaleDateString()
+                        : "N/A"
+                    }
+                    color="text-emerald-500"
+                  />
+                </div>
               </dl>
             </div>
 
             {/* Share */}
             <div
-              className={`bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-8 rounded-3xl shadow-2xl text-white transition-colors duration-300`}
+              className={`bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-8 rounded-3xl shadow-2xl text-white transition-colors duration-300 ${ANIMATIONS.FADE.IN_UP}`}
+              style={{ animationDelay: "0.5s" }}
             >
               <div className="flex items-center gap-3 mb-6">
-                <Share2 className="w-6 h-6 text-blue-400 transition-colors duration-200" />
+                <PulseGlow variant="glow">
+                  <Share2
+                    className={`w-6 h-6 text-blue-400 transition-colors duration-200 ${ANIMATIONS.ROTATE.SLOW}`}
+                  />
+                </PulseGlow>
                 <h3 className="text-xl font-black tracking-tight transition-colors duration-200">
                   Share This Place
                 </h3>
               </div>
               <button
                 onClick={handleShare}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all duration-200 border border-white/10 font-black shadow-lg backdrop-blur-md"
+                className={`w-full flex items-center justify-center gap-3 px-6 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all duration-200 border border-white/10 font-black shadow-lg backdrop-blur-md ${ANIMATIONS.PULSE.GLOW}`}
               >
-                <Share2 className="w-5 h-5" />
+                <Share2 className={`w-5 h-5 ${ANIMATIONS.BOUNCE.GENTLE}`} />
                 <span>{isCopied ? "LINK COPIED!" : "COPY LINK"}</span>
               </button>
             </div>
@@ -613,14 +655,15 @@ const FactItem: React.FC<FactItemProps> = ({
   };
 
   return (
-    <div className="flex items-center gap-4 group">
-      <div
+    <div className={`flex items-center gap-4 group ${ANIMATIONS.FADE.IN_UP}`}>
+      <PulseGlow
+        variant="gentle"
         className={`p-3.5 rounded-2xl transition-all group-hover:scale-110 ${getBgColor(
           color
         )}`}
       >
-        <Icon className={`w-6 h-6 ${color}`} />
-      </div>
+        <Icon className={`w-6 h-6 ${color} ${ANIMATIONS.ROTATE.SLOW}`} />
+      </PulseGlow>
       <div>
         <dt
           className={`text-[10px] font-black ${COLORS.TEXT.MUTED} uppercase tracking-[0.15em] mb-0.5 transition-colors duration-200`}
