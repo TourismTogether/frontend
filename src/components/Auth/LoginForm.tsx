@@ -20,8 +20,9 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
 
     try {
       await signIn(email, password);
-    } catch (err: any) {
-      setError(err.message || 'Failed to sign in');
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to sign in';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }

@@ -22,7 +22,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
 }
 
-const beApi = process.env.NEXT_PUBLIC_API_URL;
+import { API_ENDPOINTS } from "../constants/api";
 
 // Default coordinates (Ho Chi Minh City)
 const DEFAULT_LATITUDE = 10.762892238148003;
@@ -80,7 +80,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(true);
 
     try {
-      const res = await fetch(`${beApi}/auth/user`, {
+      const res = await fetch(API_ENDPOINTS.AUTH.ME, {
         credentials: "include",
       });
 
@@ -104,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Check if user is admin
       try {
-        const adminRes = await fetch(`${beApi}/admins/${data.user.id}`, {
+        const adminRes = await fetch(API_ENDPOINTS.ADMINS.BY_ID(Number(data.user.id)), {
           credentials: "include",
         });
         if (adminRes.ok) {
@@ -133,7 +133,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       // Fetch traveller data but don't block on failure
       try {
         const travellerRes = await fetch(
-          `${beApi}/travellers/${data.user.id}`,
+          API_ENDPOINTS.TRAVELLERS.BY_ID(Number(data.user.id)),
           {
             credentials: "include",
           }
@@ -144,7 +144,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           if (travellerResult.status === 200) {
             // Update traveller with current location
             try {
-              await fetch(`${beApi}/travellers/${data.user.id}`, {
+              await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(Number(data.user.id)), {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -167,7 +167,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           } else {
             // Create traveller if not found
             try {
-              await fetch(`${beApi}/travellers`, {
+              await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -194,7 +194,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         } else {
           // Create traveller if fetch failed
           try {
-            await fetch(`${beApi}/travellers`, {
+            await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
@@ -245,7 +245,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(true);
 
     try {
-      const res = await fetch(`${beApi}/auth/signup`, {
+      const res = await fetch(API_ENDPOINTS.AUTH.SIGNUP, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -284,7 +284,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // Update or create traveller with location
         try {
           const travellerRes = await fetch(
-            `${beApi}/travellers/${result.data.user.id}`,
+            API_ENDPOINTS.TRAVELLERS.BY_ID(Number(result.data.user.id)),
             {
               credentials: "include",
             }
@@ -294,7 +294,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             const travellerResult = await travellerRes.json();
             if (travellerResult.status === 200) {
               // Update existing traveller with location
-              await fetch(`${beApi}/travellers/${result.data.user.id}`, {
+              await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(Number(result.data.user.id)), {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -312,7 +312,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               });
             } else {
               // Create new traveller
-              await fetch(`${beApi}/travellers`, {
+              await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -335,7 +335,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             }
           } else {
             // Create new traveller if fetch failed
-            await fetch(`${beApi}/travellers`, {
+            await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
@@ -378,7 +378,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(true);
 
     try {
-      const res = await fetch(`${beApi}/auth/signin`, {
+      const res = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -400,7 +400,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Check if user is admin
         try {
-          const adminRes = await fetch(`${beApi}/admins/${result.data.user.id}`, {
+          const adminRes = await fetch(API_ENDPOINTS.ADMINS.BY_ID(Number(result.data.user.id)), {
             credentials: "include",
           });
           if (adminRes.ok) {
@@ -427,7 +427,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // Update or create traveller with location
         try {
           const travellerRes = await fetch(
-            `${beApi}/travellers/${result.data.user.id}`,
+            API_ENDPOINTS.TRAVELLERS.BY_ID(Number(result.data.user.id)),
             {
               credentials: "include",
             }
@@ -437,7 +437,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             const travellerResult = await travellerRes.json();
             if (travellerResult.status === 200) {
               // Update existing traveller with location
-              await fetch(`${beApi}/travellers/${result.data.user.id}`, {
+              await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(Number(result.data.user.id)), {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -455,7 +455,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               });
             } else {
               // Create new traveller
-              await fetch(`${beApi}/travellers`, {
+              await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -478,7 +478,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             }
           } else {
             // Create new traveller if fetch failed
-            await fetch(`${beApi}/travellers`, {
+            await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               credentials: "include",
@@ -521,7 +521,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(true);
 
     try {
-      const res = await fetch(`${beApi}/auth/logout`, {
+      const res = await fetch(API_ENDPOINTS.AUTH.LOGOUT, {
         method: "POST",
         credentials: "include",
       });

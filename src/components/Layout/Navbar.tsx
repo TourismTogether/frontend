@@ -22,6 +22,7 @@ import {
 import { useAuth } from "../../contexts/AuthContext";
 import { EmergencyModal } from "../Emergency/EmergencyModal";
 import { SOSNotification } from "../Emergency/SOSNotification";
+import { API_ENDPOINTS } from "../../constants/api";
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
@@ -29,8 +30,6 @@ export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State cho Mobile Menu
   const [showEmergency, setShowEmergency] = useState(false); // State cho Emergency Modal
   const [isSupporter, setIsSupporter] = useState(false); // State cho Supporter check
-
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   // Check if current user is a supporter
   useEffect(() => {
@@ -41,7 +40,7 @@ export const Navbar: React.FC = () => {
       }
 
       try {
-        const res = await fetch(`${API_URL}/supporters/${user.id}`, {
+        const res = await fetch(`${API_ENDPOINTS.USERS.BASE}/${user.id}/supporters`, {
           credentials: "include",
         });
         const result = await res.json();

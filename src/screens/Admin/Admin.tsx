@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Image from "next/image";
 import {
   Shield,
   Users,
@@ -15,6 +16,8 @@ import { SupportTeamManager } from "./SupportTeamManager";
 import { DestinationsManager } from "./DestinationsManager";
 import { SOSManagement } from "./SOSManagement";
 import { RegionsManager } from "./RegionsManager";
+import { getTravelImageUrl } from "../../constants/api";
+import { COLORS, GRADIENTS } from "../../constants/colors";
 
 type TabType = "overview" | "supporters" | "destinations" | "sos" | "regions";
 
@@ -31,10 +34,19 @@ export const Admin: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
       {/* Header */}
-      <div className="bg-linear-to-r from-indigo-600 to-purple-600 text-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className={`${GRADIENTS.PRIMARY} text-white relative overflow-hidden`}>
+        <div className="absolute inset-0">
+          <Image
+            src={getTravelImageUrl("admin dashboard management", 1920, 200)}
+            alt="Admin"
+            fill
+            className="object-cover opacity-30"
+            unoptimized
+          />
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <button
@@ -44,12 +56,12 @@ export const Admin: React.FC = () => {
                 <ArrowLeft className="w-5 h-5" />
               </button>
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                <div className="w-10 h-10 bg-white/20 backdrop-blur-sm rounded-lg flex items-center justify-center">
                   <Shield className="w-6 h-6" />
                 </div>
                 <div>
                   <h1 className="text-2xl font-bold">Admin Dashboard</h1>
-                  <p className="text-indigo-100 text-sm">Quản lý hệ thống</p>
+                  <p className="text-white/80 text-sm">Quản lý hệ thống</p>
                 </div>
               </div>
             </div>
@@ -57,22 +69,25 @@ export const Admin: React.FC = () => {
         </div>
 
         {/* Tabs */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex space-x-1 border-b border-white/20">
-            {tabs.map((tab) => (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors ${
-                  activeTab === tab.id
-                    ? "bg-white text-indigo-600 rounded-t-lg"
-                    : "text-white/80 hover:text-white hover:bg-white/10"
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span>{tab.label}</span>
-              </button>
-            ))}
+            {tabs.map((tab) => {
+              const Icon = tab.icon;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center space-x-2 px-4 py-3 text-sm font-medium transition-colors ${
+                    activeTab === tab.id
+                      ? "bg-white text-accent rounded-t-lg"
+                      : "text-white/80 hover:text-white hover:bg-white/10"
+                  }`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span>{tab.label}</span>
+                </button>
+              );
+            })}
           </div>
         </div>
       </div>
@@ -92,77 +107,77 @@ export const Admin: React.FC = () => {
 const OverviewTab: React.FC = () => {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 hover:shadow-xl transition-all transform hover:-translate-y-1`}>
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-            <Users className="w-6 h-6 text-blue-600" />
+          <div className={`w-12 h-12 ${COLORS.PRIMARY.LIGHT} rounded-lg flex items-center justify-center`}>
+            <Users className={`w-6 h-6 ${COLORS.TEXT.PRIMARY}`} />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Support Team</p>
-            <p className="text-2xl font-bold text-gray-900">Quản lý</p>
+            <p className={`text-sm ${COLORS.TEXT.MUTED}`}>Support Team</p>
+            <p className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>Quản lý</p>
           </div>
         </div>
-        <p className="mt-4 text-gray-600 text-sm">
+        <p className={`mt-4 ${COLORS.TEXT.MUTED} text-sm`}>
           Thêm, sửa, xóa thành viên trong đội hỗ trợ SOS
         </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 hover:shadow-xl transition-all transform hover:-translate-y-1`}>
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
-            <Globe className="w-6 h-6 text-indigo-600" />
+          <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg flex items-center justify-center">
+            <Globe className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Regions</p>
-            <p className="text-2xl font-bold text-gray-900">Quản lý</p>
+            <p className={`text-sm ${COLORS.TEXT.MUTED}`}>Regions</p>
+            <p className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>Quản lý</p>
           </div>
         </div>
-        <p className="mt-4 text-gray-600 text-sm">
+        <p className={`mt-4 ${COLORS.TEXT.MUTED} text-sm`}>
           Thêm, sửa, xóa các khu vực/địa điểm
         </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 hover:shadow-xl transition-all transform hover:-translate-y-1`}>
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-            <MapPin className="w-6 h-6 text-green-600" />
+          <div className={`w-12 h-12 ${GRADIENTS.PRIMARY} rounded-lg flex items-center justify-center`}>
+            <MapPin className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Destinations</p>
-            <p className="text-2xl font-bold text-gray-900">Quản lý</p>
+            <p className={`text-sm ${COLORS.TEXT.MUTED}`}>Destinations</p>
+            <p className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>Quản lý</p>
           </div>
         </div>
-        <p className="mt-4 text-gray-600 text-sm">
+        <p className={`mt-4 ${COLORS.TEXT.MUTED} text-sm`}>
           Thêm, sửa, xóa các điểm đến du lịch
         </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 hover:shadow-xl transition-all transform hover:-translate-y-1`}>
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
-            <AlertTriangle className="w-6 h-6 text-red-600" />
+          <div className="w-12 h-12 bg-gradient-to-r from-red-500 to-rose-500 rounded-lg flex items-center justify-center">
+            <AlertTriangle className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">SOS Management</p>
-            <p className="text-2xl font-bold text-gray-900">Monitor</p>
+            <p className={`text-sm ${COLORS.TEXT.MUTED}`}>SOS Management</p>
+            <p className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>Monitor</p>
           </div>
         </div>
-        <p className="mt-4 text-gray-600 text-sm">
+        <p className={`mt-4 ${COLORS.TEXT.MUTED} text-sm`}>
           Monitor and manage SOS emergency requests from travelers
         </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 hover:shadow-xl transition-all transform hover:-translate-y-1`}>
         <div className="flex items-center space-x-4">
-          <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-            <Shield className="w-6 h-6 text-purple-600" />
+          <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-lg flex items-center justify-center">
+            <Shield className="w-6 h-6 text-white" />
           </div>
           <div>
-            <p className="text-sm text-gray-500">Admin</p>
-            <p className="text-2xl font-bold text-gray-900">Panel</p>
+            <p className={`text-sm ${COLORS.TEXT.MUTED}`}>Admin</p>
+            <p className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>Panel</p>
           </div>
         </div>
-        <p className="mt-4 text-gray-600 text-sm">
+        <p className={`mt-4 ${COLORS.TEXT.MUTED} text-sm`}>
           Quản lý toàn bộ hệ thống TourismTogether
         </p>
       </div>

@@ -12,8 +12,8 @@ import {
   Search,
   RefreshCw,
 } from "lucide-react";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+import { API_ENDPOINTS } from "../../constants/api";
+import { COLORS, GRADIENTS } from "../../constants/colors";
 
 interface Region {
   id: string;
@@ -39,7 +39,7 @@ export const RegionsManager: React.FC = () => {
   const fetchRegions = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/regions`, {
+      const res = await fetch(API_ENDPOINTS.REGIONS.BASE, {
         credentials: "include",
       });
       const result = await res.json();
@@ -73,7 +73,7 @@ export const RegionsManager: React.FC = () => {
     if (!confirm("Bạn có chắc muốn xóa region này?")) return;
 
     try {
-      const res = await fetch(`${API_URL}/regions/${id}`, {
+      const res = await fetch(API_ENDPOINTS.REGIONS.DELETE(Number(id)), {
         method: "DELETE",
         credentials: "include",
       });
@@ -103,7 +103,7 @@ export const RegionsManager: React.FC = () => {
       let response: Response;
       if (editingRegion) {
         // Update
-        response = await fetch(`${API_URL}/regions/${editingRegion.id}`, {
+        response = await fetch(API_ENDPOINTS.REGIONS.UPDATE(Number(editingRegion.id)), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -111,7 +111,7 @@ export const RegionsManager: React.FC = () => {
         });
       } else {
         // Create
-        response = await fetch(`${API_URL}/regions`, {
+        response = await fetch(API_ENDPOINTS.REGIONS.CREATE, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
@@ -139,7 +139,7 @@ export const RegionsManager: React.FC = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
+        <Loader2 className={`w-8 h-8 animate-spin ${COLORS.TEXT.PRIMARY}`} />
       </div>
     );
   }
@@ -149,19 +149,19 @@ export const RegionsManager: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
         <div>
-          <h2 className="text-xl font-bold text-gray-900">Regions</h2>
-          <p className="text-gray-500 text-sm">Quản lý các khu vực/địa điểm</p>
+          <h2 className={`text-xl font-bold ${COLORS.TEXT.DEFAULT}`}>Regions</h2>
+          <p className={`${COLORS.TEXT.MUTED} text-sm`}>Quản lý các khu vực/địa điểm</p>
         </div>
         <div className="flex items-center gap-3">
           <button
             onClick={fetchRegions}
-            className="p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+            className={`p-2 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
           >
             <RefreshCw className="w-5 h-5" />
           </button>
           <button
             onClick={handleCreate}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition-colors"
+            className={`flex items-center gap-2 ${GRADIENTS.PRIMARY} text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity`}
           >
             <Plus className="w-4 h-4" />
             Thêm Region
@@ -170,72 +170,72 @@ export const RegionsManager: React.FC = () => {
       </div>
 
       {/* Search */}
-      <div className="relative mb-6">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+      <div className={`relative mb-6 ${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl p-4`}>
+        <Search className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${COLORS.TEXT.MUTED}`} />
         <input
           type="text"
           placeholder="Tìm kiếm theo địa chỉ..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+          className={`w-full pl-10 pr-4 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
         />
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+      <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg overflow-hidden`}>
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead className="bg-gray-50 border-b border-gray-200">
+            <thead className={`${COLORS.BACKGROUND.MUTED} border-b ${COLORS.BORDER.DEFAULT}`}>
               <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-left text-xs font-medium ${COLORS.TEXT.MUTED} uppercase tracking-wider`}>
                   Địa chỉ
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-left text-xs font-medium ${COLORS.TEXT.MUTED} uppercase tracking-wider`}>
                   Ngày tạo
                 </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-left text-xs font-medium ${COLORS.TEXT.MUTED} uppercase tracking-wider`}>
                   Ngày cập nhật
                 </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                <th className={`px-6 py-3 text-right text-xs font-medium ${COLORS.TEXT.MUTED} uppercase tracking-wider`}>
                   Thao tác
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className={`${COLORS.BACKGROUND.CARD} divide-y ${COLORS.BORDER.DEFAULT}`}>
               {filteredRegions.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="px-6 py-12 text-center text-gray-500">
+                  <td colSpan={4} className={`px-6 py-12 text-center ${COLORS.TEXT.MUTED}`}>
                     Chưa có region nào
                   </td>
                 </tr>
               ) : (
                 filteredRegions.map((region) => (
-                  <tr key={region.id} className="hover:bg-gray-50">
+                  <tr key={region.id} className={`hover:${COLORS.BACKGROUND.MUTED}`}>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <MapPin className="w-5 h-5 text-indigo-500 mr-2" />
-                        <span className="text-sm font-medium text-gray-900">
+                        <MapPin className={`w-5 h-5 ${COLORS.TEXT.PRIMARY} mr-2`} />
+                        <span className={`text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>
                           {region.address}
                         </span>
                       </div>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${COLORS.TEXT.MUTED}`}>
                       {new Date(region.created_at).toLocaleDateString("vi-VN")}
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className={`px-6 py-4 whitespace-nowrap text-sm ${COLORS.TEXT.MUTED}`}>
                       {new Date(region.updated_at).toLocaleDateString("vi-VN")}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                       <div className="flex items-center justify-end space-x-2">
                         <button
                           onClick={() => handleEdit(region)}
-                          className="p-2 text-gray-500 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                          className={`p-2 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.PRIMARY} hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
                         >
                           <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => handleDelete(region.id)}
-                          className="p-2 text-gray-500 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className={`p-2 ${COLORS.TEXT.MUTED} hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors`}
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -251,22 +251,22 @@ export const RegionsManager: React.FC = () => {
 
       {/* Modal */}
       {showModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
-            <div className="flex items-center justify-between p-4 border-b">
-              <h3 className="text-lg font-semibold">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-2xl w-full max-w-md`}>
+            <div className={`flex items-center justify-between p-4 border-b ${COLORS.BORDER.DEFAULT}`}>
+              <h3 className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT}`}>
                 {editingRegion ? "Chỉnh sửa Region" : "Thêm Region mới"}
               </h3>
               <button
                 onClick={() => setShowModal(false)}
-                className="p-2 hover:bg-gray-100 rounded-lg"
+                className={`p-2 hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="p-4 space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className={`block text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-1`}>
                   Địa chỉ *
                 </label>
                 <input
@@ -275,7 +275,7 @@ export const RegionsManager: React.FC = () => {
                   onChange={(e) =>
                     setFormData({ ...formData, address: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+                  className={`w-full px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                   placeholder="Ví dụ: Ho Chi Minh City, Vietnam"
                   required
                 />
@@ -285,13 +285,13 @@ export const RegionsManager: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+                  className={`px-4 py-2 ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  className={`flex items-center gap-2 ${GRADIENTS.PRIMARY} text-white px-4 py-2 rounded-lg hover:opacity-90 transition-opacity`}
                 >
                   <Save className="w-4 h-4" />
                   {editingRegion ? "Cập nhật" : "Thêm mới"}

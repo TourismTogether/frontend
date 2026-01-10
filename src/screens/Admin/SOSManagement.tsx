@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import Image from "next/image";
 import {
   AlertTriangle,
   MapPin,
@@ -16,8 +17,8 @@ import {
   Trash2,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL;
+import { API_ENDPOINTS } from "../../constants/api";
+import { COLORS, GRADIENTS } from "../../constants/colors";
 
 // Dynamically import MapContainer to avoid SSR issues
 const MapContainer = dynamic(
@@ -48,8 +49,13 @@ const createCustomIcon = (color: string) => {
   const L = require("leaflet");
   
   // Fix for default marker icon in Next.js (only needed once)
-  if (!(L.Icon.Default.prototype as any)._iconUrlFixed) {
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
+  interface IconDefaultPrototype {
+    _iconUrlFixed?: boolean;
+    _getIconUrl?: () => string;
+  }
+  const iconProto = L.Icon.Default.prototype as IconDefaultPrototype;
+  if (!iconProto._iconUrlFixed) {
+    delete iconProto._getIconUrl;
     L.Icon.Default.mergeOptions({
       iconRetinaUrl:
         "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png",
@@ -58,7 +64,7 @@ const createCustomIcon = (color: string) => {
       shadowUrl:
         "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png",
     });
-    (L.Icon.Default.prototype as any)._iconUrlFixed = true;
+    iconProto._iconUrlFixed = true;
   }
   
   return L.divIcon({
@@ -106,7 +112,7 @@ export const SOSManagement: React.FC = () => {
   const fetchSOSRequests = useCallback(async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API_URL}/travellers/sos/all`, {
+      const res = await fetch(API_ENDPOINTS.TRAVELLERS.SOS_ALL, {
         credentials: "include",
       });
       const result = await res.json();
@@ -125,7 +131,7 @@ export const SOSManagement: React.FC = () => {
 
   const fetchSupporters = useCallback(async () => {
     try {
-      const res = await fetch(`${API_URL}/supporters/with-user-info`, {
+      const res = await fetch(API_ENDPOINTS.SUPPORTERS.WITH_USER_INFO, {
         credentials: "include",
       });
       const result = await res.json();
@@ -232,7 +238,7 @@ export const SOSManagement: React.FC = () => {
   const handleResolveEmergency = async (userId: string) => {
     setProcessingId(userId);
     try {
-      const res = await fetch(`${API_URL}/travellers/${userId}`, {
+      const res = await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(Number(userId)), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
@@ -397,57 +403,57 @@ export const SOSManagement: React.FC = () => {
     <div className="space-y-6">
       {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-lg shadow-lg p-4`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Total SOS</p>
-              <p className="text-2xl font-bold text-gray-900">{sosRequests.length}</p>
+              <p className={`text-sm ${COLORS.TEXT.MUTED}`}>Total SOS</p>
+              <p className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>{sosRequests.length}</p>
             </div>
-            <AlertTriangle className="w-8 h-8 text-gray-400" />
+            <AlertTriangle className={`w-8 h-8 ${COLORS.TEXT.MUTED}`} />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-yellow-200 p-4">
+        <div className={`${COLORS.BACKGROUND.CARD} border border-yellow-200 rounded-lg shadow-lg p-4`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Pending</p>
+              <p className={`text-sm ${COLORS.TEXT.MUTED}`}>Pending</p>
               <p className="text-2xl font-bold text-yellow-600">{pendingCount}</p>
             </div>
             <Clock className="w-8 h-8 text-yellow-400" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-orange-200 p-4">
+        <div className={`${COLORS.BACKGROUND.CARD} border border-orange-200 rounded-lg shadow-lg p-4`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">In Progress</p>
+              <p className={`text-sm ${COLORS.TEXT.MUTED}`}>In Progress</p>
               <p className="text-2xl font-bold text-orange-600">{inProgressCount}</p>
             </div>
             <Navigation className="w-8 h-8 text-orange-400" />
           </div>
         </div>
-        <div className="bg-white rounded-lg shadow-sm border border-green-200 p-4">
+        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.PRIMARY} border rounded-lg shadow-lg p-4`}>
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-sm text-gray-500">Completed</p>
-              <p className="text-2xl font-bold text-green-600">{completedCount}</p>
+              <p className={`text-sm ${COLORS.TEXT.MUTED}`}>Completed</p>
+              <p className={`text-2xl font-bold ${COLORS.TEXT.PRIMARY}`}>{completedCount}</p>
             </div>
-            <CheckCircle className="w-8 h-8 text-green-400" />
+            <CheckCircle className={`w-8 h-8 ${COLORS.TEXT.PRIMARY}`} />
           </div>
         </div>
       </div>
 
       {/* Filters and Actions */}
-      <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+      <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-lg shadow-lg p-4`}>
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2">
-            <Filter className="w-5 h-5 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700">Filter:</span>
+            <Filter className={`w-5 h-5 ${COLORS.TEXT.MUTED}`} />
+            <span className={`text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>Filter:</span>
           </div>
           <button
             onClick={() => setStatusFilter("all")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               statusFilter === "all"
-                ? "bg-indigo-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? `${GRADIENTS.PRIMARY} text-white`
+                : `${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.SECONDARY}`
             }`}
           >
             All
@@ -457,7 +463,7 @@ export const SOSManagement: React.FC = () => {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               statusFilter === "pending"
                 ? "bg-yellow-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : `${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.SECONDARY}`
             }`}
           >
             Pending ({pendingCount})
@@ -467,7 +473,7 @@ export const SOSManagement: React.FC = () => {
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               statusFilter === "in_progress"
                 ? "bg-orange-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                : `${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.SECONDARY}`
             }`}
           >
             In Progress ({inProgressCount})
@@ -476,8 +482,8 @@ export const SOSManagement: React.FC = () => {
             onClick={() => setStatusFilter("completed")}
             className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
               statusFilter === "completed"
-                ? "bg-green-600 text-white"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? `${GRADIENTS.PRIMARY} text-white`
+                : `${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.SECONDARY}`
             }`}
           >
             Completed ({completedCount})
@@ -486,7 +492,7 @@ export const SOSManagement: React.FC = () => {
             <button
               onClick={fetchSOSRequests}
               disabled={loading}
-              className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50"
+              className={`flex items-center gap-2 px-4 py-2 ${GRADIENTS.PRIMARY} text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50`}
             >
               <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
               Refresh
@@ -498,7 +504,7 @@ export const SOSManagement: React.FC = () => {
       {/* Map and List */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Map */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-lg shadow-lg overflow-hidden`}>
           <div className="h-[600px] w-full">
             {typeof window !== "undefined" && (
               <MapContainer
@@ -542,26 +548,26 @@ export const SOSManagement: React.FC = () => {
         </div>
 
         {/* SOS Requests List */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200">
-          <div className="p-4 border-b border-gray-200">
-            <h2 className="text-lg font-semibold text-gray-900">SOS Requests</h2>
-            <p className="text-sm text-gray-500">
+        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-lg shadow-lg`}>
+          <div className={`p-4 border-b ${COLORS.BORDER.DEFAULT}`}>
+            <h2 className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT}`}>SOS Requests</h2>
+            <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
               {filteredRequests.length} request{filteredRequests.length !== 1 ? "s" : ""} found
             </p>
           </div>
           <div className="max-h-[600px] overflow-y-auto">
             {loading && filteredRequests.length === 0 ? (
               <div className="p-8 text-center">
-                <RefreshCw className="w-8 h-8 animate-spin text-gray-400 mx-auto mb-2" />
-                <p className="text-gray-500">Loading SOS requests...</p>
+                <RefreshCw className={`w-8 h-8 animate-spin ${COLORS.TEXT.MUTED} mx-auto mb-2`} />
+                <p className={COLORS.TEXT.MUTED}>Loading SOS requests...</p>
               </div>
             ) : filteredRequests.length === 0 ? (
               <div className="p-8 text-center">
-                <AlertTriangle className="w-12 h-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500">No SOS requests found</p>
+                <AlertTriangle className={`w-12 h-12 ${COLORS.TEXT.MUTED} mx-auto mb-2`} />
+                <p className={COLORS.TEXT.MUTED}>No SOS requests found</p>
               </div>
             ) : (
-              <div className="divide-y divide-gray-200">
+              <div className={`divide-y ${COLORS.BORDER.DEFAULT}`}>
                 {filteredRequests.map((request) => {
                   const status = getSOSStatus(request);
                   const isSelected = selectedRequest?.user_id === request.user_id;
@@ -571,14 +577,14 @@ export const SOSManagement: React.FC = () => {
                       onClick={() => setSelectedRequest(request)}
                       className={`p-4 cursor-pointer transition-colors ${
                         isSelected
-                          ? "bg-indigo-50 border-l-4 border-indigo-600"
-                          : "hover:bg-gray-50"
+                          ? `${COLORS.PRIMARY.LIGHT} ${COLORS.BORDER.PRIMARY} border-l-4`
+                          : `hover:${COLORS.BACKGROUND.MUTED}`
                       }`}
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <h3 className="font-semibold text-gray-900">
+                            <h3 className={`font-semibold ${COLORS.TEXT.DEFAULT}`}>
                               {request.user_full_name || "Unknown User"}
                             </h3>
                             <span
@@ -589,7 +595,7 @@ export const SOSManagement: React.FC = () => {
                               {getStatusLabel(status)}
                             </span>
                           </div>
-                          <div className="space-y-1 text-sm text-gray-600">
+                          <div className={`space-y-1 text-sm ${COLORS.TEXT.MUTED}`}>
                             <div className="flex items-center gap-2">
                               <MapPin className="w-4 h-4" />
                               <span>
@@ -620,7 +626,7 @@ export const SOSManagement: React.FC = () => {
                                 e.stopPropagation();
                                 handleCall(request.user_phone!);
                               }}
-                              className="flex items-center gap-1 px-3 py-1.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm"
+                              className={`flex items-center gap-1 px-3 py-1.5 ${GRADIENTS.PRIMARY} text-white rounded-lg hover:opacity-90 transition-opacity text-sm`}
                             >
                               <Phone className="w-4 h-4" />
                               Call
@@ -642,7 +648,7 @@ export const SOSManagement: React.FC = () => {
                               handleResolveEmergency(request.user_id);
                             }}
                             disabled={processingId === request.user_id}
-                            className="flex items-center gap-1 px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm disabled:opacity-50"
+                            className={`flex items-center gap-1 px-3 py-1.5 ${GRADIENTS.PRIMARY} text-white rounded-lg hover:opacity-90 transition-opacity text-sm disabled:opacity-50`}
                           >
                             <CheckCircle className="w-4 h-4" />
                             Resolve
@@ -670,36 +676,36 @@ export const SOSManagement: React.FC = () => {
           }}
         >
           <div 
-            className="bg-white rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col relative"
+            className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-lg shadow-2xl max-w-2xl w-full max-h-[90vh] flex flex-col relative`}
             style={{ zIndex: 10000 }}
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header - Fixed */}
-            <div className="p-6 border-b border-gray-200 flex-shrink-0">
+            <div className={`p-6 border-b ${COLORS.BORDER.DEFAULT} flex-shrink-0`}>
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">SOS Request Details</h2>
+                <h2 className={`text-xl font-bold ${COLORS.TEXT.DEFAULT}`}>SOS Request Details</h2>
                 <button
                   onClick={() => setSelectedRequest(null)}
-                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  className={`p-2 hover:${COLORS.BACKGROUND.MUTED} rounded-lg transition-colors`}
                 >
-                  <X className="w-5 h-5 text-gray-500" />
+                  <X className={`w-5 h-5 ${COLORS.TEXT.MUTED}`} />
                 </button>
               </div>
             </div>
             {/* Content - Scrollable */}
             <div className="p-6 space-y-4 overflow-y-auto flex-1">
               <div>
-                <label className="text-sm font-medium text-gray-700">Traveler Name</label>
-                <p className="text-gray-900">{selectedRequest.user_full_name || "Unknown"}</p>
+                <label className={`text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>Traveler Name</label>
+                <p className={COLORS.TEXT.DEFAULT}>{selectedRequest.user_full_name || "Unknown"}</p>
               </div>
               {selectedRequest.user_phone && (
                 <div>
-                  <label className="text-sm font-medium text-gray-700">Phone Number</label>
-                  <p className="text-gray-900">{selectedRequest.user_phone}</p>
+                  <label className={`text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>Phone Number</label>
+                  <p className={COLORS.TEXT.DEFAULT}>{selectedRequest.user_phone}</p>
                 </div>
               )}
               <div>
-                <label className="text-sm font-medium text-gray-700">Status</label>
+                <label className={`text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>Status</label>
                 <div className="mt-1">
                   <span
                     className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(
@@ -711,22 +717,22 @@ export const SOSManagement: React.FC = () => {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-700">Location</label>
-                <p className="text-gray-900">
+                <label className={`text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>Location</label>
+                <p className={COLORS.TEXT.DEFAULT}>
                   {selectedRequest.latitude.toFixed(6)}, {selectedRequest.longitude.toFixed(6)}
                 </p>
               </div>
               {/* Assign Supporter Section */}
               {!selectedRequest.is_safe && (
-                <div className="pt-4 border-t border-gray-200">
-                  <label className="text-sm font-medium text-gray-700 mb-2 block">
+                <div className={`pt-4 border-t ${COLORS.BORDER.DEFAULT}`}>
+                  <label className={`text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-2 block`}>
                     Assign Supporter
                   </label>
                   <div className="flex gap-2 mb-4">
                     <select
                       value={selectedSupporterId}
                       onChange={(e) => setSelectedSupporterId(e.target.value)}
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                      className={`flex-1 px-3 py-2 ${COLORS.BORDER.DEFAULT} border rounded-lg focus:outline-none focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
                       disabled={assigningSupporter === selectedRequest.user_id}
                     >
                       <option value="">Select a supporter...</option>
@@ -753,7 +759,7 @@ export const SOSManagement: React.FC = () => {
                         !selectedSupporterId ||
                         assigningSupporter === selectedRequest.user_id
                       }
-                      className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className={`flex items-center gap-2 px-4 py-2 ${GRADIENTS.PRIMARY} text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed`}
                     >
                       <UserPlus className="w-4 h-4" />
                       Assign
@@ -765,8 +771,8 @@ export const SOSManagement: React.FC = () => {
               {/* Assigned Supporters List */}
               {selectedRequest.emergency_contacts &&
                 selectedRequest.emergency_contacts.length > 0 && (
-                  <div className="pt-4 border-t border-gray-200">
-                    <label className="text-sm font-medium text-gray-700 mb-2 block">
+                  <div className={`pt-4 border-t ${COLORS.BORDER.DEFAULT}`}>
+                    <label className={`text-sm font-medium ${COLORS.TEXT.DEFAULT} mb-2 block`}>
                       <Users className="w-4 h-4 inline mr-1" />
                       Assigned Supporters ({selectedRequest.emergency_contacts.length})
                     </label>
@@ -776,26 +782,29 @@ export const SOSManagement: React.FC = () => {
                         return (
                           <div
                             key={supporterId}
-                            className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+                            className={`flex items-center justify-between p-3 ${COLORS.BACKGROUND.MUTED} rounded-lg`}
                           >
                             <div className="flex items-center gap-3">
                               {supporter?.user_avatar_url ? (
-                                <img
+                                <Image
                                   src={supporter.user_avatar_url}
                                   alt={supporter.user_full_name || supporterId}
-                                  className="w-8 h-8 rounded-full"
+                                  width={32}
+                                  height={32}
+                                  className="rounded-full"
+                                  unoptimized
                                 />
                               ) : (
-                                <div className="w-8 h-8 rounded-full bg-indigo-100 flex items-center justify-center">
-                                  <Users className="w-4 h-4 text-indigo-600" />
+                                <div className={`w-8 h-8 rounded-full ${COLORS.PRIMARY.LIGHT} flex items-center justify-center`}>
+                                  <Users className={`w-4 h-4 ${COLORS.TEXT.PRIMARY}`} />
                                 </div>
                               )}
                               <div>
-                                <p className="text-sm font-medium text-gray-900">
+                                <p className={`text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>
                                   {supporter?.user_full_name || supporterId}
                                 </p>
                                 {supporter?.user_phone && (
-                                  <p className="text-xs text-gray-500">
+                                  <p className={`text-xs ${COLORS.TEXT.MUTED}`}>
                                     {supporter.user_phone}
                                   </p>
                                 )}
@@ -825,11 +834,11 @@ export const SOSManagement: React.FC = () => {
                   </div>
                 )}
               {!selectedRequest.is_safe && (
-                <div className="pt-4 border-t border-gray-200 flex gap-3">
+                <div className={`pt-4 border-t ${COLORS.BORDER.DEFAULT} flex gap-3`}>
                   {selectedRequest.user_phone && (
                     <button
                       onClick={() => handleCall(selectedRequest.user_phone!)}
-                      className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                      className={`flex items-center gap-2 px-4 py-2 ${GRADIENTS.PRIMARY} text-white rounded-lg hover:opacity-90 transition-opacity`}
                     >
                       <Phone className="w-5 h-5" />
                       Call Traveler
@@ -847,7 +856,7 @@ export const SOSManagement: React.FC = () => {
                   <button
                     onClick={() => handleResolveEmergency(selectedRequest.user_id)}
                     disabled={processingId === selectedRequest.user_id}
-                    className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors disabled:opacity-50 ml-auto"
+                    className={`flex items-center gap-2 px-4 py-2 ${GRADIENTS.PRIMARY} text-white rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 ml-auto`}
                   >
                     <CheckCircle className="w-5 h-5" />
                     Resolve Emergency

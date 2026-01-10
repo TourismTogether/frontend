@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { LoginForm } from "../../components/Auth/LoginForm";
 import { SignUpForm } from "../../components/Auth/SignUpForm";
+import { GRADIENTS } from "../../constants/colors";
 
 export const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -35,7 +36,7 @@ export const Auth: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-400 via-emerald-500 to-teal-600 flex items-center justify-center px-4 py-12 relative overflow-hidden">
+    <div className={`min-h-screen ${GRADIENTS.HERO} flex items-center justify-center px-4 py-12 relative overflow-hidden`}>
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-white/10 rounded-full blur-3xl animate-pulse"></div>

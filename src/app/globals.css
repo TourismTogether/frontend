@@ -78,39 +78,39 @@
   --popover: #ffffff;
   --popover-foreground: #0f172a;
 
-  --primary: #2563eb; /* blue-600 - adventure blue */
+  --primary: #16a34a; /* green-600 - nature green (main theme) */
   --primary-foreground: #ffffff;
 
-  --secondary: #f1f5f9; /* slate-100 */
-  --secondary-foreground: #0f172a;
+  --secondary: #f0fdf4; /* green-50 */
+  --secondary-foreground: #166534; /* green-800 */
 
-  --muted: #f8fafc;
+  --muted: #f7fafc;
   --muted-foreground: #64748b; /* slate-500 */
 
-  --accent: #10b981; /* emerald-500 - nature green */
+  --accent: #22c55e; /* green-500 - vibrant green */
   --accent-foreground: #ffffff;
 
   --destructive: #ef4444; /* red-500 */
   --border: #e2e8f0; /* slate-200 */
   --input: #e2e8f0;
-  --ring: #2563eb;
+  --ring: #16a34a; /* green-600 */
 
-  /* Chart colors - vibrant & clear */
-  --chart-1: #3b82f6; /* blue */
-  --chart-2: #10b981; /* green */
-  --chart-3: #f59e0b; /* amber */
-  --chart-4: #8b5cf6; /* purple */
-  --chart-5: #ec4899; /* pink */
+  /* Chart colors - vibrant & clear (green theme) */
+  --chart-1: #22c55e; /* green-500 */
+  --chart-2: #10b981; /* emerald-500 */
+  --chart-3: #84cc16; /* lime-500 */
+  --chart-4: #14b8a6; /* teal-500 */
+  --chart-5: #16a34a; /* green-600 */
 
   /* Sidebar clean */
   --sidebar: #ffffff;
   --sidebar-foreground: #0f172a;
-  --sidebar-primary: #2563eb;
+  --sidebar-primary: #16a34a; /* green-600 */
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #f1f5f9;
-  --sidebar-accent-foreground: #0f172a;
-  --sidebar-border: #e2e8f0;
-  --sidebar-ring: #2563eb;
+  --sidebar-accent: #f0fdf4; /* green-50 */
+  --sidebar-accent-foreground: #166534; /* green-800 */
+  --sidebar-border: #bbf7d0; /* green-200 */
+  --sidebar-ring: #16a34a; /* green-600 */
 
   /* Entity Colors - Đồng bộ với schema.sql (Light Mode) */
   /* USERS & ACCOUNT - Blue (người dùng cơ bản) */
@@ -166,39 +166,39 @@
   --popover: #1e293b;
   --popover-foreground: #f8fafc;
 
-  --primary: #3b82f6; /* blue-500 */
+  --primary: #22c55e; /* green-500 */
   --primary-foreground: #ffffff;
 
-  --secondary: #334155; /* slate-700 */
-  --secondary-foreground: #f8fafc;
+  --secondary: #14532d; /* green-900 */
+  --secondary-foreground: #dcfce7; /* green-100 */
 
   --muted: #1e293b;
   --muted-foreground: #94a3b8; /* slate-400 */
 
-  --accent: #10b981; /* emerald-500 */
+  --accent: #16a34a; /* green-600 */
   --accent-foreground: #ffffff;
 
   --destructive: #ef4444; /* red-500 */
   --border: #334155; /* slate-700 */
   --input: #334155;
-  --ring: #3b82f6;
+  --ring: #22c55e; /* green-500 */
 
-  /* Chart colors - dark optimized */
-  --chart-1: #60a5fa; /* blue-400 */
-  --chart-2: #34d399; /* green-400 */
-  --chart-3: #fbbf24; /* amber-400 */
-  --chart-4: #a78bfa; /* purple-400 */
-  --chart-5: #f472b6; /* pink-400 */
+  /* Chart colors - dark optimized (green theme) */
+  --chart-1: #4ade80; /* green-400 */
+  --chart-2: #34d399; /* emerald-400 */
+  --chart-3: #a3e635; /* lime-400 */
+  --chart-4: #2dd4bf; /* teal-400 */
+  --chart-5: #22c55e; /* green-500 */
 
   /* Sidebar dark */
   --sidebar: #1e293b;
   --sidebar-foreground: #f8fafc;
-  --sidebar-primary: #3b82f6;
+  --sidebar-primary: #22c55e; /* green-500 */
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #334155;
-  --sidebar-accent-foreground: #f8fafc;
-  --sidebar-border: #334155;
-  --sidebar-ring: #3b82f6;
+  --sidebar-accent: #14532d; /* green-900 */
+  --sidebar-accent-foreground: #dcfce7; /* green-100 */
+  --sidebar-border: #166534; /* green-800 */
+  --sidebar-ring: #22c55e; /* green-500 */
 
   /* Entity Colors - Đồng bộ với schema.sql (Dark Mode) */
   /* USERS & ACCOUNT - Blue (lighter for dark mode) */

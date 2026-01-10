@@ -1,6 +1,7 @@
 "use client";
 
 import { IPost, IPostReply } from "@/types/forum";
+import Image from "next/image";
 import {
   Clock,
   MessageCircle,
@@ -16,6 +17,8 @@ import Link from "next/link";
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { forumService } from "../../services/forumService";
+import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
+import { COLORS, GRADIENTS } from "../../constants/colors";
 
 export interface ICategory {
   id: string;
@@ -23,20 +26,53 @@ export interface ICategory {
   color: string;
 }
 
-const getCategoryColor = (category: string) => {
+interface UserInfo {
+  id: string;
+  full_name?: string;
+  avatar_url?: string | null;
+  account_id?: string;
+  phone?: string;
+}
+
+interface PostApiResponse {
+  id: string | number;
+  uuid?: string;
+  user_id?: string | number;
+  id_user?: string | number;
+  title: string;
+  content: string;
+  image?: string;
+  tags?: string;
+  reply_count?: number;
+  total_views?: number;
+  total_likes?: number;
+  is_pinned?: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+interface UserApiResponse {
+  data?: UserInfo;
+  id?: string;
+  full_name?: string;
+  avatar_url?: string | null;
+}
+
+const getCategoryColor = (category: string): string => {
   switch (category) {
     case "Travel Tips":
-      return "#10b981";
+      return "#16a34a"; // green-600
     case "Destinations":
-      return "#3b82f6";
+      return "#22c55e"; // green-500
     case "Gear & Equipment":
-      return "#f59e0b";
+      return "#84cc16"; // lime-500
     default:
-      return "#6366f1";
+      return "#10b981"; // emerald-500
   }
 };
 
 type TabType = "public" | "my-posts";
+type SortType = "recent" | "popular" | "trending";
 
 export const Forum: React.FC = () => {
   const { user } = useAuth();
@@ -45,31 +81,25 @@ export const Forum: React.FC = () => {
   const [categories, setCategories] = useState<ICategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>("public");
-  const [sortBy, setSortBy] = useState<"recent" | "popular" | "trending">(
-    "recent"
-  );
+  const [sortBy, setSortBy] = useState<SortType>("recent");
   const [postComments, setPostComments] = useState<
     Record<string, IPostReply[]>
   >({});
-  const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
-    if (API_URL) {
-      fetchForumData();
-    }
-  }, [API_URL]);
+    fetchForumData();
+  }, []);
 
   const fetchForumData = async () => {
-    if (!API_URL) return;
-
     try {
       setLoading(true);
 
-      const res = await fetch(`${API_URL}/posts`, {
+      const res = await fetch(API_ENDPOINTS.FORUM.POSTS.BASE, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
       });
 
       if (!res.ok) {
@@ -77,27 +107,29 @@ export const Forum: React.FC = () => {
       }
 
       const rawData = await res.json();
-      const rawPosts = Array.isArray(rawData) ? rawData : rawData.data || [];
+      const rawPosts: PostApiResponse[] = Array.isArray(rawData) ? rawData : rawData.data || [];
 
       // Fetch user info for posts
       const postUserIds: string[] = [
         ...new Set(
           rawPosts
-            .map((p: any) => p.user_id || p.id_user)
-            .filter(Boolean) as string[]
+            .map((p) => String(p.user_id || p.id_user || ""))
+            .filter(Boolean)
         ),
       ];
 
-      const userInfoMap: Record<string, any> = {};
+      const userInfoMap: Record<string, UserInfo> = {};
 
       // Fetch user details for each post author
       if (postUserIds.length > 0) {
         const userPromises = postUserIds.map(async (userId: string) => {
-          if (!userId) return null;
+          if (!userId || userId === "NaN" || userId === "undefined") return null;
           try {
-            const userRes = await fetch(`${API_URL}/users/${userId}`);
+            const userRes = await fetch(API_ENDPOINTS.USERS.BY_ID(userId), {
+              credentials: "include",
+            });
             if (userRes.ok) {
-              const userData = await userRes.json();
+              const userData: UserApiResponse = await userRes.json();
               const userInfo = userData.data || userData;
               return { userId, userData: userInfo };
             }
@@ -116,13 +148,13 @@ export const Forum: React.FC = () => {
         });
       }
 
-      const transformedPosts: IPost[] = rawPosts.map((post: any) => {
-        const userId = post.user_id || post.id_user;
+      const transformedPosts: IPost[] = rawPosts.map((post) => {
+        const userId = String(post.user_id || post.id_user || "");
         const userInfo = userInfoMap[userId] || {};
         const categoryName = post.tags?.split(",")[0]?.trim() || "General";
         return {
           ...post,
-          id: post.id || post.uuid,
+          id: String(post.id || post.uuid || ""),
           user_id: userId,
           last_activity_at: post.updated_at || post.created_at,
           reply_count: post.reply_count || 0,
@@ -148,10 +180,10 @@ export const Forum: React.FC = () => {
       const uniqueCategories = Array.from(
         new Set(
           transformedPosts
-            .map((p: any) => p.forum_categories?.name)
-            .filter(Boolean)
+            .map((p) => p.forum_categories?.name)
+            .filter(Boolean) as string[]
         )
-      ).map((name: any) => ({
+      ).map((name) => ({
         id: name.toLowerCase().replace(/\s+/g, "-"),
         name,
         color: getCategoryColor(name),
@@ -174,25 +206,39 @@ export const Forum: React.FC = () => {
   };
 
   const fetchCommentsForPosts = async (posts: IPost[]) => {
-    if (!API_URL) return;
-
     try {
       const commentsMap: Record<string, IPostReply[]> = {};
 
-      // Fetch comments for each post (limit to first 2 most recent)
       const commentPromises = posts.map(async (post) => {
         try {
-          const replies = await forumService.getReplies(post.id);
+          // Validate post ID before fetching replies
+          if (!post.id || post.id === "NaN" || post.id === "undefined" || String(post.id).trim() === "") {
+            console.warn("Invalid post ID, skipping replies fetch:", post.id);
+            return;
+          }
+          const replies = await forumService.getReplies(String(post.id));
           if (replies && replies.length > 0) {
-            // Fetch user info for comment authors
             const repliesWithUsers = await Promise.all(
               replies.slice(0, 2).map(async (reply: IPostReply) => {
                 try {
+                  if (!reply.user_id || reply.user_id === "NaN" || reply.user_id === "undefined") {
+                    return {
+                      ...reply,
+                      profiles: {
+                        id: reply.user_id || "",
+                        full_name: "User",
+                        avatar_url: null,
+                        account_id: "",
+                        phone: "",
+                      },
+                    };
+                  }
                   const userRes = await fetch(
-                    `${API_URL}/users/${reply.user_id}`
+                    API_ENDPOINTS.USERS.BY_ID(String(reply.user_id)),
+                    { credentials: "include" }
                   );
                   if (userRes.ok) {
-                    const userData = await userRes.json();
+                    const userData: UserApiResponse = await userRes.json();
                     const userInfo = userData.data || userData;
                     return {
                       ...reply,
@@ -234,7 +280,7 @@ export const Forum: React.FC = () => {
     }
   };
 
-  const formatTimeAgo = (dateString: string) => {
+  const formatTimeAgo = (dateString: string): string => {
     const date = new Date(dateString);
     const now = new Date();
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
@@ -248,10 +294,10 @@ export const Forum: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen bg-linear-to-br from-gray-50 via-white to-gray-50">
+      <div className={`flex justify-center items-center h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading forum...</p>
+          <div className={`animate-spin rounded-full h-16 w-16 border-4 ${COLORS.BORDER.DEFAULT} border-t-accent mx-auto mb-4`}></div>
+          <p className={`${COLORS.TEXT.MUTED} font-medium`}>Loading forum...</p>
         </div>
       </div>
     );
@@ -260,15 +306,13 @@ export const Forum: React.FC = () => {
   // Filter posts based on active tab, category
   let filteredPosts = posts;
 
-  // Apply tab filter (My Posts vs Public Posts)
   if (activeTab === "my-posts" && user) {
     filteredPosts = filteredPosts.filter(
       (post) =>
-        post.user_id === user.id || String(post.user_id) === String(user.id)
+        post.user_id === String(user.id) || String(post.user_id) === String(user.id)
     );
   }
 
-  // Apply category filter
   if (selectedCategory) {
     filteredPosts = filteredPosts.filter(
       (post) => post.forum_categories?.name === selectedCategory
@@ -293,101 +337,130 @@ export const Forum: React.FC = () => {
     }
   });
 
-  // Calculate post counts for tabs
   const myPostsCount = user
     ? posts.filter(
-        (p) => p.user_id === user.id || String(p.user_id) === String(user.id)
+        (p) => p.user_id === String(user.id) || String(p.user_id) === String(user.id)
       ).length
     : 0;
   const publicPostsCount = posts.length;
 
   return (
-    <div className="min-h-screen bg-linear-to-brrom-slate-50 via-blue-50/30 to-indigo-50/50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-        {/* Header Section */}
-        <div className="mb-8">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-            <div>
-              <h1 className="text-4xl sm:text-5xl font-extrabold bg-linear-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                Community Forum
-              </h1>
-              <p className="text-gray-600 text-lg font-medium">
-                Share experiences, ask questions, and connect with travelers
-              </p>
-            </div>
-            <Link
-              href="/forum/new"
-              className="flex items-center space-x-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
-            >
-              <Plus className="w-5 h-5" />
-              <span>New Post</span>
-            </Link>
-          </div>
+    <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
+      {/* Hero Section */}
+      <div className="relative h-64 md:h-80 overflow-hidden">
+        <div className="absolute inset-0">
+          <Image
+            src={getTravelImageUrl("community discussion forum", 1920, 400)}
+            alt="Forum"
+            fill
+            className="object-cover"
+            priority
+            unoptimized
+          />
+          <div className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-80`}></div>
+        </div>
+        <div className="relative z-10 max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
+          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
+            Community Forum 💬
+          </h1>
+          <p className="text-lg md:text-xl text-white/90 drop-shadow-md">
+            Share experiences, ask questions, and connect with travelers
+          </p>
+        </div>
+      </div>
 
-          {/* Tabs Section */}
-          <div className="bg-white rounded-2xl shadow-lg border border-gray-200 p-2 mb-6">
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setActiveTab("public");
-                  setSelectedCategory(null);
-                }}
-                className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
+      <div className="max-w-7xl mx-auto px-4 py-8 -mt-8 relative z-20">
+        {/* Header with New Post Button */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+          <div>
+            <h2 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
+              Travel Discussions
+            </h2>
+            <p className={`${COLORS.TEXT.MUTED} mt-1`}>
+              Join the conversation and share your adventures
+            </p>
+          </div>
+          <Link
+            href="/forum/new"
+            className={`flex items-center space-x-2 ${GRADIENTS.PRIMARY} text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold`}
+          >
+            <Plus className="w-5 h-5" />
+            <span>New Post</span>
+          </Link>
+        </div>
+
+        {/* Tabs Section */}
+        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-2 mb-6`}>
+          <div className="flex gap-2">
+            <button
+              onClick={() => {
+                setActiveTab("public");
+                setSelectedCategory(null);
+              }}
+              className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200 ${
+                activeTab === "public"
+                  ? `${GRADIENTS.PRIMARY} text-white shadow-lg scale-105`
+                  : `${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.MUTED}`
+              }`}
+            >
+              <Globe className="w-4 h-4" />
+              <span>Public Posts</span>
+              <span
+                className={`px-2 py-0.5 rounded-full text-xs font-bold ${
                   activeTab === "public"
-                    ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-lg scale-105"
-                    : "text-gray-600 hover:bg-gray-50"
+                    ? "bg-white/20 text-white"
+                    : `${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.MUTED}`
                 }`}
               >
-                <Globe className="w-4 h-4" />
-                <span>Public Posts</span>
+                {publicPostsCount}
+              </span>
+            </button>
+            {user && (
+              <button
+                onClick={() => {
+                  setActiveTab("my-posts");
+                  setSelectedCategory(null);
+                }}
+                className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-semibold text-sm transition-all duration-200 ${
+                  activeTab === "my-posts"
+                    ? "bg-gradient-to-r from-purple-500 to-pink-500 text-white shadow-lg scale-105"
+                    : `${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.MUTED}`
+                }`}
+              >
+                <User className="w-4 h-4" />
+                <span>My Posts</span>
                 <span
                   className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                    activeTab === "public"
+                    activeTab === "my-posts"
                       ? "bg-white/20 text-white"
-                      : "bg-gray-200 text-gray-700"
+                      : `${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.MUTED}`
                   }`}
                 >
-                  {publicPostsCount}
+                  {myPostsCount}
                 </span>
               </button>
-              {user && (
-                <button
-                  onClick={() => {
-                    setActiveTab("my-posts");
-                    setSelectedCategory(null);
-                  }}
-                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 ${
-                    activeTab === "my-posts"
-                      ? "bg-linear-to-r from-purple-600 to-pink-600 text-white shadow-lg scale-105"
-                      : "text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <User className="w-4 h-4" />
-                  <span>My Posts</span>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-xs font-bold ${
-                      activeTab === "my-posts"
-                        ? "bg-white/20 text-white"
-                        : "bg-gray-200 text-gray-700"
-                    }`}
-                  >
-                    {myPostsCount}
-                  </span>
-                </button>
-              )}
-            </div>
+            )}
           </div>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-4">
             {filteredPosts.length === 0 ? (
-              <div className="bg-white rounded-2xl shadow-lg p-16 text-center border-2 border-dashed border-gray-300">
-                <MessageCircle className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-gray-900 mb-2">
+              <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border-2 border-dashed rounded-xl shadow-lg p-16 text-center`}>
+                <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden">
+                  <Image
+                    src={getTravelImageUrl("no posts discussion", 200, 200)}
+                    alt="No posts"
+                    fill
+                    className="object-cover opacity-50"
+                    unoptimized
+                  />
+                </div>
+                <MessageCircle className={`w-16 h-16 ${COLORS.TEXT.MUTED} mx-auto mb-4`} />
+                <h3 className={`text-xl font-bold ${COLORS.TEXT.DEFAULT} mb-2`}>
                   No posts found
                 </h3>
-                <p className="text-gray-600">
+                <p className={COLORS.TEXT.MUTED}>
                   {activeTab === "my-posts"
                     ? "You haven't created any posts yet. Start sharing your travel experiences!"
                     : selectedCategory
@@ -397,7 +470,7 @@ export const Forum: React.FC = () => {
                 {activeTab === "my-posts" && (
                   <Link
                     href="/forum/new"
-                    className="inline-flex items-center gap-2 mt-4 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
+                    className={`inline-flex items-center gap-2 mt-4 ${GRADIENTS.PRIMARY} text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-semibold`}
                   >
                     <Plus className="w-5 h-5" />
                     <span>Create Your First Post</span>
@@ -409,17 +482,20 @@ export const Forum: React.FC = () => {
                 <Link
                   key={post.id}
                   href={`/forum/${post.id}`}
-                  className="bg-white rounded-xl shadow-md hover:shadow-2xl transition-all duration-300 border border-gray-200 hover:border-blue-400 hover:-translate-y-1 block group overflow-hidden"
+                  className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-md hover:shadow-xl transition-all duration-300 hover:${COLORS.BORDER.PRIMARY} hover:-translate-y-1 block group overflow-hidden`}
                 >
                   <div className="p-6">
                     <div className="flex items-start gap-4">
                       {/* Avatar */}
-                      <div className="w-14 h-14 bg-linear-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white group-hover:ring-blue-200 transition-all">
+                      <div className={`w-14 h-14 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white group-hover:ring-accent/50 transition-all`}>
                         {post.profiles?.avatar_url ? (
-                          <img
+                          <Image
                             src={post.profiles.avatar_url}
                             alt={post.profiles.full_name || "User"}
-                            className="w-full h-full rounded-full object-cover"
+                            width={56}
+                            height={56}
+                            className="rounded-full object-cover"
+                            unoptimized
                           />
                         ) : (
                           <span className="text-xl font-bold text-white">
@@ -444,7 +520,7 @@ export const Forum: React.FC = () => {
                             {post.forum_categories?.name || "General"}
                           </span>
                           {post.is_pinned && (
-                            <span className="text-xs bg-linear-to-r from-yellow-100 to-amber-100 text-yellow-800 px-2.5 py-1 rounded-full font-semibold border border-yellow-300 flex items-center gap-1">
+                            <span className="text-xs bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 px-2.5 py-1 rounded-full font-semibold border border-yellow-300 flex items-center gap-1">
                               <span>📌</span>
                               <span>Pinned</span>
                             </span>
@@ -452,46 +528,53 @@ export const Forum: React.FC = () => {
                         </div>
 
                         {/* Title */}
-                        <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors line-clamp-2">
+                        <h3 className={`text-xl font-bold ${COLORS.TEXT.DEFAULT} mb-2 group-hover:${COLORS.TEXT.PRIMARY} transition-colors line-clamp-2`}>
                           {post.title}
                         </h3>
 
                         {/* Post Image */}
                         {post.image && (
-                          <div className="mb-3 rounded-lg overflow-hidden border border-gray-200">
-                            <img
+                          <div className={`mb-3 rounded-lg overflow-hidden ${COLORS.BORDER.DEFAULT} border`}>
+                            <Image
                               src={post.image}
                               alt={post.title}
+                              width={600}
+                              height={200}
                               className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                              unoptimized
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
                             />
                           </div>
                         )}
 
                         {/* Content Preview */}
-                        <p className="text-gray-600 text-sm mb-4 line-clamp-2 leading-relaxed">
+                        <p className={`${COLORS.TEXT.MUTED} text-sm mb-4 line-clamp-2 leading-relaxed`}>
                           {post.content}
                         </p>
 
                         {/* Comments Preview */}
                         {postComments[post.id] &&
                           postComments[post.id].length > 0 && (
-                            <div className="mb-4 space-y-2 border-t border-gray-100 pt-3">
-                              <div className="text-xs font-semibold text-gray-500 mb-2">
+                            <div className={`mb-4 space-y-2 border-t ${COLORS.BORDER.DEFAULT} pt-3`}>
+                              <div className={`text-xs font-semibold ${COLORS.TEXT.MUTED} mb-2`}>
                                 Recent Comments
                               </div>
                               {postComments[post.id].map((comment) => (
                                 <div
                                   key={comment.id}
-                                  className="flex gap-2 bg-gray-50 rounded-lg p-2.5 hover:bg-gray-100 transition-colors"
+                                  className={`flex gap-2 ${COLORS.BACKGROUND.MUTED} rounded-lg p-2.5 hover:${COLORS.BACKGROUND.SECONDARY} transition-colors`}
                                 >
-                                  <div className="w-6 h-6 bg-linear-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center shrink-0">
+                                  <div className={`w-6 h-6 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0`}>
                                     {comment.profiles?.avatar_url ? (
-                                      <img
+                                      <Image
                                         src={comment.profiles.avatar_url}
-                                        alt={
-                                          comment.profiles.full_name || "User"
-                                        }
-                                        className="w-full h-full rounded-full object-cover"
+                                        alt={comment.profiles.full_name || "User"}
+                                        width={24}
+                                        height={24}
+                                        className="rounded-full object-cover"
+                                        unoptimized
                                       />
                                     ) : (
                                       <span className="text-xs font-bold text-white">
@@ -503,19 +586,19 @@ export const Forum: React.FC = () => {
                                   </div>
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-2 mb-1">
-                                      <span className="text-xs font-semibold text-gray-700">
+                                      <span className={`text-xs font-semibold ${COLORS.TEXT.DEFAULT}`}>
                                         {comment.profiles?.full_name || "User"}
                                       </span>
                                     </div>
-                                    <p className="text-xs text-gray-600 line-clamp-2">
+                                    <p className={`text-xs ${COLORS.TEXT.MUTED} line-clamp-2`}>
                                       {comment.content}
                                     </p>
                                   </div>
                                 </div>
                               ))}
-                              {post.reply_count >
-                                postComments[post.id].length && (
-                                <div className="text-xs text-gray-500 text-center pt-1">
+                              {post.reply_count &&
+                                post.reply_count > postComments[post.id].length && (
+                                <div className={`text-xs ${COLORS.TEXT.MUTED} text-center pt-1`}>
                                   +
                                   {post.reply_count -
                                     postComments[post.id].length}{" "}
@@ -531,24 +614,24 @@ export const Forum: React.FC = () => {
                           )}
 
                         {/* Meta Info */}
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-500">
-                          <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-lg">
-                            <MessageCircle className="w-4 h-4 text-blue-500" />
+                        <div className={`flex flex-wrap items-center gap-4 text-sm ${COLORS.TEXT.MUTED}`}>
+                          <span className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}>
+                            <MessageCircle className={`w-4 h-4 ${COLORS.TEXT.PRIMARY}`} />
                             <span className="font-medium">
                               {post.reply_count || 0}
                             </span>
                           </span>
-                          <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-lg">
+                          <span className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}>
                             <Heart className="w-4 h-4 text-red-500" />
                             <span className="font-medium">
                               {post.total_likes || 0}
                             </span>
                           </span>
-                          <span className="flex items-center gap-1.5 bg-gray-50 px-3 py-1 rounded-lg">
-                            <Clock className="w-4 h-4 text-gray-400" />
+                          <span className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}>
+                            <Clock className="w-4 h-4" />
                             <span>{formatTimeAgo(post.last_activity_at)}</span>
                           </span>
-                          <span className="text-gray-600 font-semibold ml-auto">
+                          <span className={`${COLORS.TEXT.DEFAULT} font-semibold ml-auto`}>
                             {post.profiles?.full_name || "User"}
                           </span>
                         </div>
@@ -562,32 +645,31 @@ export const Forum: React.FC = () => {
 
           <div className="space-y-6">
             {/* Filters */}
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <Filter className="w-5 h-5 mr-2 text-blue-600" />
+            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6`}>
+              <h3 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-4 flex items-center`}>
+                <Filter className={`w-5 h-5 mr-2 ${COLORS.TEXT.PRIMARY}`} />
                 Sort & Filter
               </h3>
 
-              {/* Sort By */}
               <div className="mb-4">
-                <label className="text-xs font-semibold text-gray-600 uppercase tracking-wide mb-3 block">
+                <label className={`text-xs font-semibold ${COLORS.TEXT.MUTED} uppercase tracking-wide mb-3 block`}>
                   Sort By
                 </label>
                 <div className="space-y-2">
                   {[
-                    { value: "recent", label: "Most Recent", icon: Clock },
-                    { value: "popular", label: "Most Popular", icon: Heart },
-                    { value: "trending", label: "Trending", icon: Sparkles },
+                    { value: "recent" as SortType, label: "Most Recent", icon: Clock },
+                    { value: "popular" as SortType, label: "Most Popular", icon: Heart },
+                    { value: "trending" as SortType, label: "Trending", icon: Sparkles },
                   ].map((option) => {
                     const Icon = option.icon;
                     return (
                       <button
                         key={option.value}
-                        onClick={() => setSortBy(option.value as any)}
+                        onClick={() => setSortBy(option.value)}
                         className={`w-full flex items-center gap-2 text-left px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                           sortBy === option.value
-                            ? "bg-linear-to-r from-blue-50 to-indigo-50 text-blue-700 border-2 border-blue-200 shadow-sm"
-                            : "bg-gray-50 text-gray-700 hover:bg-gray-100 border-2 border-transparent"
+                            ? `${COLORS.PRIMARY.LIGHT} ${COLORS.TEXT.PRIMARY} ${COLORS.BORDER.PRIMARY} border-2 shadow-sm`
+                            : `${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.SECONDARY} border-2 border-transparent`
                         }`}
                       >
                         <Icon className="w-4 h-4" />
@@ -600,9 +682,9 @@ export const Forum: React.FC = () => {
             </div>
 
             {/* Categories Sidebar */}
-            <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-bold text-gray-900 mb-4 flex items-center">
-                <TrendingUp className="w-5 h-5 mr-2 text-blue-600" />
+            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6`}>
+              <h3 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-4 flex items-center`}>
+                <TrendingUp className={`w-5 h-5 mr-2 ${COLORS.TEXT.PRIMARY}`} />
                 Categories
               </h3>
               <div className="space-y-2">
@@ -612,8 +694,8 @@ export const Forum: React.FC = () => {
                   }}
                   className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${
                     selectedCategory === null
-                      ? "bg-linear-to-r from-blue-600 to-indigo-600 text-white shadow-lg"
-                      : "bg-gray-50 text-gray-700 hover:bg-gray-100"
+                      ? `${GRADIENTS.PRIMARY} text-white shadow-lg`
+                      : `${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.SECONDARY}`
                   }`}
                 >
                   <span>All Topics</span>
@@ -627,13 +709,12 @@ export const Forum: React.FC = () => {
                 </button>
                 {categories.map((category) => {
                   const isActive = selectedCategory === category.name;
-                  // Filter category count based on active tab
                   const categoryCount =
                     activeTab === "my-posts" && user
                       ? posts.filter(
                           (p) =>
                             p.forum_categories?.name === category.name &&
-                            (p.user_id === user.id ||
+                            (p.user_id === String(user.id) ||
                               String(p.user_id) === String(user.id))
                         ).length
                       : posts.filter(
@@ -648,7 +729,7 @@ export const Forum: React.FC = () => {
                       className={`w-full flex items-center justify-between px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 border-2 ${
                         isActive
                           ? "shadow-lg scale-105"
-                          : "bg-white border-gray-200 hover:border-gray-300"
+                          : `${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} hover:${COLORS.BORDER.PRIMARY}`
                       }`}
                       style={{
                         borderColor: isActive ? category.color : undefined,
@@ -667,7 +748,7 @@ export const Forum: React.FC = () => {
                       </div>
                       <span
                         className={`text-xs px-2 py-0.5 rounded-full font-semibold ${
-                          isActive ? "bg-white/20" : "bg-gray-100"
+                          isActive ? "bg-white/20" : COLORS.BACKGROUND.MUTED
                         }`}
                       >
                         {categoryCount}
@@ -679,7 +760,7 @@ export const Forum: React.FC = () => {
             </div>
 
             {/* Forum Guidelines */}
-            <div className="bg-linear-to-br from-blue-600 to-indigo-600 rounded-xl shadow-lg p-6 text-white">
+            <div className={`${GRADIENTS.PRIMARY} rounded-xl shadow-lg p-6 text-white`}>
               <h3 className="font-bold text-lg mb-4">Forum Guidelines</h3>
               <ul className="text-sm space-y-2.5">
                 <li className="flex items-start gap-2">
