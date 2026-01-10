@@ -24,14 +24,14 @@ export const API_ENDPOINTS = {
   // Trips
   TRIPS: {
     BASE: `${API_BASE_URL}/trips`,
-    BY_ID: (id: number) => `${API_BASE_URL}/trips/${id}`,
+    BY_ID: (id: string | number) => `${API_BASE_URL}/trips/${id}`,
     CREATE: `${API_BASE_URL}/trips`,
-    UPDATE: (id: number) => `${API_BASE_URL}/trips/${id}`,
-    DELETE: (id: number) => `${API_BASE_URL}/trips/${id}`,
-    JOIN: (id: number) => `${API_BASE_URL}/trips/${id}/join`,
-    LEAVE: (id: number) => `${API_BASE_URL}/trips/${id}/leave`,
-    ROUTES: (id: number) => `${API_BASE_URL}/trips/${id}/routes`,
-    COSTS: (id: number) => `${API_BASE_URL}/trips/${id}/costs`,
+    UPDATE: (id: string | number) => `${API_BASE_URL}/trips/${id}`,
+    DELETE: (id: string | number) => `${API_BASE_URL}/trips/${id}`,
+    JOIN: (id: string | number) => `${API_BASE_URL}/trips/${id}/join`,
+    LEAVE: (id: string | number) => `${API_BASE_URL}/trips/${id}/leave`,
+    ROUTES: (id: string | number) => `${API_BASE_URL}/trips/${id}/routes`,
+    COSTS: (id: string | number) => `${API_BASE_URL}/trips/${id}/costs`,
   },
 
   // Routes
@@ -46,21 +46,22 @@ export const API_ENDPOINTS = {
   // Destinations
   DESTINATIONS: {
     BASE: `${API_BASE_URL}/destinations`,
-    BY_ID: (id: number) => `${API_BASE_URL}/destinations/${id}`,
+    BY_ID: (id: string | number) => `${API_BASE_URL}/destinations/${id}`,
     CREATE: `${API_BASE_URL}/destinations`,
-    UPDATE: (id: number) => `${API_BASE_URL}/destinations/${id}`,
-    DELETE: (id: number) => `${API_BASE_URL}/destinations/${id}`,
-    REVIEWS: (id: number) => `${API_BASE_URL}/destinations/${id}/reviews`,
-    POSTS: (id: number) => `${API_BASE_URL}/destinations/${id}/posts`,
+    UPDATE: (id: string | number) => `${API_BASE_URL}/destinations/${id}`,
+    DELETE: (id: string | number) => `${API_BASE_URL}/destinations/${id}`,
+    REVIEWS: (id: string | number) => `${API_BASE_URL}/destinations/${id}/reviews`,
+    POSTS: (id: string | number) => `${API_BASE_URL}/destinations/${id}/posts`,
   },
 
-  // Reviews
+  // Reviews (Assessments)
   REVIEWS: {
-    BASE: `${API_BASE_URL}/assess-destinations`,
-    BY_ID: (id: number) => `${API_BASE_URL}/assess-destinations/${id}`,
-    CREATE: `${API_BASE_URL}/assess-destinations`,
-    UPDATE: (id: number) => `${API_BASE_URL}/assess-destinations/${id}`,
-    DELETE: (id: number) => `${API_BASE_URL}/assess-destinations/${id}`,
+    BASE: `${API_BASE_URL}/api/assess-destination`,
+    BY_ID: (id: string | number) => `${API_BASE_URL}/api/assess-destination/${id}`,
+    BY_DESTINATION: (destinationId: string | number) => `${API_BASE_URL}/api/assess-destination/destination/${destinationId}`,
+    CREATE: `${API_BASE_URL}/api/assess-destination`,
+    UPDATE: `${API_BASE_URL}/api/assess-destination`,
+    DELETE: `${API_BASE_URL}/api/assess-destination`,
   },
 
   // Forum
@@ -103,27 +104,27 @@ export const API_ENDPOINTS = {
   // Supporters
   SUPPORTERS: {
     BASE: `${API_BASE_URL}/supporters`,
-    BY_ID: (userId: number) => `${API_BASE_URL}/supporters/${userId}`,
+    BY_ID: (userId: string | number) => `${API_BASE_URL}/supporters/${userId}`,
     CREATE: `${API_BASE_URL}/supporters`,
-    UPDATE: (userId: number) => `${API_BASE_URL}/supporters/${userId}`,
-    DELETE: (userId: number) => `${API_BASE_URL}/supporters/${userId}`,
+    UPDATE: (userId: string | number) => `${API_BASE_URL}/supporters/${userId}`,
+    DELETE: (userId: string | number) => `${API_BASE_URL}/supporters/${userId}`,
     WITH_USER_INFO: `${API_BASE_URL}/supporters/with-user-info`,
   },
 
   // Travellers
   TRAVELLERS: {
     BASE: `${API_BASE_URL}/travellers`,
-    BY_ID: (userId: number) => `${API_BASE_URL}/travellers/${userId}`,
+    BY_ID: (userId: string | number) => `${API_BASE_URL}/travellers/${userId}`,
     SOS_ALL: `${API_BASE_URL}/travellers/sos/all`,
-    SOS_BY_SUPPORTER: (supporterId: number) => `${API_BASE_URL}/travellers/sos/supporter/${supporterId}`,
-    UPDATE: (userId: number) => `${API_BASE_URL}/travellers/${userId}`,
+    SOS_BY_SUPPORTER: (supporterId: string | number) => `${API_BASE_URL}/travellers/sos/supporter/${supporterId}`,
+    UPDATE: (userId: string | number) => `${API_BASE_URL}/travellers/${userId}`,
     CREATE: `${API_BASE_URL}/travellers`,
   },
 
   // Admins
   ADMINS: {
     BASE: `${API_BASE_URL}/admins`,
-    BY_ID: (userId: number) => `${API_BASE_URL}/admins/${userId}`,
+    BY_ID: (userId: string | number) => `${API_BASE_URL}/admins/${userId}`,
     CREATE: `${API_BASE_URL}/admins`,
   },
 

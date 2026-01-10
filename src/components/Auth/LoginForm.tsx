@@ -5,6 +5,7 @@ import { useAuth } from '../../contexts/AuthContext';
 import { Input } from '../ui/input';
 import { Button } from '../ui/button';
 import { Mail, Lock, Loader2, AlertCircle } from 'lucide-react';
+import { COLORS } from '../../constants/colors';
 
 export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
   const [email, setEmail] = useState('');
@@ -30,7 +31,7 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
 
   return (
     <div className="w-full max-w-md animate-fade-in">
-      <form onSubmit={handleSubmit} className="bg-white/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 border border-white/20">
+      <form onSubmit={handleSubmit} className={`${COLORS.BACKGROUND.CARD}/95 backdrop-blur-lg rounded-2xl shadow-2xl p-8 ${COLORS.BORDER.DEFAULT} transition-all duration-300`}>
         <div className="text-center mb-8">
           <h2 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
             Welcome Back
@@ -98,7 +99,7 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
             <button
               type="button"
               onClick={onSwitch}
-              className="text-green-600 hover:text-green-700 font-semibold transition-colors underline-offset-4 hover:underline"
+              className={`${COLORS.TEXT.PRIMARY} hover:opacity-80 font-semibold transition-colors duration-200 underline-offset-4 hover:underline`}
             >
               Sign up
             </button>

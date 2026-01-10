@@ -9,6 +9,8 @@ import { TripCard } from "./TripCard";
 import { EditTripModal } from "./EditTripModal";
 import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
+import Loading from "../../components/Loading/Loading";
+import Hero from "../../components/Hero/Hero";
 
 // Interface definitions
 export interface IDestination {
@@ -69,7 +71,11 @@ const fetchDestinationDetails = async (
   destinationId: string
 ): Promise<IDestination | null> => {
   try {
-    const response = await fetch(API_ENDPOINTS.DESTINATIONS.BY_ID(Number(destinationId)), {
+    if (!destinationId || destinationId === "NaN" || destinationId === "undefined") {
+      console.error("Invalid destinationId:", destinationId);
+      return null;
+    }
+    const response = await fetch(API_ENDPOINTS.DESTINATIONS.BY_ID(String(destinationId)), {
       method: "GET",
       headers: {
         "Content-Type": "application/json",
@@ -112,7 +118,13 @@ export const Trips: React.FC = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(API_ENDPOINTS.USERS.BY_ID(Number(userId)) + "/trips", {
+      if (!userId || userId === "NaN" || userId === "undefined") {
+        console.error("Invalid userId:", userId);
+        setTrips([]);
+        setLoading(false);
+        return;
+      }
+      const response = await fetch(API_ENDPOINTS.USERS.BY_ID(String(userId)) + "/trips", {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -290,10 +302,7 @@ export const Trips: React.FC = () => {
             </p>
           </div>
         ) : (
-          <div className="text-center">
-            <div className={`animate-spin rounded-full h-16 w-16 border-4 ${COLORS.BORDER.DEFAULT} border-t-accent mx-auto mb-4`}></div>
-            <p className={`${COLORS.TEXT.MUTED} font-medium`}>Loading your trips...</p>
-          </div>
+          <Loading type="trips" />
         )}
       </div>
     );
@@ -302,34 +311,14 @@ export const Trips: React.FC = () => {
   return (
     <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
       {/* Hero Section */}
-      <div className="relative h-64 md:h-80 overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src={getTravelImageUrl("travel planning adventure", 1920, 400)}
-            alt="My Trips"
-            fill
-            className="object-cover"
-            priority
-            unoptimized
-          />
-          <div className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-80`}></div>
-        </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-            My Trips ✈️
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 drop-shadow-md">
-            Manage your travel plans and budgets
-          </p>
-          {trips.length > 0 && (
-            <p className="text-sm text-white/80 mt-2">
-              {trips.length} {trips.length === 1 ? "trip" : "trips"} planned
-            </p>
-          )}
-        </div>
-      </div>
+      <Hero
+        title="My Trips ✈️"
+        description="Manage your travel plans and budgets"
+        subtitle={trips.length > 0 ? `${trips.length} ${trips.length === 1 ? "trip" : "trips"} planned` : undefined}
+        imageKeyword="travel planning adventure"
+      />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 -mt-8 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
         {/* Header with Add Button */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div className="mb-4 sm:mb-0">

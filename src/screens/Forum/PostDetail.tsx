@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { COLORS } from "@/constants/colors";
 
 interface PostDetailProps {
     postData: IPost;
@@ -322,15 +323,15 @@ export default function PostDetail({ postData }: PostDetailProps) {
     const categoryColor = getCategoryColor(categoryName);
 
     return (
-        <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 pt-8 pb-20 px-4 sm:px-6 lg:px-8">
+        <div className={`min-h-screen bg-background pt-8 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-300`}>
             <div className="max-w-5xl mx-auto min-w-7xl">
                 {/* Header Section */}
                 <div className="mb-6">
                     <button
                         onClick={() => router.back()}
-                        className="flex items-center text-gray-600 hover:text-gray-900 mb-6 transition-colors font-semibold group"
+                        className={`flex items-center ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} mb-6 transition-all duration-200 font-semibold group`}
                     >
-                        <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+                        <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
                         <span>Back to Forum</span>
                     </button>
 
@@ -357,7 +358,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                 </div>
 
                 {/* Main Post Card */}
-                <div className="bg-white rounded-2xl shadow-xl border border-gray-200 overflow-hidden mb-6">
+                <div className={`${COLORS.BACKGROUND.CARD} rounded-2xl shadow-xl ${COLORS.BORDER.DEFAULT} overflow-hidden mb-6 transition-all duration-300`}>
                     {/* Post Image Header */}
                     {postData.image && (
                         <div className="w-full h-64 sm:h-80 overflow-hidden bg-linear-to-br from-blue-100 to-indigo-100">
@@ -411,9 +412,9 @@ export default function PostDetail({ postData }: PostDetailProps) {
                         </div>
 
                         {/* Post Meta Info */}
-                        <div className="flex flex-wrap items-center gap-4 text-sm mb-6 pb-6 border-b border-gray-200">
-                            <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg">
-                                <div className="w-10 h-10 rounded-full overflow-hidden bg-linear-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 border-white shadow-md">
+                        <div className={`flex flex-wrap items-center gap-4 text-sm mb-6 pb-6 border-b ${COLORS.BORDER.LIGHT} transition-colors duration-200`}>
+                            <div className={`flex items-center gap-2 ${COLORS.BACKGROUND.MUTED} px-4 py-2 rounded-lg transition-colors duration-200`}>
+                                <div className={`w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 ${COLORS.BACKGROUND.CARD} shadow-md transition-colors duration-200`}>
                                     {postAuthor?.avatar_url ||
                                     postData.profiles?.avatar_url ? (
                                         <img
@@ -433,35 +434,35 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                     )}
                                 </div>
                                 <div>
-                                    <div className="font-bold text-gray-900">
+                                    <div className={`font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
                                         {postAuthor?.full_name ||
                                             postData.profiles?.full_name ||
                                             "User"}
                                     </div>
-                                    <div className="text-xs text-gray-500 flex items-center gap-1">
-                                        <Clock className="w-3 h-3" />
+                                    <div className={`text-xs ${COLORS.TEXT.MUTED} flex items-center gap-1 transition-colors duration-200`}>
+                                        <Clock className="w-3 h-3 transition-colors duration-200" />
                                         {formatTimeAgo(postData.created_at)}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg">
-                                <Calendar className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700">
+                            <div className={`flex items-center gap-2 ${COLORS.BACKGROUND.MUTED} px-4 py-2 rounded-lg transition-colors duration-200`}>
+                                <Calendar className={`w-4 h-4 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
+                                <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                                     {formatDate(postData.created_at)}
                                 </span>
                             </div>
 
-                            <div className="flex items-center gap-2 bg-gray-50 px-4 py-2 rounded-lg">
-                                <Eye className="w-4 h-4 text-gray-500" />
-                                <span className="text-gray-700 font-medium">
+                            <div className={`flex items-center gap-2 ${COLORS.BACKGROUND.MUTED} px-4 py-2 rounded-lg transition-colors duration-200`}>
+                                <Eye className={`w-4 h-4 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
+                                <span className={`${COLORS.TEXT.MUTED} font-medium transition-colors duration-200`}>
                                     {postData.total_views || 0} views
                                 </span>
                             </div>
                         </div>
 
                         {/* Post Content */}
-                        <div className="prose max-w-none text-gray-700 mb-8">
+                        <div className={`prose max-w-none ${COLORS.TEXT.MUTED} mb-8 transition-colors duration-200`}>
                             {isEditingMode ? (
                                 <textarea
                                     id="edit-content"
@@ -471,7 +472,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                     onChange={(e) =>
                                         setEditContent(e.target.value)
                                     }
-                                    className="w-full p-4 border-2 border-gray-300 rounded-xl min-h-[300px] outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none bg-gray-50"
+                                    className={`w-full p-4 border-2 ${COLORS.BORDER.DEFAULT} rounded-xl min-h-[300px] outline-none focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} resize-none ${COLORS.BACKGROUND.MUTED} transition-all duration-200`}
                                 />
                             ) : (
                                 <div className="text-base sm:text-lg leading-relaxed text-gray-800">

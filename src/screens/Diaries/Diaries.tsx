@@ -6,9 +6,20 @@ import Link from "next/link";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Plus, Search, BookOpen, Edit, Trash2, Share2, Eye, EyeOff } from "lucide-react";
+import {
+  Plus,
+  Search,
+  BookOpen,
+  Edit,
+  Trash2,
+  Share2,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
+import Loading, { SkeletonGrid } from "../../components/Loading/Loading";
+import Hero from "../../components/Hero/Hero";
 
 interface IDiary {
   id: string | number;
@@ -58,11 +69,15 @@ export default function Diaries() {
       });
     } else if (filter === "drafts") {
       filterList = allDiaries.filter((diary) => {
-        return diary.is_draft === true && String(diary.user_id) === String(user?.id);
+        return (
+          diary.is_draft === true && String(diary.user_id) === String(user?.id)
+        );
       });
     } else if (filter === "explore") {
       filterList = allDiaries.filter((diary) => {
-        return String(diary.user_id) !== String(user?.id) && diary.is_public === true;
+        return (
+          String(diary.user_id) !== String(user?.id) && diary.is_public === true
+        );
       });
     }
 
@@ -108,12 +123,8 @@ export default function Diaries() {
         throw new Error("Delete failed");
       }
 
-      setAllDiaries((prev) =>
-        prev.filter((d) => String(d.id) !== String(id))
-      );
-      setDiaries((prev) =>
-        prev.filter((d) => String(d.id) !== String(id))
-      );
+      setAllDiaries((prev) => prev.filter((d) => String(d.id) !== String(id)));
+      setDiaries((prev) => prev.filter((d) => String(d.id) !== String(id)));
     } catch (error) {
       console.error("Delete diary error", error);
       alert("Failed to delete diary");
@@ -139,7 +150,8 @@ export default function Diaries() {
       user_id: String(shareDiary.user_id),
       title: shareDiary.title,
       content: shareDiary.description,
-      image: shareDiary.main_image_url || shareDiary.images?.[0]?.url || undefined,
+      image:
+        shareDiary.main_image_url || shareDiary.images?.[0]?.url || undefined,
       tags: "Diary",
       total_likes: 0,
       total_views: 0,
@@ -161,8 +173,74 @@ export default function Diaries() {
 
   if (loading) {
     return (
-      <div className={`flex justify-center items-center h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
-        <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${COLORS.BORDER.PRIMARY}`}></div>
+      <div
+        className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} transition-colors duration-300`}
+      >
+        {/* Hero Section Skeleton */}
+        <div className="relative h-64 md:h-80 overflow-hidden">
+          <div
+            className={`absolute inset-0 ${COLORS.BACKGROUND.MUTED} animate-pulse`}
+          >
+            <div
+              className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-80`}
+            ></div>
+          </div>
+          <div className="relative z-10 max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
+            <div
+              className={`h-12 ${COLORS.BACKGROUND.CARD}/30 rounded-lg w-64 mb-4 animate-pulse`}
+            ></div>
+            <div
+              className={`h-6 ${COLORS.BACKGROUND.CARD}/30 rounded-lg w-96 animate-pulse`}
+            ></div>
+          </div>
+        </div>
+
+        <div className="max-w-7xl mx-auto px-4 py-8 -mt-8 relative z-20">
+          {/* Header Skeleton */}
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex-1">
+              <div
+                className={`h-8 ${COLORS.BACKGROUND.MUTED} rounded-lg w-64 mb-2 animate-pulse`}
+              ></div>
+              <div
+                className={`h-4 ${COLORS.BACKGROUND.MUTED} rounded w-96 animate-pulse`}
+              ></div>
+            </div>
+            <div
+              className={`h-12 ${COLORS.BACKGROUND.MUTED} rounded-xl w-32 animate-pulse`}
+            ></div>
+          </div>
+
+          {/* Filter Skeleton */}
+          <div
+            className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 mb-8 animate-pulse`}
+          >
+            <div className="flex items-center justify-between flex-wrap gap-4">
+              <div className="flex gap-2">
+                <div
+                  className={`h-10 ${COLORS.BACKGROUND.MUTED} rounded-lg w-24`}
+                ></div>
+                <div
+                  className={`h-10 ${COLORS.BACKGROUND.MUTED} rounded-lg w-28`}
+                ></div>
+                <div
+                  className={`h-10 ${COLORS.BACKGROUND.MUTED} rounded-lg w-20`}
+                ></div>
+              </div>
+              <div
+                className={`h-10 ${COLORS.BACKGROUND.MUTED} rounded-lg w-64`}
+              ></div>
+            </div>
+          </div>
+
+          {/* Diaries Grid Skeleton */}
+          <SkeletonGrid count={6} columns={3} />
+
+          {/* Loading indicator */}
+          <div className="flex flex-col items-center justify-center py-12 mt-8">
+            <Loading type="diaries" fullScreen={false} />
+          </div>
+        </div>
       </div>
     );
   }
@@ -171,29 +249,13 @@ export default function Diaries() {
     <>
       <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
         {/* Hero Section */}
-        <div className="relative h-64 md:h-80 overflow-hidden">
-          <div className="absolute inset-0">
-            <Image
-              src={getTravelImageUrl("travel diary journal", 1920, 400)}
-              alt="Travel Diary"
-              fill
-              className="object-cover"
-              priority
-              unoptimized
-            />
-            <div className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-80`}></div>
-          </div>
-          <div className="relative z-10 max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
-            <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-              Travel Diary 📔
-            </h1>
-            <p className="text-lg md:text-xl text-white/90 drop-shadow-md">
-              Capture and share your adventure memories
-            </p>
-          </div>
-        </div>
+        <Hero
+          title="Travel Diary 📔"
+          description="Capture and share your adventure memories"
+          imageKeyword="travel diary journal"
+        />
 
-        <div className="max-w-7xl mx-auto px-4 py-8 -mt-8 relative z-20">
+        <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -214,7 +276,9 @@ export default function Diaries() {
           </div>
 
           {/* Filter */}
-          <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 mb-8`}>
+          <div
+            className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 mb-8`}
+          >
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex gap-2">
                 <button
@@ -253,7 +317,9 @@ export default function Diaries() {
               </div>
               <div className="flex-1 max-w-md">
                 <div className="relative">
-                  <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${COLORS.TEXT.MUTED} w-4 h-4`} />
+                  <Search
+                    className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${COLORS.TEXT.MUTED} w-4 h-4`}
+                  />
                   <input
                     type="text"
                     placeholder="Search by title..."
@@ -269,9 +335,14 @@ export default function Diaries() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {diaries.length > 0 ? (
               diaries.map((diary) => {
-                const imageUrl = diary.main_image_url || 
-                  (diary.images && Array.isArray(diary.images) && diary.images.length > 0 
-                    ? (typeof diary.images[0] === 'string' ? diary.images[0] : diary.images[0].url)
+                const imageUrl =
+                  diary.main_image_url ||
+                  (diary.images &&
+                  Array.isArray(diary.images) &&
+                  diary.images.length > 0
+                    ? typeof diary.images[0] === "string"
+                      ? diary.images[0]
+                      : diary.images[0].url
                     : null) ||
                   getTravelImageUrl(diary.title, 400, 300);
 
@@ -294,7 +365,9 @@ export default function Diaries() {
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
                         {diary.is_public && (
-                          <span className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm`}>
+                          <span
+                            className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm`}
+                          >
                             Public
                           </span>
                         )}
@@ -309,7 +382,9 @@ export default function Diaries() {
                     <div className="p-4">
                       <div className="flex justify-between items-start mb-2">
                         <div className="flex-1">
-                          <h3 className={`font-bold text-lg ${COLORS.TEXT.DEFAULT} mb-1 line-clamp-1`}>
+                          <h3
+                            className={`font-bold text-lg ${COLORS.TEXT.DEFAULT} mb-1 line-clamp-1`}
+                          >
                             {diary.title}
                           </h3>
                           <p className={`text-xs ${COLORS.TEXT.MUTED} mt-1`}>
@@ -350,7 +425,9 @@ export default function Diaries() {
                         </div>
                       </div>
 
-                      <p className={`text-sm ${COLORS.TEXT.MUTED} mt-2 line-clamp-2`}>
+                      <p
+                        className={`text-sm ${COLORS.TEXT.MUTED} mt-2 line-clamp-2`}
+                      >
                         {diary.description}
                       </p>
                     </div>
@@ -359,7 +436,9 @@ export default function Diaries() {
               })
             ) : (
               <div className="col-span-full">
-                <div className={`text-center py-16 ${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border-2 border-dashed rounded-xl shadow-lg`}>
+                <div
+                  className={`text-center py-16 ${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border-2 border-dashed rounded-xl shadow-lg`}
+                >
                   <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden">
                     <Image
                       src={getTravelImageUrl("no diary entries", 200, 200)}
@@ -369,8 +448,12 @@ export default function Diaries() {
                       unoptimized
                     />
                   </div>
-                  <BookOpen className={`w-20 h-20 ${COLORS.TEXT.MUTED} mx-auto mb-4`} />
-                  <h3 className={`text-xl font-medium ${COLORS.TEXT.DEFAULT} mb-2`}>
+                  <BookOpen
+                    className={`w-20 h-20 ${COLORS.TEXT.MUTED} mx-auto mb-4`}
+                  />
+                  <h3
+                    className={`text-xl font-medium ${COLORS.TEXT.DEFAULT} mb-2`}
+                  >
                     No diaries found
                   </h3>
                   <p className={COLORS.TEXT.MUTED}>
@@ -399,8 +482,12 @@ export default function Diaries() {
                   className="fixed inset-0 bg-black/50 backdrop-blur-sm"
                   onClick={closeShareModal}
                 ></div>
-                <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl p-6 z-10 max-w-sm w-full shadow-2xl`}>
-                  <h2 className={`text-lg font-semibold mb-2 ${COLORS.TEXT.DEFAULT}`}>
+                <div
+                  className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl p-6 z-10 max-w-sm w-full shadow-2xl`}
+                >
+                  <h2
+                    className={`text-lg font-semibold mb-2 ${COLORS.TEXT.DEFAULT}`}
+                  >
                     Share "{shareDiary.title}"
                   </h2>
                   <p className={`text-sm ${COLORS.TEXT.MUTED} mb-4`}>

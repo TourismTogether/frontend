@@ -11,6 +11,7 @@ import {
   Gauge,
 } from "lucide-react";
 import { ITrip } from "./Trips";
+import { COLORS } from "../../constants/colors";
 
 interface TripCardProps {
   trip: ITrip;
@@ -73,7 +74,7 @@ export const TripCard: React.FC<TripCardProps> = ({
   const isDifficult = difficultLevel >= 3;
 
   return (
-    <div className="bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 border border-gray-200 hover:border-blue-300 block relative group overflow-hidden">
+    <div className={`${COLORS.BACKGROUND.CARD} rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 ${COLORS.BORDER.DEFAULT} hover:${COLORS.BORDER.PRIMARY} block relative group overflow-hidden`}>
       {/* Header Section with Title and Actions */}
       <div className="relative p-5 pb-4">
         {/* Action Buttons - Better positioned */}
@@ -84,10 +85,10 @@ export const TripCard: React.FC<TripCardProps> = ({
               e.stopPropagation();
               onEdit();
             }}
-            className="p-1.5 bg-white hover:bg-blue-50 text-gray-400 hover:text-blue-600 rounded-lg transition-all duration-200 shadow-sm border border-gray-200 hover:border-blue-300"
+            className={`p-1.5 ${COLORS.BACKGROUND.CARD} hover:bg-accent/10 ${COLORS.TEXT.MUTED} hover:text-accent rounded-lg transition-all duration-200 shadow-sm ${COLORS.BORDER.DEFAULT} hover:${COLORS.BORDER.PRIMARY}`}
             title="Edit Trip"
           >
-            <Edit className="w-4 h-4" />
+            <Edit className="w-4 h-4 transition-colors duration-200" />
           </button>
           <button
             onClick={(e) => {
@@ -95,25 +96,25 @@ export const TripCard: React.FC<TripCardProps> = ({
               e.stopPropagation();
               onDelete();
             }}
-            className="p-1.5 bg-white hover:bg-red-50 text-gray-400 hover:text-red-600 rounded-lg transition-all duration-200 shadow-sm border border-gray-200 hover:border-red-300"
+            className={`p-1.5 ${COLORS.BACKGROUND.CARD} hover:bg-destructive/10 ${COLORS.TEXT.MUTED} hover:text-destructive rounded-lg transition-all duration-200 shadow-sm ${COLORS.BORDER.DEFAULT} hover:border-destructive`}
             title="Delete Trip"
           >
-            <Trash2 className="w-4 h-4" />
+            <Trash2 className="w-4 h-4 transition-colors duration-200" />
           </button>
         </div>
 
         <Link href={`/trips/${trip.id}`} className="block">
           {/* Title and Status */}
           <div className="pr-20 mb-3">
-            <h3 className="text-lg font-bold text-gray-900 line-clamp-2 group-hover:text-blue-600 transition-colors leading-snug">
+            <h3 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} line-clamp-2 group-hover:${COLORS.TEXT.PRIMARY} transition-colors duration-200 leading-snug`}>
               {trip.title}
             </h3>
           </div>
 
           {/* Destination */}
           <div className="flex items-center gap-2 mb-3">
-            <MapPin className="w-4 h-4 text-blue-600 flex-shrink-0" />
-            <span className="text-sm font-medium text-gray-700 truncate">
+            <MapPin className={`w-4 h-4 ${COLORS.TEXT.PRIMARY} flex-shrink-0 transition-colors duration-200`} />
+            <span className={`text-sm font-medium ${COLORS.TEXT.MUTED} truncate transition-colors duration-200`}>
               {destinationName}
             </span>
             <span
@@ -134,40 +135,40 @@ export const TripCard: React.FC<TripCardProps> = ({
           <div className="grid grid-cols-2 gap-3">
             {/* Date */}
             <div className="flex items-center gap-2 text-sm">
-              <Calendar className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <span className="text-gray-700 truncate">
+              <Calendar className={`w-4 h-4 ${COLORS.TEXT.MUTED} flex-shrink-0 transition-colors duration-200`} />
+              <span className={`${COLORS.TEXT.MUTED} truncate transition-colors duration-200`}>
                 {startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {endDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
               </span>
             </div>
 
             {/* Duration */}
             <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-gray-400 flex-shrink-0" />
-              <span className="text-gray-700 font-medium">{diffDays} {diffDays === 1 ? 'day' : 'days'}</span>
+              <Clock className={`w-4 h-4 ${COLORS.TEXT.MUTED} flex-shrink-0 transition-colors duration-200`} />
+              <span className={`${COLORS.TEXT.MUTED} font-medium transition-colors duration-200`}>{diffDays} {diffDays === 1 ? 'day' : 'days'}</span>
             </div>
           </div>
 
           {/* Budget Section - Cleaner */}
           <div className="space-y-2">
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 flex items-center gap-1.5">
-                <DollarSign className="w-4 h-4 text-green-600" />
+              <span className={`${COLORS.TEXT.MUTED} flex items-center gap-1.5 transition-colors duration-200`}>
+                <DollarSign className={`w-4 h-4 ${COLORS.TEXT.PRIMARY} transition-colors duration-200`} />
                 Budget
               </span>
-              <span className="text-gray-900 font-semibold">
+              <span className={`${COLORS.TEXT.DEFAULT} font-semibold transition-colors duration-200`}>
                 {formatCurrency(trip.spent_amount, trip.currency)} / {formatCurrency(trip.total_budget, trip.currency)}
               </span>
             </div>
             
             {/* Progress Bar */}
-            <div className="w-full bg-gray-100 rounded-full h-2 overflow-hidden">
+            <div className={`w-full ${COLORS.BACKGROUND.MUTED} rounded-full h-2 overflow-hidden transition-colors duration-200`}>
               <div
                 className={`h-2 rounded-full transition-all duration-500 ${
                   percentageUsed > 100 
-                    ? "bg-red-500" 
+                    ? "bg-destructive" 
                     : percentageUsed > 80 
                     ? "bg-yellow-500" 
-                    : "bg-green-500"
+                    : COLORS.PRIMARY.DEFAULT
                 }`}
                 style={{
                   width: `${Math.min(percentageUsed, 100)}%`,
@@ -175,24 +176,24 @@ export const TripCard: React.FC<TripCardProps> = ({
               ></div>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className="text-gray-500">Progress</span>
-              <span className="font-semibold text-gray-700">{percentageUsed.toFixed(0)}%</span>
+              <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200`}>Progress</span>
+              <span className={`font-semibold ${COLORS.TEXT.MUTED} transition-colors duration-200`}>{percentageUsed.toFixed(0)}%</span>
             </div>
           </div>
 
           {/* Additional Info - Only if needed */}
           {(trip.departure || difficultLevel > 0) && (
-            <div className="flex items-center gap-4 pt-2 border-t border-gray-100 text-xs">
+            <div className={`flex items-center gap-4 pt-2 border-t ${COLORS.BORDER.LIGHT} text-xs transition-colors duration-200`}>
               {trip.departure && (
-                <div className="flex items-center gap-1.5 text-gray-600">
-                  <MapPin className="w-3.5 h-3.5 text-gray-400" />
+                <div className={`flex items-center gap-1.5 ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
+                  <MapPin className={`w-3.5 h-3.5 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
                   <span className="truncate">{trip.departure}</span>
                 </div>
               )}
               {difficultLevel > 0 && (
                 <div className="flex items-center gap-1.5">
-                  <Gauge className={`w-3.5 h-3.5 ${isDifficult ? "text-red-500" : "text-green-500"}`} />
-                  <span className={`font-medium ${isDifficult ? "text-red-600" : "text-green-600"}`}>
+                  <Gauge className={`w-3.5 h-3.5 transition-colors duration-200 ${isDifficult ? "text-destructive" : COLORS.TEXT.PRIMARY}`} />
+                  <span className={`font-medium transition-colors duration-200 ${isDifficult ? "text-destructive" : COLORS.TEXT.PRIMARY}`}>
                     {difficultLevel}/5
                   </span>
                 </div>

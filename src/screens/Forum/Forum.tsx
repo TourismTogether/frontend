@@ -19,6 +19,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { forumService } from "../../services/forumService";
 import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
+import Loading from "../../components/Loading/Loading";
+import Hero from "../../components/Hero/Hero";
 
 export interface ICategory {
   id: string;
@@ -293,14 +295,7 @@ export const Forum: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className={`flex justify-center items-center h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
-        <div className="text-center">
-          <div className={`animate-spin rounded-full h-16 w-16 border-4 ${COLORS.BORDER.DEFAULT} border-t-accent mx-auto mb-4`}></div>
-          <p className={`${COLORS.TEXT.MUTED} font-medium`}>Loading forum...</p>
-        </div>
-      </div>
-    );
+    return <Loading type="forum" />;
   }
 
   // Filter posts based on active tab, category
@@ -347,29 +342,13 @@ export const Forum: React.FC = () => {
   return (
     <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
       {/* Hero Section */}
-      <div className="relative h-64 md:h-80 overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src={getTravelImageUrl("community discussion forum", 1920, 400)}
-            alt="Forum"
-            fill
-            className="object-cover"
-            priority
-            unoptimized
-          />
-          <div className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-80`}></div>
-        </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-            Community Forum 💬
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 drop-shadow-md">
-            Share experiences, ask questions, and connect with travelers
-          </p>
-        </div>
-      </div>
+      <Hero
+        title="Community Forum 💬"
+        description="Share experiences, ask questions, and connect with travelers"
+        imageKeyword="community discussion forum"
+      />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 -mt-8 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
         {/* Header with New Post Button */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
           <div>

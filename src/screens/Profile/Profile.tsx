@@ -18,6 +18,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { EditProfileModal } from "./EditProfileModal";
 import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
+import Loading from "../../components/Loading/Loading";
+import Hero from "../../components/Hero/Hero";
 
 interface ProfileStats {
   totalRoutes: number;
@@ -141,64 +143,71 @@ export const Profile: React.FC = () => {
       let completedTripsCount = 0;
 
       try {
-        const tripsResponse = await fetch(
-          API_ENDPOINTS.USERS.BY_ID(Number(user.id)) + "/trips",
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            credentials: "include",
-          }
-        );
+        if (!user.id || user.id === "NaN" || user.id === "undefined") {
+          console.error("Invalid user.id:", user.id);
+          tripsData = [];
+          routesCount = 0;
+          completedTripsCount = 0;
+        } else {
+          const tripsResponse = await fetch(
+            API_ENDPOINTS.USERS.BY_ID(String(user.id)) + "/trips",
+            {
+              method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              credentials: "include",
+            }
+          );
 
-        if (tripsResponse.ok) {
-          const tripsResult: TripApiResponse = await tripsResponse.json();
+          if (tripsResponse.ok) {
+            const tripsResult: TripApiResponse = await tripsResponse.json();
 
-          if (Array.isArray(tripsResult)) {
-            tripsData = tripsResult;
-          } else if (tripsResult.data && Array.isArray(tripsResult.data)) {
-            tripsData = tripsResult.data;
-          } else if (tripsResult.data && !Array.isArray(tripsResult.data)) {
-            tripsData = [tripsResult.data];
-          }
+            if (Array.isArray(tripsResult)) {
+              tripsData = tripsResult;
+            } else if (tripsResult.data && Array.isArray(tripsResult.data)) {
+              tripsData = tripsResult.data;
+            } else if (tripsResult.data && !Array.isArray(tripsResult.data)) {
+              tripsData = [tripsResult.data];
+            }
 
-          completedTripsCount = tripsData.filter(
-            (trip) =>
-              trip.status === "completed" || trip.status === "Completed"
-          ).length;
+            completedTripsCount = tripsData.filter(
+              (trip) =>
+                trip.status === "completed" || trip.status === "Completed"
+            ).length;
 
-          const routesPromises = tripsData.map(async (trip) => {
-            if (!trip.id) return [];
-            try {
-              const routesResponse = await fetch(
-                API_ENDPOINTS.TRIPS.ROUTES(Number(trip.id)),
-                { credentials: "include" }
-              );
-              if (routesResponse.ok) {
-                const routesResult: RouteApiResponse = await routesResponse.json();
-                const routes = Array.isArray(routesResult)
-                  ? routesResult
-                  : Array.isArray(routesResult.data)
-                  ? routesResult.data
-                  : [];
-                return routes;
-              } else if (routesResponse.status === 404) {
+            const routesPromises = tripsData.map(async (trip) => {
+              if (!trip.id) return [];
+              try {
+                const routesResponse = await fetch(
+                  API_ENDPOINTS.TRIPS.ROUTES(String(trip.id)),
+                  { credentials: "include" }
+                );
+                if (routesResponse.ok) {
+                  const routesResult: RouteApiResponse = await routesResponse.json();
+                  const routes = Array.isArray(routesResult)
+                    ? routesResult
+                    : Array.isArray(routesResult.data)
+                    ? routesResult.data
+                    : [];
+                  return routes;
+                } else if (routesResponse.status === 404) {
+                  return [];
+                }
+                return [];
+              } catch (err) {
+                console.error(`Error fetching routes for trip ${trip.id}:`, err);
                 return [];
               }
-              return [];
-            } catch (err) {
-              console.error(`Error fetching routes for trip ${trip.id}:`, err);
-              return [];
-            }
-          });
+            });
 
-          const allRoutesArrays = await Promise.all(routesPromises);
-          routesCount = allRoutesArrays.flat().length;
-        } else if (tripsResponse.status === 404) {
-          tripsData = [];
-        } else {
-          console.warn(`Failed to fetch trips: ${tripsResponse.status}`);
+            const allRoutesArrays = await Promise.all(routesPromises);
+            routesCount = allRoutesArrays.flat().length;
+          } else if (tripsResponse.status === 404) {
+            tripsData = [];
+          } else {
+            console.warn(`Failed to fetch trips: ${tripsResponse.status}`);
+          }
         }
       } catch (err) {
         console.error("Error fetching trips:", err);
@@ -278,14 +287,7 @@ export const Profile: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className={`flex justify-center items-center h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
-        <div className="text-center">
-          <div className={`animate-spin rounded-full h-16 w-16 border-4 ${COLORS.BORDER.DEFAULT} border-t-accent mx-auto mb-4`}></div>
-          <p className={`${COLORS.TEXT.MUTED} font-medium`}>Loading profile...</p>
-        </div>
-      </div>
-    );
+    return <Loading type="profile" />;
   }
 
   const completionRate =
@@ -312,21 +314,13 @@ export const Profile: React.FC = () => {
     <>
       <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
         {/* Hero Section */}
-        <div className="relative h-64 md:h-80 overflow-hidden">
-          <div className="absolute inset-0">
-            <Image
-              src={getTravelImageUrl(displayName, 1920, 400)}
-              alt="Profile"
-              fill
-              className="object-cover"
-              priority
-              unoptimized
-            />
-            <div className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-80`}></div>
-          </div>
-        </div>
+        <Hero
+          title={`${displayName}'s Profile`}
+          description={user?.email || ""}
+          imageKeyword={displayName}
+        />
 
-        <div className="max-w-7xl mx-auto px-4 py-8 -mt-20 relative z-20">
+        <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
           {/* Profile Header Card */}
           <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-3xl shadow-xl overflow-hidden mb-8 relative`}>
             <div className={`h-40 ${GRADIENTS.PRIMARY} relative`}>

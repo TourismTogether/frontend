@@ -16,6 +16,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 import { ICost, IRoute } from "@/lib/type/interface";
+import { COLORS } from "@/constants/colors";
 
 // Hàm tiện ích formatCurrency
 const formatCurrencyLocal = (amount: number) => {
@@ -68,8 +69,8 @@ const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit, initialDat
   };
 
   return (
-    <div className="bg-white p-4 rounded-lg shadow-inner border border-gray-100 mt-2">
-      <h4 className="text-sm font-bold mb-3 text-trip">
+    <div className={`${COLORS.BACKGROUND.CARD} p-4 rounded-lg shadow-inner ${COLORS.BORDER.DEFAULT} border mt-2 transition-colors duration-200`}>
+      <h4 className={`text-sm font-bold mb-3 ${COLORS.TEXT.PRIMARY} transition-colors duration-200`}>
         {initialData ? "Sửa Chi Phí" : "Thêm Chi Phí"}
       </h4>
       <form onSubmit={handleSubmit} className="space-y-2">
@@ -79,19 +80,19 @@ const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit, initialDat
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Tiêu đề (vd: Vé vào cửa, Bữa trưa)"
           required
-          className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-trip focus:border-transparent"
+          className={`w-full rounded-md ${COLORS.BORDER.DEFAULT} border ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT} p-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors duration-200`}
         />
         <input
           type="text"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           placeholder="Mô tả chi tiết (tùy chọn)"
-          className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-trip focus:border-transparent"
+          className={`w-full rounded-md ${COLORS.BORDER.DEFAULT} border ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT} p-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors duration-200`}
         />
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="w-full rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-trip focus:border-transparent"
+          className={`w-full rounded-md ${COLORS.BORDER.DEFAULT} border ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT} p-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors duration-200`}
         >
           <option value="transport">Vận chuyển</option>
           <option value="accommodation">Chỗ ở</option>
@@ -109,11 +110,11 @@ const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit, initialDat
             min="0"
             step="1000"
             placeholder="Số tiền (VND)"
-            className="flex-1 rounded-md border border-gray-300 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-trip focus:border-transparent"
+            className={`flex-1 rounded-md ${COLORS.BORDER.DEFAULT} border ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT} p-2 text-sm focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-colors duration-200`}
           />
           <button
             type="submit"
-            className="flex items-center text-xs px-3 py-2 bg-trip text-white rounded-md hover:bg-trip-dark transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            className={`flex items-center text-xs px-3 py-2 ${COLORS.PRIMARY.DEFAULT} text-white rounded-md ${COLORS.PRIMARY.HOVER} transition-colors disabled:opacity-50 disabled:cursor-not-allowed`}
             disabled={!title.trim() || !amount || amount <= 0}
           >
             <Check className="w-4 h-4 mr-1" />
@@ -122,7 +123,7 @@ const AddCostForm: React.FC<AddCostFormProps> = ({ onClose, onSubmit, initialDat
           <button
             type="button"
             onClick={onClose}
-            className="flex items-center text-xs px-3 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors"
+            className={`flex items-center text-xs px-3 py-2 ${COLORS.BORDER.DEFAULT} border ${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.DEFAULT} rounded-md ${COLORS.BACKGROUND.MUTED_HOVER_OPACITY} transition-colors duration-200`}
           >
             <X className="w-4 h-4" />
           </button>
@@ -189,28 +190,28 @@ export const RouteCard: React.FC<RouteCardProps> = ({
   };
 
   return (
-    <div className="bg-card p-5 rounded-xl shadow-md border border-border transition-shadow hover:shadow-lg relative">
+    <div className={`${COLORS.BACKGROUND.CARD} p-5 rounded-xl shadow-md ${COLORS.BORDER.DEFAULT} border transition-all hover:shadow-lg relative duration-200`}>
       {/* Delete Confirmation Overlay */}
       {showDeleteConfirm && (
-        <div className="absolute inset-0 bg-red-50 border-2 border-red-300 rounded-xl flex items-center justify-center z-20 backdrop-blur-sm">
+        <div className={`absolute inset-0 ${COLORS.BACKGROUND.DESTRUCTIVE}/10 border-2 ${COLORS.BORDER.DESTRUCTIVE} rounded-xl flex items-center justify-center z-20 backdrop-blur-sm transition-colors duration-200`}>
           <div className="text-center p-4">
-            <AlertCircle className="h-8 w-8 text-red-600 mx-auto mb-2" />
-            <p className="text-sm font-semibold text-red-900 mb-1">
+            <AlertCircle className={`h-8 w-8 ${COLORS.TEXT.DESTRUCTIVE} mx-auto mb-2 transition-colors duration-200`} />
+            <p className={`text-sm font-semibold ${COLORS.TEXT.DESTRUCTIVE} mb-1 transition-colors duration-200`}>
               Delete this route?
             </p>
-            <p className="text-xs text-red-700 mb-3">
+            <p className={`text-xs ${COLORS.TEXT.DESTRUCTIVE}/80 mb-3 transition-colors duration-200`}>
               This will also delete all associated costs.
             </p>
             <div className="flex gap-2 justify-center">
               <button
                 onClick={handleDeleteClick}
-                className="px-4 py-1.5 bg-red-600 text-white text-xs font-semibold rounded-lg hover:bg-red-700 transition-colors"
+                className={`px-4 py-1.5 ${COLORS.BACKGROUND.DESTRUCTIVE} text-white text-xs font-semibold rounded-lg ${COLORS.BACKGROUND.DESTRUCTIVE}/90 hover:opacity-90 transition-colors duration-200`}
               >
                 Confirm Delete
               </button>
               <button
                 onClick={() => setShowDeleteConfirm(false)}
-                className="px-4 py-1.5 bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-300 transition-colors"
+                className={`px-4 py-1.5 ${COLORS.BACKGROUND.MUTED} ${COLORS.TEXT.DEFAULT} text-xs font-semibold rounded-lg ${COLORS.BACKGROUND.MUTED_HOVER_OPACITY} transition-colors duration-200`}
               >
                 Cancel
               </button>
@@ -220,33 +221,33 @@ export const RouteCard: React.FC<RouteCardProps> = ({
       )}
 
       {/* Header và Title */}
-      <div className="flex justify-between items-start mb-2 border-b pb-2 border-dashed">
+      <div className={`flex justify-between items-start mb-2 ${COLORS.BORDER.DEFAULT} border-b pb-2 border-dashed transition-colors duration-200`}>
         <div className="flex-1 flex items-center gap-2">
           <button
             onClick={() => setIsCardOpen(!isCardOpen)}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
+            className={`p-1 ${COLORS.BACKGROUND.MUTED_HOVER} rounded transition-colors duration-200`}
             title={isCardOpen ? "Thu gọn" : "Mở rộng"}
             aria-label={isCardOpen ? "Thu gọn" : "Mở rộng"}
           >
             {isCardOpen ? (
-              <ChevronUp className="w-4 h-4 text-gray-500" />
+              <ChevronUp className={`w-4 h-4 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
             ) : (
-              <ChevronDown className="w-4 h-4 text-gray-500" />
+              <ChevronDown className={`w-4 h-4 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
             )}
           </button>
-          <h3 className="text-xl font-bold text-foreground">
-            <Route className="inline w-5 h-5 mr-2 text-traveller" />
+          <h3 className={`text-xl font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
+            <Route className={`inline w-5 h-5 mr-2 ${COLORS.ENTITY.TRAVELLER}`} />
             {route.title}
           </h3>
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-xs font-semibold px-2 py-0.5 rounded-full bg-trip/10 text-trip">
+          <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${COLORS.ENTITY.TRIP}/10 ${COLORS.ENTITY.TRIP} transition-colors duration-200`}>
             Stop {(route.index ?? 0) + 1}
           </span>
           {onEditRoute && route.id && (
             <button
               onClick={() => onEditRoute(route)}
-              className="p-1.5 text-blue-500 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
+              className={`p-1.5 ${COLORS.TEXT.PRIMARY} ${COLORS.TEXT.PRIMARY_HOVER} ${COLORS.BACKGROUND.MUTED_HOVER} rounded-lg transition-colors duration-200`}
               title="Edit route"
               aria-label="Edit route"
             >
@@ -256,7 +257,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
           {onDeleteRoute && route.id && (
             <button
               onClick={handleDeleteClick}
-              className="p-1.5 text-red-500 hover:text-red-700 hover:bg-red-50 rounded-lg transition-colors"
+              className={`p-1.5 ${COLORS.TEXT.DESTRUCTIVE} ${COLORS.DESTRUCTIVE.TEXT_HOVER} ${COLORS.DESTRUCTIVE.BACKGROUND_HOVER} rounded-lg transition-colors duration-200`}
               title="Delete route"
               aria-label="Delete route"
             >
@@ -269,11 +270,11 @@ export const RouteCard: React.FC<RouteCardProps> = ({
       {/* Collapsible Content */}
       {isCardOpen && (
         <>
-          <p className="text-sm text-muted-foreground mb-3">{route.description}</p>
+          <p className={`text-sm ${COLORS.TEXT.MUTED} mb-3 transition-colors duration-200`}>{route.description}</p>
 
           {/* Tọa độ */}
-          <div className="text-sm text-muted-foreground mb-3 p-3 bg-muted rounded-md border border-border">
-            <h4 className="font-semibold text-foreground mb-1 flex items-center">
+          <div className={`text-sm ${COLORS.TEXT.MUTED} mb-3 p-3 ${COLORS.BACKGROUND.MUTED} rounded-md ${COLORS.BORDER.DEFAULT} border transition-colors duration-200`}>
+            <h4 className={`font-semibold ${COLORS.TEXT.DEFAULT} mb-1 flex items-center transition-colors duration-200`}>
               <Navigation className="w-4 h-4 mr-1" /> Tọa độ:
             </h4>
             <p>
@@ -285,28 +286,28 @@ export const RouteCard: React.FC<RouteCardProps> = ({
           </div>
 
           {/* Hoạt động */}
-          <h4 className="font-semibold text-sm text-foreground/80 mb-1">
+          <h4 className={`font-semibold text-sm ${COLORS.TEXT.MUTED} mb-1 transition-colors duration-200`}>
             Hoạt động:
           </h4>
-          <ul className="list-disc list-inside text-muted-foreground text-sm space-y-1 ml-4 mb-4">
+          <ul className={`list-disc list-inside ${COLORS.TEXT.MUTED} text-sm space-y-1 ml-4 mb-4 transition-colors duration-200`}>
             {route.details.map((detail: string, i: number) => (
               <li key={i}>{detail}</li>
             ))}
           </ul>
 
           {/* Chi phí (Cost Management) */}
-          <div className="border-t pt-4 mt-4">
+          <div className={`${COLORS.BORDER.DEFAULT} border-t pt-4 mt-4 transition-colors duration-200`}>
         <div className="flex justify-between items-center mb-3">
-          <h4 className="font-bold text-base text-foreground flex items-center">
-            <DollarSign className="w-4 h-4 mr-1 text-red-500" /> Tổng Chi phí
+          <h4 className={`font-bold text-base ${COLORS.TEXT.DEFAULT} flex items-center transition-colors duration-200`}>
+            <DollarSign className={`w-4 h-4 mr-1 ${COLORS.DESTRUCTIVE.TEXT} transition-colors duration-200`} /> Tổng Chi phí
             Chặng:{" "}
-            <span className="ml-2 text-red-600">
+            <span className={`ml-2 ${COLORS.DESTRUCTIVE.TEXT} transition-colors duration-200`}>
               {formatCurrencyLocal(totalRouteCost)}
             </span>
           </h4>
           <button
             onClick={() => setIsAddingCost(!isAddingCost)}
-            className="flex items-center text-xs text-red-500 hover:text-red-700 transition-colors font-medium border border-red-500 rounded-full px-2 py-1"
+            className={`flex items-center text-xs ${COLORS.DESTRUCTIVE.TEXT} ${COLORS.DESTRUCTIVE.TEXT_HOVER} transition-colors font-medium ${COLORS.DESTRUCTIVE.BORDER} border rounded-full px-2 py-1 transition-colors duration-200`}
           >
             <PlusCircle className="w-3 h-3 mr-1" />{" "}
             {isAddingCost ? "Đóng" : "Thêm Cost"}
@@ -349,12 +350,12 @@ export const RouteCard: React.FC<RouteCardProps> = ({
         {/* Danh sách Cost */}
         <div className="space-y-2">
           {route.costs.length === 0 ? (
-            <p className="text-xs text-muted-foreground italic p-2 bg-gray-50 rounded-md">
+            <p className={`text-xs ${COLORS.TEXT.MUTED} italic p-2 ${COLORS.BACKGROUND.MUTED} rounded-md transition-colors duration-200`}>
               Chưa có chi phí nào được ghi nhận cho chặng này.
             </p>
           ) : (
-            <div className="text-xs border rounded-lg overflow-hidden">
-              <div className="grid grid-cols-5 font-semibold bg-gray-100 p-2 text-foreground/80 border-b">
+            <div className={`text-xs ${COLORS.BORDER.DEFAULT} border rounded-lg overflow-hidden transition-colors duration-200`}>
+              <div className={`grid grid-cols-5 font-semibold ${COLORS.BACKGROUND.MUTED} p-2 ${COLORS.TEXT.MUTED} ${COLORS.BORDER.DEFAULT} border-b transition-colors duration-200`}>
                 <span className="col-span-2">Mô tả</span>
                 <span className="text-right">Số tiền</span>
                 <span className="text-center">Sửa</span>
@@ -363,12 +364,12 @@ export const RouteCard: React.FC<RouteCardProps> = ({
               {route.costs.map((cost) => (
                 <div
                   key={cost.id}
-                  className="grid grid-cols-5 items-center p-2 hover:bg-gray-50 border-b last:border-b-0"
+                  className={`grid grid-cols-5 items-center p-2 hover:${COLORS.BACKGROUND.MUTED} ${COLORS.BORDER.DEFAULT} border-b last:border-b-0 transition-colors duration-200`}
                 >
-                  <span className="col-span-2 truncate">
+                  <span className={`col-span-2 truncate ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
                     {cost.description}
                   </span>
-                  <span className="text-right font-medium text-destructive">
+                  <span className={`text-right font-medium ${COLORS.TEXT.DESTRUCTIVE} transition-colors duration-200`}>
                     {formatCurrencyLocal(cost.amount)}
                   </span>
                   <div className="flex justify-center">
@@ -378,7 +379,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
                           setEditingCostId(cost.id || null);
                           setIsAddingCost(false);
                         }}
-                        className="text-blue-400 hover:text-blue-600 transition-colors"
+                        className={`${COLORS.TEXT.PRIMARY} ${COLORS.TEXT.PRIMARY_HOVER} transition-colors duration-200`}
                         aria-label={`Sửa chi phí ${cost.description}`}
                       >
                         <Pencil className="w-3 h-3" />
@@ -390,7 +391,7 @@ export const RouteCard: React.FC<RouteCardProps> = ({
                       onClick={() =>
                         cost.id && route.id && onDeleteCost(route.id, cost.id)
                       }
-                      className="text-red-400 hover:text-red-600 transition-colors"
+                      className={`${COLORS.TEXT.DESTRUCTIVE} ${COLORS.DESTRUCTIVE.TEXT_HOVER} transition-colors duration-200`}
                       aria-label={`Xóa chi phí ${cost.description}`}
                     >
                       <Trash2 className="w-3 h-3" />

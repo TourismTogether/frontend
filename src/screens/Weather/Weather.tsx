@@ -26,6 +26,8 @@ import dynamic from "next/dynamic";
 import { useAuth } from "../../contexts/AuthContext";
 import { getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
+import Loading from "../../components/Loading/Loading";
+import Hero from "../../components/Hero/Hero";
 
 // Dynamically import map components to avoid SSR issues
 const MapContainer = dynamic(
@@ -354,14 +356,7 @@ export const Weather: React.FC = () => {
   }, [location, fetchWeather]);
 
   if (loading) {
-    return (
-      <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} flex items-center justify-center`}>
-        <div className="text-center">
-          <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${COLORS.BORDER.PRIMARY} mx-auto mb-4`}></div>
-          <p className={COLORS.TEXT.MUTED}>Loading weather information...</p>
-        </div>
-      </div>
-    );
+    return <Loading type="default" message="Loading weather information..." />;
   }
 
   if (error || !weather) {
@@ -447,27 +442,12 @@ export const Weather: React.FC = () => {
   return (
     <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} py-8 px-4`}>
       {/* Hero Section */}
-      <div className="relative h-48 md:h-64 overflow-hidden mb-8">
-        <div className="absolute inset-0">
-          <Image
-            src={getTravelImageUrl("weather forecast sky", 1920, 300)}
-            alt="Weather"
-            fill
-            className="object-cover"
-            priority
-            unoptimized
-          />
-          <div className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-80`}></div>
-        </div>
-        <div className="relative z-10 max-w-4xl mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-            Weather Forecast 🌤️
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 drop-shadow-md">
-            Plan your trips with accurate weather information
-          </p>
-        </div>
-      </div>
+      <Hero
+        title="Weather Forecast 🌤️"
+        description="Plan your trips with accurate weather information"
+        imageKeyword="weather forecast sky"
+        height="small"
+      />
 
       <div className="max-w-4xl mx-auto">
         {/* Back Button */}

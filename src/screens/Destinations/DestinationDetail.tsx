@@ -18,6 +18,9 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import CreateReviewModal from "./CreateReviewModal";
+import { COLORS } from "../../constants/colors";
+import { API_ENDPOINTS } from "../../constants/api";
+import Loading from "../../components/Loading/Loading";
 
 // Giao diện IDestinationDetail (Giữ nguyên)
 interface IDestinationDetail {
@@ -65,11 +68,18 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
   // Define fetchAssessmentStats before using it in useEffect
   const fetchAssessmentStats = useCallback(async () => {
     try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-      if (!apiUrl || !destinationId) return;
+      if (
+        !destinationId ||
+        destinationId === "NaN" ||
+        destinationId === "undefined"
+      ) {
+        console.error("Invalid destinationId for assessment:", destinationId);
+        return;
+      }
 
       const response = await fetch(
-        `${apiUrl}/api/assess-destination/destination/${destinationId}`
+        API_ENDPOINTS.REVIEWS.BY_DESTINATION(String(destinationId)),
+        { credentials: "include" }
       );
 
       if (response.ok) {
@@ -150,9 +160,22 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
         return;
       }
 
+      if (
+        !destinationId ||
+        destinationId === "NaN" ||
+        destinationId === "undefined"
+      ) {
+        console.error("Invalid destinationId:", destinationId);
+        setLoading(false);
+        setDestination(null);
+        return;
+      }
+
       setLoading(true);
 
-      const response = await fetch(`${apiUrl}/destinations/${destinationId}`);
+      const response = await fetch(
+        `${apiUrl}/destinations/${String(destinationId)}`
+      );
 
       if (!response.ok) {
         throw new Error(
@@ -180,29 +203,30 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-4 border-gray-200 border-t-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">Loading destination...</p>
-        </div>
-      </div>
-    );
+    return <Loading type="destinations" message="Loading destination..." />;
   }
 
   if (!destination) {
     return (
-      <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50/50 flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-2xl shadow-xl border border-gray-200">
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">
+      <div
+        className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} flex items-center justify-center transition-colors duration-300`}
+      >
+        <div
+          className={`text-center p-8 ${COLORS.BACKGROUND.CARD} rounded-2xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300`}
+        >
+          <h2
+            className={`text-3xl font-bold ${COLORS.TEXT.DEFAULT} mb-4 transition-colors duration-200`}
+          >
             Destination not found
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p
+            className={`${COLORS.TEXT.MUTED} mb-6 transition-colors duration-200`}
+          >
             The destination you're looking for doesn't exist.
           </p>
           <button
             onClick={() => router.push("/destinations")}
-            className="bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl"
+            className={`${COLORS.PRIMARY.DEFAULT} ${COLORS.PRIMARY.HOVER} px-6 py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl`}
           >
             Go back to destinations
           </button>
@@ -273,15 +297,17 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
   const categoryColor = getCategoryColor(destination.category || "");
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-slate-50 via-blue-50/30 to-indigo-50/50">
+    <div
+      className={`min-h-screen bg-background transition-colors duration-300`}
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         {/* Header */}
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-gray-600 hover:text-gray-900 transition-colors font-semibold group"
+            className={`flex items-center ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} transition-all duration-200 font-semibold group`}
           >
-            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
+            <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
             <span>Back to Destinations</span>
           </button>
         </div>
@@ -291,8 +317,12 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-8">
             {/* Image Gallery */}
-            <div className="bg-white rounded-3xl overflow-hidden shadow-2xl border border-gray-100 relative group">
-              <div className="h-[450px] md:h-[600px] relative bg-linear-to-br from-gray-200 to-gray-300">
+            <div
+              className={`${COLORS.BACKGROUND.CARD} rounded-3xl overflow-hidden shadow-2xl ${COLORS.BORDER.DEFAULT} relative group transition-all duration-300`}
+            >
+              <div
+                className={`h-[450px] md:h-[600px] relative ${COLORS.BACKGROUND.MUTED} transition-colors duration-300`}
+              >
                 {hasImages ? (
                   <>
                     <img
@@ -310,10 +340,10 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                               prev > 0 ? prev - 1 : images.length - 1
                             )
                           }
-                          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900 p-3 rounded-2xl shadow-xl transition-all hover:scale-110 hidden md:flex"
+                          className={`absolute left-4 top-1/2 -translate-y-1/2 ${COLORS.BACKGROUND.CARD}/90 hover:${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} p-3 rounded-2xl shadow-xl transition-all duration-200 hover:scale-110 hidden md:flex`}
                           aria-label="Previous image"
                         >
-                          <ChevronLeft className="w-6 h-6" />
+                          <ChevronLeft className="w-6 h-6 transition-colors duration-200" />
                         </button>
                         <button
                           onClick={() =>
@@ -321,7 +351,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                               prev < images.length - 1 ? prev + 1 : 0
                             )
                           }
-                          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/90 hover:bg-white text-gray-900 p-3 rounded-2xl shadow-xl transition-all hover:scale-110 hidden md:flex"
+                          className={`absolute right-4 top-1/2 -translate-y-1/2 ${COLORS.BACKGROUND.CARD}/90 hover:${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} p-3 rounded-2xl shadow-xl transition-all duration-200 hover:scale-110 hidden md:flex`}
                           aria-label="Next image"
                         >
                           <ChevronRight className="w-6 h-6" />
@@ -336,8 +366,8 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                               onClick={() => setCurrentImageIndex(index)}
                               className={`rounded-full transition-all duration-300 ${
                                 index === currentImageIndex
-                                  ? "bg-white w-8 h-2.5"
-                                  : "bg-white/50 w-2.5 h-2.5 hover:bg-white/70"
+                                  ? `${COLORS.BACKGROUND.CARD} w-8 h-2.5`
+                                  : `${COLORS.BACKGROUND.CARD}/50 w-2.5 h-2.5 hover:${COLORS.BACKGROUND.CARD}/70`
                               }`}
                               aria-label={`View image ${index + 1}`}
                             />
@@ -347,24 +377,36 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                     )}
                   </>
                 ) : (
-                  <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-linear-to-br from-gray-100 to-gray-200">
-                    <ImageIcon className="w-24 h-24 mb-4 opacity-50" />
-                    <p className="text-lg font-medium">No images available</p>
+                  <div
+                    className={`w-full h-full flex flex-col items-center justify-center ${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.MUTED} transition-colors duration-300`}
+                  >
+                    <ImageIcon className="w-24 h-24 mb-4 opacity-50 transition-colors duration-200" />
+                    <p className="text-lg font-medium transition-colors duration-200">
+                      No images available
+                    </p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Description */}
-            <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-xl border border-gray-100">
+            <div
+              className={`${COLORS.BACKGROUND.CARD} p-8 sm:p-10 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300`}
+            >
               <div className="flex items-center gap-4 mb-8">
-                <div className="w-1.5 h-10 bg-linear-to-b from-blue-600 to-indigo-600 rounded-full"></div>
-                <h2 className="text-3xl font-black text-gray-900 tracking-tight">
+                <div
+                  className={`w-1.5 h-10 ${COLORS.PRIMARY.DEFAULT} rounded-full transition-colors duration-200`}
+                ></div>
+                <h2
+                  className={`text-3xl font-black ${COLORS.TEXT.DEFAULT} tracking-tight transition-colors duration-200`}
+                >
                   About {destination.name}
                 </h2>
               </div>
               <div className="prose max-w-none">
-                <p className="text-gray-700 leading-relaxed whitespace-pre-line text-lg font-medium">
+                <p
+                  className={`${COLORS.TEXT.MUTED} leading-relaxed whitespace-pre-line text-lg font-medium transition-colors duration-200`}
+                >
                   {destination.description ||
                     "No description available. Please check back later or contribute to expand this section."}
                 </p>
@@ -375,11 +417,13 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
           {/* Right Column */}
           <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-8">
             {/* Title & Rating */}
-            <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
+            <div
+              className={`${COLORS.BACKGROUND.CARD} p-8 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300`}
+            >
               <div className="flex flex-wrap gap-2 mb-6">
                 {destination.category && (
                   <span
-                    className="text-xs px-4 py-2 rounded-xl font-black uppercase tracking-wider border-2"
+                    className="text-xs px-4 py-2 rounded-xl font-black uppercase tracking-wider border-2 transition-colors duration-200"
                     style={{
                       backgroundColor: `${categoryColor}10`,
                       borderColor: categoryColor,
@@ -390,19 +434,27 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                   </span>
                 )}
                 {destination.best_season && (
-                  <span className="text-xs px-4 py-2 bg-amber-50 text-amber-700 rounded-xl font-bold border-2 border-amber-100 flex items-center gap-1.5">
-                    <Sun className="w-4 h-4" />
+                  <span
+                    className={`text-xs px-4 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-xl font-bold border-2 border-amber-100 dark:border-amber-800 flex items-center gap-1.5 transition-colors duration-200`}
+                  >
+                    <Sun className="w-4 h-4 transition-colors duration-200" />
                     {destination.best_season}
                   </span>
                 )}
               </div>
 
-              <h1 className="text-3xl sm:text-4xl font-black text-gray-900 mb-4 leading-[1.1] tracking-tight">
+              <h1
+                className={`text-3xl sm:text-4xl font-black ${COLORS.TEXT.DEFAULT} mb-4 leading-[1.1] tracking-tight transition-colors duration-200`}
+              >
                 {destination.name}
               </h1>
 
-              <div className="flex items-center gap-2 text-gray-500 mb-8 font-semibold bg-gray-50 px-4 py-3 rounded-xl">
-                <MapPin className="w-5 h-5 text-blue-600" />
+              <div
+                className={`flex items-center gap-2 ${COLORS.TEXT.MUTED} mb-8 font-semibold ${COLORS.BACKGROUND.MUTED} px-4 py-3 rounded-xl transition-colors duration-200`}
+              >
+                <MapPin
+                  className={`w-5 h-5 ${COLORS.TEXT.PRIMARY} transition-colors duration-200`}
+                />
                 <span>
                   {destination.country ||
                     destination.region_name ||
@@ -410,16 +462,22 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                 </span>
               </div>
 
-              <div className="bg-linear-to-br from-amber-50 via-amber-100 to-orange-50 rounded-2xl p-6 border border-amber-100 shadow-inner">
+              <div className="bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-6 border border-amber-100 dark:border-amber-800 shadow-inner transition-colors duration-300">
                 <div className="flex items-center gap-5">
-                  <div className="flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg ring-4 ring-amber-100">
-                    <Star className="w-8 h-8 text-amber-500 fill-amber-500" />
+                  <div
+                    className={`flex items-center justify-center w-16 h-16 ${COLORS.BACKGROUND.CARD} rounded-2xl shadow-lg ring-4 ring-amber-100 dark:ring-amber-800 transition-all duration-200`}
+                  >
+                    <Star className="w-8 h-8 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400 transition-colors duration-200" />
                   </div>
                   <div>
-                    <div className="text-4xl font-black text-gray-900 leading-none mb-1">
+                    <div
+                      className={`text-4xl font-black ${COLORS.TEXT.DEFAULT} leading-none mb-1 transition-colors duration-200`}
+                    >
                       {currentRating}
                     </div>
-                    <div className="text-xs text-gray-600 font-bold uppercase tracking-tight opacity-70">
+                    <div
+                      className={`text-xs ${COLORS.TEXT.MUTED} font-bold uppercase tracking-tight opacity-70 transition-colors duration-200`}
+                    >
                       {totalReviews > 0
                         ? `${totalReviews} Reviews`
                         : "No Reviews"}
@@ -434,9 +492,9 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
               {user && (
                 <button
                   onClick={() => setShowReviewModal(true)}
-                  className="w-full flex items-center justify-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-2xl py-4 font-black transition-all shadow-lg hover:shadow-blue-200 hover:scale-[1.02]"
+                  className={`w-full flex items-center justify-center gap-2 ${COLORS.PRIMARY.DEFAULT} ${COLORS.PRIMARY.HOVER} rounded-2xl py-4 font-black transition-all duration-200 shadow-lg hover:scale-[1.02]`}
                 >
-                  <MessageSquare className="w-5 h-5" />
+                  <MessageSquare className="w-5 h-5 transition-colors duration-200" />
                   <span>Write a Review</span>
                 </button>
               )}
@@ -444,16 +502,22 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                 onClick={() =>
                   router.push(`/destinations/${destinationId}/reviews`)
                 }
-                className="w-full bg-white border-2 border-gray-100 text-gray-700 hover:bg-gray-50 transition-all rounded-2xl py-4 font-black shadow-sm"
+                className={`w-full ${COLORS.BACKGROUND.CARD} border-2 ${COLORS.BORDER.DEFAULT} ${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.MUTED} transition-all duration-200 rounded-2xl py-4 font-black shadow-sm`}
               >
                 View All Reviews ({totalReviews})
               </button>
             </div>
 
             {/* Quick Facts */}
-            <div className="bg-white p-8 rounded-3xl shadow-xl border border-gray-100">
-              <h3 className="text-xl font-black text-gray-900 mb-6 flex items-center">
-                <TrendingUp className="w-6 h-6 mr-3 text-blue-600" />
+            <div
+              className={`${COLORS.BACKGROUND.CARD} p-8 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300`}
+            >
+              <h3
+                className={`text-xl font-black ${COLORS.TEXT.DEFAULT} mb-6 flex items-center transition-colors duration-200`}
+              >
+                <TrendingUp
+                  className={`w-6 h-6 mr-3 ${COLORS.TEXT.PRIMARY} transition-colors duration-200`}
+                />
                 Quick Facts
               </h3>
               <dl className="space-y-6">
@@ -489,16 +553,18 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
             </div>
 
             {/* Share */}
-            <div className="bg-linear-to-br from-slate-900 to-slate-800 p-8 rounded-3xl shadow-2xl text-white">
+            <div
+              className={`bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-8 rounded-3xl shadow-2xl text-white transition-colors duration-300`}
+            >
               <div className="flex items-center gap-3 mb-6">
-                <Share2 className="w-6 h-6 text-blue-400" />
-                <h3 className="text-xl font-black tracking-tight">
+                <Share2 className="w-6 h-6 text-blue-400 transition-colors duration-200" />
+                <h3 className="text-xl font-black tracking-tight transition-colors duration-200">
                   Share This Place
                 </h3>
               </div>
               <button
                 onClick={handleShare}
-                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all border border-white/10 font-black shadow-lg backdrop-blur-md"
+                className="w-full flex items-center justify-center gap-3 px-6 py-4 bg-white/10 hover:bg-white/20 text-white rounded-2xl transition-all duration-200 border border-white/10 font-black shadow-lg backdrop-blur-md"
               >
                 <Share2 className="w-5 h-5" />
                 <span>{isCopied ? "LINK COPIED!" : "COPY LINK"}</span>
@@ -556,10 +622,14 @@ const FactItem: React.FC<FactItemProps> = ({
         <Icon className={`w-6 h-6 ${color}`} />
       </div>
       <div>
-        <dt className="text-[10px] font-black text-gray-400 uppercase tracking-[0.15em] mb-0.5">
+        <dt
+          className={`text-[10px] font-black ${COLORS.TEXT.MUTED} uppercase tracking-[0.15em] mb-0.5 transition-colors duration-200`}
+        >
           {title}
         </dt>
-        <dd className="text-base font-black text-gray-900 leading-tight">
+        <dd
+          className={`text-base font-black ${COLORS.TEXT.DEFAULT} leading-tight transition-colors duration-200`}
+        >
           {value || "Unknown"}
         </dd>
       </div>

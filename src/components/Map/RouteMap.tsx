@@ -13,6 +13,7 @@ import {
 import { ChevronDown, ChevronUp } from "lucide-react";
 import L from "leaflet";
 import { IRoute } from "@/lib/type/interface";
+import { COLORS } from "@/constants/colors";
 
 // Fix for default marker icon in Next.js
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -416,7 +417,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
 
   return (
     <div
-      className="w-full rounded-lg overflow-hidden border-2 border-gray-200 shadow-lg relative"
+      className={`w-full rounded-lg overflow-hidden border-2 ${COLORS.BORDER.DEFAULT} shadow-lg relative transition-colors duration-200`}
       style={{ height }}
     >
       <MapContainer
@@ -510,40 +511,40 @@ export const RouteMap: React.FC<RouteMapProps> = ({
                   }
                 >
                   <Popup className="route-popup">
-                    <div className="p-3 min-w-[200px]">
+                    <div className={`p-3 min-w-[200px] ${COLORS.BACKGROUND.CARD} transition-colors duration-200`}>
                       <div className="flex items-center gap-2 mb-2">
                         <div
                           className="w-4 h-4 rounded-full"
                           style={{ backgroundColor: color }}
                         ></div>
-                        <p className="font-bold text-base text-gray-900">
+                        <p className={`font-bold text-base ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
                           Route {routeNumber}: {route.title || "Untitled Route"}
                         </p>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className={`text-sm ${COLORS.TEXT.MUTED} mb-2 transition-colors duration-200`}>
                         {route.description || "No description"}
                       </p>
-                      <div className="border-t pt-2 mt-2 space-y-1">
-                        <p className="text-xs text-gray-500">
+                      <div className={`${COLORS.BORDER.DEFAULT} border-t pt-2 mt-2 space-y-1 transition-colors duration-200`}>
+                        <p className={`text-xs ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                           <span className="font-semibold">Start:</span>{" "}
                           {route.latStart.toFixed(6)},{" "}
                           {route.lngStart.toFixed(6)}
                         </p>
-                        <p className="text-xs text-gray-500">
+                        <p className={`text-xs ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                           <span className="font-semibold">End:</span>{" "}
                           {route.latEnd.toFixed(6)}, {route.lngEnd.toFixed(6)}
                         </p>
                         {route.details && route.details.length > 0 && (
                           <div className="mt-2">
-                            <p className="text-xs font-semibold text-gray-500 mb-1">
+                            <p className={`text-xs font-semibold ${COLORS.TEXT.MUTED} mb-1 transition-colors duration-200`}>
                               Activities:
                             </p>
-                            <ul className="text-xs text-gray-600 space-y-0.5">
+                            <ul className={`text-xs ${COLORS.TEXT.MUTED} space-y-0.5 transition-colors duration-200`}>
                               {route.details.slice(0, 3).map((detail, i) => (
                                 <li key={i}>• {detail}</li>
                               ))}
                               {route.details.length > 3 && (
-                                <li className="text-gray-400">
+                                <li className={COLORS.TEXT.MUTED}>
                                   +{route.details.length - 3} more
                                 </li>
                               )}
@@ -567,13 +568,13 @@ export const RouteMap: React.FC<RouteMapProps> = ({
                   }
                 >
                   <Popup className="route-popup">
-                    <div className="p-3 min-w-[200px]">
+                    <div className={`p-3 min-w-[200px] ${COLORS.BACKGROUND.CARD} transition-colors duration-200`}>
                       <div className="flex items-center gap-2 mb-2">
                         <div
                           className="w-4 h-4 rounded-full"
                           style={{ backgroundColor: color }}
                         ></div>
-                        <p className="font-bold text-base text-gray-900">
+                        <p className={`font-bold text-base ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
                           {index === validRoutes.length - 1
                             ? `Final Destination: ${
                                 route.title || "Route " + routeNumber
@@ -581,13 +582,13 @@ export const RouteMap: React.FC<RouteMapProps> = ({
                             : `Route ${routeNumber} End`}
                         </p>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className={`text-sm ${COLORS.TEXT.MUTED} mb-2 transition-colors duration-200`}>
                         {index === validRoutes.length - 1
                           ? route.description || "End of journey"
                           : "End point of this route"}
                       </p>
-                      <div className="border-t pt-2 mt-2">
-                        <p className="text-xs text-gray-500">
+                      <div className={`${COLORS.BORDER.DEFAULT} border-t pt-2 mt-2 transition-colors duration-200`}>
+                        <p className={`text-xs ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                           <span className="font-semibold">Coordinates:</span>{" "}
                           {route.latEnd.toFixed(6)}, {route.lngEnd.toFixed(6)}
                         </p>
@@ -604,21 +605,21 @@ export const RouteMap: React.FC<RouteMapProps> = ({
                   icon={createRouteMarkerIcon(routeNumber, color, false)}
                 >
                   <Popup className="route-popup">
-                    <div className="p-3 min-w-[200px]">
+                    <div className={`p-3 min-w-[200px] ${COLORS.BACKGROUND.CARD} transition-colors duration-200`}>
                       <div className="flex items-center gap-2 mb-2">
                         <div
                           className="w-4 h-4 rounded-full"
                           style={{ backgroundColor: color }}
                         ></div>
-                        <p className="font-bold text-base text-gray-900">
+                        <p className={`font-bold text-base ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
                           Route {routeNumber} ↔ Route {routeNumber + 1}
                         </p>
                       </div>
-                      <p className="text-sm text-gray-600 mb-2">
+                      <p className={`text-sm ${COLORS.TEXT.MUTED} mb-2 transition-colors duration-200`}>
                         Connection point between routes
                       </p>
-                      <div className="border-t pt-2 mt-2">
-                        <p className="text-xs text-gray-500">
+                      <div className={`${COLORS.BORDER.DEFAULT} border-t pt-2 mt-2 transition-colors duration-200`}>
+                        <p className={`text-xs ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                           <span className="font-semibold">Coordinates:</span>{" "}
                           {route.latEnd.toFixed(6)}, {route.lngEnd.toFixed(6)}
                         </p>
@@ -634,25 +635,25 @@ export const RouteMap: React.FC<RouteMapProps> = ({
 
       {/* Route Legend */}
       {validRoutes.length > 0 && (
-        <div className="absolute bottom-4 right-4 bg-white rounded-lg shadow-lg border border-gray-200 z-10 max-w-xs pointer-events-auto overflow-hidden">
+        <div className={`absolute bottom-4 right-4 ${COLORS.BACKGROUND.CARD} rounded-lg shadow-lg ${COLORS.BORDER.DEFAULT} border z-10 max-w-xs pointer-events-auto overflow-hidden transition-colors duration-200`}>
           {/* Legend Header with Toggle Button */}
           <div
-            className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 transition-colors"
+            className={`flex items-center justify-between p-3 cursor-pointer ${COLORS.BACKGROUND.MUTED_HOVER} transition-colors duration-200`}
             onClick={() => setIsLegendOpen(!isLegendOpen)}
           >
-            <p className="text-xs font-bold text-gray-700 uppercase tracking-wide">
+            <p className={`text-xs font-bold ${COLORS.TEXT.DEFAULT} uppercase tracking-wide transition-colors duration-200`}>
               Route Legend ({validRoutes.length})
             </p>
             {isLegendOpen ? (
-              <ChevronUp className="w-4 h-4 text-gray-500 shrink-0" />
+              <ChevronUp className={`w-4 h-4 ${COLORS.TEXT.MUTED} shrink-0 transition-colors duration-200`} />
             ) : (
-              <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />
+              <ChevronDown className={`w-4 h-4 ${COLORS.TEXT.MUTED} shrink-0 transition-colors duration-200`} />
             )}
           </div>
 
           {/* Legend Content - Collapsible */}
           {isLegendOpen && (
-            <div className="px-3 pb-3 border-t border-gray-100">
+            <div className={`px-3 pb-3 ${COLORS.BORDER.DEFAULT} border-t transition-colors duration-200`}>
               <div className="space-y-1.5 max-h-48 overflow-y-auto mt-2">
                 {validRoutes.map((route, index) => {
                   const routeNumber = (route.index || 0) + 1;
@@ -666,10 +667,10 @@ export const RouteMap: React.FC<RouteMapProps> = ({
                         className="w-3 h-3 rounded-full shrink-0"
                         style={{ backgroundColor: color }}
                       ></div>
-                      <span className="font-semibold text-gray-700">
+                      <span className={`font-semibold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
                         Route {routeNumber}:
                       </span>
-                      <span className="text-gray-600 truncate">
+                      <span className={`${COLORS.TEXT.MUTED} truncate transition-colors duration-200`}>
                         {route.title || "Untitled"}
                       </span>
                     </div>
@@ -677,14 +678,14 @@ export const RouteMap: React.FC<RouteMapProps> = ({
                 })}
               </div>
               {validRoutes.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-gray-200">
+                <div className={`mt-2 pt-2 ${COLORS.BORDER.DEFAULT} border-t transition-colors duration-200`}>
                   <div className="flex items-center gap-2 text-xs">
-                    <div className="w-3 h-3 rounded-full bg-green-500 shrink-0"></div>
-                    <span className="text-gray-600">Start Point</span>
+                    <div className={`w-3 h-3 rounded-full ${COLORS.GREEN[500]} shrink-0`}></div>
+                    <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200`}>Start Point</span>
                   </div>
                   <div className="flex items-center gap-2 text-xs mt-1">
-                    <div className="w-3 h-3 rounded-full bg-red-500 shrink-0"></div>
-                    <span className="text-gray-600">End Point</span>
+                    <div className={`w-3 h-3 rounded-full ${COLORS.DESTRUCTIVE.BACKGROUND} shrink-0`}></div>
+                    <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200`}>End Point</span>
                   </div>
                 </div>
               )}

@@ -14,6 +14,7 @@ import {
 import { Profile } from "@/types/user";
 import { useAuth } from "@/contexts/AuthContext";
 import { uploadFile } from "@/lib/supabase";
+import { COLORS } from "@/constants/colors";
 
 interface EditProfileModalProps {
   isOpen: boolean;
@@ -213,24 +214,24 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm transition-colors duration-300">
+      <div className={`${COLORS.BACKGROUND.CARD} rounded-2xl shadow-2xl w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto transition-colors duration-300`}>
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-2xl">
-          <h2 className="text-2xl font-bold text-gray-900">Edit Profile</h2>
+        <div className={`sticky top-0 ${COLORS.BACKGROUND.CARD} border-b ${COLORS.BORDER.DEFAULT} px-6 py-4 flex items-center justify-between rounded-t-2xl transition-colors duration-300`}>
+          <h2 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>Edit Profile</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-full transition-colors"
+            className={`p-2 hover:${COLORS.BACKGROUND.MUTED} rounded-full transition-all duration-200`}
             disabled={loading}
           >
-            <X className="w-5 h-5 text-gray-500" />
+            <X className={`w-5 h-5 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
           </button>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+            <div className={`bg-destructive/10 border-destructive text-destructive px-4 py-3 rounded-lg transition-colors duration-200`}>
               {error}
             </div>
           )}
@@ -239,9 +240,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <div>
             <label
               htmlFor="full_name"
-              className="block text-sm font-semibold text-gray-700 mb-2"
+              className={`block text-sm font-semibold ${COLORS.TEXT.MUTED} mb-2 transition-colors duration-200`}
             >
-              <User className="w-4 h-4 inline mr-2" />
+              <User className={`w-4 h-4 inline mr-2 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
               Full Name *
             </label>
             <input
@@ -251,7 +252,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               value={formData.full_name}
               onChange={handleChange}
               required
-              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className={`w-full p-3 ${COLORS.BORDER.DEFAULT} rounded-lg ${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} transition-all duration-200`}
               placeholder="Enter your full name"
             />
           </div>
@@ -260,9 +261,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <div>
             <label
               htmlFor="phone"
-              className="block text-sm font-semibold text-gray-700 mb-2"
+              className={`block text-sm font-semibold ${COLORS.TEXT.MUTED} mb-2 transition-colors duration-200`}
             >
-              <Phone className="w-4 h-4 inline mr-2" />
+              <Phone className={`w-4 h-4 inline mr-2 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
               Phone Number
             </label>
             <input
@@ -271,7 +272,7 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               type="tel"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+              className={`w-full p-3 ${COLORS.BORDER.DEFAULT} rounded-lg ${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} transition-all duration-200`}
               placeholder="Enter your phone number"
             />
           </div>
@@ -280,16 +281,16 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <div>
             <label
               htmlFor="avatar"
-              className="block text-sm font-semibold text-gray-700 mb-2"
+              className={`block text-sm font-semibold ${COLORS.TEXT.MUTED} mb-2 transition-colors duration-200`}
             >
-              <ImageIcon className="w-4 h-4 inline mr-2" />
+              <ImageIcon className={`w-4 h-4 inline mr-2 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
               Profile Picture
             </label>
 
             {/* Avatar Preview */}
             {(avatarFile || existingAvatarUrl) && (
               <div className="mb-4 relative inline-block">
-                <div className="w-32 h-32 rounded-xl overflow-hidden border-2 border-gray-200 shadow-md">
+                <div className={`w-32 h-32 rounded-xl overflow-hidden border-2 ${COLORS.BORDER.DEFAULT} shadow-md transition-colors duration-200`}>
                   <img
                     src={avatarFile?.url || existingAvatarUrl || ""}
                     alt="Avatar preview"
@@ -311,9 +312,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
             <div className="flex items-center gap-3">
               <label
                 htmlFor="avatar"
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors cursor-pointer font-medium"
+                className={`flex items-center gap-2 px-4 py-2 ${COLORS.PRIMARY.DEFAULT} rounded-lg ${COLORS.PRIMARY.HOVER} transition-all duration-200 cursor-pointer font-medium`}
               >
-                <Upload className="w-4 h-4" />
+                <Upload className="w-4 h-4 transition-colors duration-200" />
                 {avatarFile || existingAvatarUrl
                   ? "Change Picture"
                   : "Upload Picture"}
@@ -327,12 +328,12 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
                 className="hidden"
               />
               {!avatarFile && !existingAvatarUrl && (
-                <span className="text-sm text-gray-500">
+                <span className={`text-sm ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                   Select an image file (max 5MB)
                 </span>
               )}
             </div>
-            <p className="mt-2 text-xs text-gray-500">
+            <p className={`mt-2 text-xs ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
               Upload a profile picture. Supported formats: JPG, PNG, GIF (max
               5MB)
             </p>
@@ -342,9 +343,9 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
           <div>
             <label
               htmlFor="bio"
-              className="block text-sm font-semibold text-gray-700 mb-2"
+              className={`block text-sm font-semibold ${COLORS.TEXT.MUTED} mb-2 transition-colors duration-200`}
             >
-              <FileText className="w-4 h-4 inline mr-2" />
+              <FileText className={`w-4 h-4 inline mr-2 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
               Bio
             </label>
             <textarea
@@ -353,10 +354,10 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               value={formData.bio}
               onChange={handleChange}
               rows={4}
-              className="w-full p-3 border border-gray-300 rounded-lg bg-white text-gray-900 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors resize-none"
+              className={`w-full p-3 ${COLORS.BORDER.DEFAULT} rounded-lg ${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} transition-all duration-200 resize-none`}
               placeholder="Tell us about yourself..."
             />
-            <p className="mt-1 text-xs text-gray-500">
+            <p className={`mt-1 text-xs ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
               Share a brief description about yourself
             </p>
           </div>
@@ -367,14 +368,14 @@ export const EditProfileModal: React.FC<EditProfileModalProps> = ({
               type="button"
               onClick={onClose}
               disabled={loading}
-              className="flex-1 px-4 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors font-semibold disabled:opacity-50"
+              className={`flex-1 px-4 py-3 ${COLORS.BORDER.DEFAULT} ${COLORS.TEXT.MUTED} rounded-lg hover:${COLORS.BACKGROUND.MUTED} transition-all duration-200 font-semibold disabled:opacity-50`}
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="flex-1 px-4 py-3 bg-linear-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg"
+              className={`flex-1 px-4 py-3 ${COLORS.PRIMARY.DEFAULT} rounded-lg ${COLORS.PRIMARY.HOVER} transition-all duration-200 font-semibold disabled:opacity-50 flex items-center justify-center gap-2 shadow-lg`}
             >
               {loading ? (
                 <>

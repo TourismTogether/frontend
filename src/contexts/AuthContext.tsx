@@ -104,14 +104,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Check if user is admin
       try {
-        const adminRes = await fetch(API_ENDPOINTS.ADMINS.BY_ID(Number(data.user.id)), {
-          credentials: "include",
-        });
-        if (adminRes.ok) {
-          const adminResult = await adminRes.json();
-          setIsAdmin(adminResult.status === 200 && adminResult.data !== null);
-        } else {
+        if (!data.user.id || data.user.id === "NaN" || data.user.id === "undefined") {
           setIsAdmin(false);
+        } else {
+          const adminRes = await fetch(API_ENDPOINTS.ADMINS.BY_ID(String(data.user.id)), {
+            credentials: "include",
+          });
+          if (adminRes.ok) {
+            const adminResult = await adminRes.json();
+            setIsAdmin(adminResult.status === 200 && adminResult.data !== null);
+          } else {
+            setIsAdmin(false);
+          }
         }
       } catch {
         setIsAdmin(false);
@@ -132,40 +136,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // Fetch traveller data but don't block on failure
       try {
-        const travellerRes = await fetch(
-          API_ENDPOINTS.TRAVELLERS.BY_ID(Number(data.user.id)),
-          {
-            credentials: "include",
-          }
-        );
-
-        if (travellerRes.ok) {
-          const travellerResult = await travellerRes.json();
-          if (travellerResult.status === 200) {
-            // Update traveller with current location
-            try {
-              await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(Number(data.user.id)), {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                  latitude: userLat,
-                  longitude: userLng,
-                }),
-              });
-            } catch {
-              // Location update failed, continue with existing data
+        if (!data.user.id || data.user.id === "NaN" || data.user.id === "undefined") {
+          // Skip traveller fetch if invalid ID
+        } else {
+          const travellerRes = await fetch(
+            API_ENDPOINTS.TRAVELLERS.BY_ID(String(data.user.id)),
+            {
+              credentials: "include",
             }
+          );
 
-            setProfile({
-              ...data.user,
-              ...travellerResult.data,
-              email,
-              latitude: userLat,
-              longitude: userLng,
-            });
+          if (travellerRes.ok) {
+            const travellerResult = await travellerRes.json();
+            if (travellerResult.status === 200) {
+              // Update traveller with current location
+              try {
+                await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(String(data.user.id)), {
+                  method: "PATCH",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  body: JSON.stringify({
+                    latitude: userLat,
+                    longitude: userLng,
+                  }),
+                });
+              } catch {
+                // Location update failed, continue with existing data
+              }
+
+              setProfile({
+                ...data.user,
+                ...travellerResult.data,
+                email,
+                latitude: userLat,
+                longitude: userLng,
+              });
+            } else {
+              // Create traveller if not found
+              try {
+                await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  credentials: "include",
+                  body: JSON.stringify({
+                    user_id: data.user.id,
+                    bio: "",
+                    is_shared_location: false,
+                    latitude: userLat,
+                    longitude: userLng,
+                    is_safe: true,
+                    emergency_contacts: [],
+                  }),
+                });
+              } catch {
+                // Traveller creation failed, continue without it
+              }
+              setProfile({
+                ...data.user,
+                email,
+                latitude: userLat,
+                longitude: userLng,
+              });
+            }
           } else {
-            // Create traveller if not found
+            // Create traveller if fetch failed
             try {
               await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
                 method: "POST",
@@ -191,32 +225,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
               longitude: userLng,
             });
           }
-        } else {
-          // Create traveller if fetch failed
-          try {
-            await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({
-                user_id: data.user.id,
-                bio: "",
-                is_shared_location: false,
-                latitude: userLat,
-                longitude: userLng,
-                is_safe: true,
-                emergency_contacts: [],
-              }),
-            });
-          } catch {
-            // Traveller creation failed, continue without it
-          }
-          setProfile({
-            ...data.user,
-            email,
-            latitude: userLat,
-            longitude: userLng,
-          });
         }
       } catch {
         setProfile({
@@ -284,7 +292,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // Update or create traveller with location
         try {
           const travellerRes = await fetch(
-            API_ENDPOINTS.TRAVELLERS.BY_ID(Number(result.data.user.id)),
+            API_ENDPOINTS.TRAVELLERS.BY_ID(String(result.data.user.id)),
             {
               credentials: "include",
             }
@@ -294,7 +302,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             const travellerResult = await travellerRes.json();
             if (travellerResult.status === 200) {
               // Update existing traveller with location
-              await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(Number(result.data.user.id)), {
+              await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(String(result.data.user.id)), {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",
@@ -400,14 +408,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
         // Check if user is admin
         try {
-          const adminRes = await fetch(API_ENDPOINTS.ADMINS.BY_ID(Number(result.data.user.id)), {
-            credentials: "include",
-          });
-          if (adminRes.ok) {
-            const adminResult = await adminRes.json();
-            setIsAdmin(adminResult.status === 200 && adminResult.data !== null);
-          } else {
+          if (!result.data.user.id || result.data.user.id === "NaN" || result.data.user.id === "undefined") {
             setIsAdmin(false);
+          } else {
+            const adminRes = await fetch(API_ENDPOINTS.ADMINS.BY_ID(String(result.data.user.id)), {
+              credentials: "include",
+            });
+            if (adminRes.ok) {
+              const adminResult = await adminRes.json();
+              setIsAdmin(adminResult.status === 200 && adminResult.data !== null);
+            } else {
+              setIsAdmin(false);
+            }
           }
         } catch {
           setIsAdmin(false);
@@ -427,7 +439,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         // Update or create traveller with location
         try {
           const travellerRes = await fetch(
-            API_ENDPOINTS.TRAVELLERS.BY_ID(Number(result.data.user.id)),
+            API_ENDPOINTS.TRAVELLERS.BY_ID(String(result.data.user.id)),
             {
               credentials: "include",
             }
@@ -437,7 +449,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             const travellerResult = await travellerRes.json();
             if (travellerResult.status === 200) {
               // Update existing traveller with location
-              await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(Number(result.data.user.id)), {
+              await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(String(result.data.user.id)), {
                 method: "PATCH",
                 headers: { "Content-Type": "application/json" },
                 credentials: "include",

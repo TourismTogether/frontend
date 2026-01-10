@@ -21,6 +21,8 @@ import dynamic from "next/dynamic";
 import { IRoute, ITrip } from "../../lib/type/interface";
 import { API_ENDPOINTS, getTravelImageUrl, getDestinationImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
+import Loading from "../../components/Loading/Loading";
+import Hero from "../../components/Hero/Hero";
 
 // Dynamically import RouteMap to avoid SSR issues
 const RouteMap = dynamic(
@@ -186,13 +188,13 @@ const QuickAccessItem: React.FC<QuickAccessItemProps> = ({
       href={link}
       className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border-l-4 ${COLORS.BORDER.PRIMARY} p-4 rounded-lg flex items-center justify-between transition-all duration-200 hover:shadow-lg hover:scale-[1.02] group`}
     >
-      <div className="flex items-center space-x-3">
-        <div className={`p-2 rounded-lg ${gradient} group-hover:scale-110 transition-transform`}>
-          <Icon className="w-5 h-5 text-white" />
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${gradient} group-hover:scale-110 transition-all duration-200`}>
+          <Icon className="w-5 h-5 text-white transition-colors duration-200" />
         </div>
-        <span className="font-medium text-foreground">{label}</span>
+        <span className={`font-medium ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>{label}</span>
       </div>
-      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-accent group-hover:translate-x-1 transition-all" />
+      <ChevronRight className={`w-4 h-4 ${COLORS.TEXT.MUTED} group-hover:${COLORS.TEXT.PRIMARY} group-hover:translate-x-1 transition-all duration-200`} />
     </Link>
   );
 };
@@ -227,25 +229,31 @@ export const Dashboard: React.FC = () => {
       // Fetch user trips
       let tripsData: ITrip[] = [];
       try {
-        const tripsResponse = await fetch(API_ENDPOINTS.USERS.BY_ID(Number(user.id)) + "/trips", {
-          credentials: "include",
-        });
-
-        if (tripsResponse.ok) {
-          const tripsResult = await tripsResponse.json();
-          if (Array.isArray(tripsResult)) {
-            tripsData = tripsResult;
-          } else if (tripsResult.data && Array.isArray(tripsResult.data)) {
-            tripsData = tripsResult.data;
-          } else if (tripsResult.data && !Array.isArray(tripsResult.data)) {
-            tripsData = [tripsResult.data];
-          }
-          setRecentTrips(tripsData.slice(0, 5));
-        } else if (tripsResponse.status === 404) {
+        if (!user.id || user.id === "NaN" || user.id === "undefined") {
+          console.error("Invalid user.id:", user.id);
           tripsData = [];
           setRecentTrips([]);
         } else {
-          console.warn(`Failed to fetch trips: ${tripsResponse.status}`);
+          const tripsResponse = await fetch(API_ENDPOINTS.USERS.BY_ID(String(user.id)) + "/trips", {
+            credentials: "include",
+          });
+
+          if (tripsResponse.ok) {
+            const tripsResult = await tripsResponse.json();
+            if (Array.isArray(tripsResult)) {
+              tripsData = tripsResult;
+            } else if (tripsResult.data && Array.isArray(tripsResult.data)) {
+              tripsData = tripsResult.data;
+            } else if (tripsResult.data && !Array.isArray(tripsResult.data)) {
+              tripsData = [tripsResult.data];
+            }
+            setRecentTrips(tripsData.slice(0, 5));
+          } else if (tripsResponse.status === 404) {
+            tripsData = [];
+            setRecentTrips([]);
+          } else {
+            console.warn(`Failed to fetch trips: ${tripsResponse.status}`);
+          }
         }
       } catch (err) {
         console.error("Error fetching trips for dashboard:", err);
@@ -255,10 +263,10 @@ export const Dashboard: React.FC = () => {
 
       // Fetch routes for all trips
       const routesPromises = tripsData.map(async (trip) => {
-        if (!trip.id) return [];
+        if (!trip.id || trip.id === "NaN" || trip.id === "undefined") return [];
         try {
           const routesResponse = await fetch(
-            API_ENDPOINTS.TRIPS.ROUTES(Number(trip.id)),
+            API_ENDPOINTS.TRIPS.ROUTES(String(trip.id)),
             { credentials: "include" }
           );
           if (routesResponse.ok) {
@@ -360,7 +368,7 @@ export const Dashboard: React.FC = () => {
             ? postsResult
             : [];
           postsCount = posts.filter(
-            (p: PostResponse) => p.user_id === Number(user.id) || p.traveller_id === Number(user.id)
+            (p: PostResponse) => String(p.user_id) === String(user.id) || String(p.traveller_id) === String(user.id)
           ).length;
         }
       } catch (err) {
@@ -381,7 +389,7 @@ export const Dashboard: React.FC = () => {
             ? diariesResult
             : [];
           diariesCount = diaries.filter(
-            (d: DiaryResponse) => d.user_id === Number(user.id)
+            (d: DiaryResponse) => String(d.user_id) === String(user.id)
           ).length;
         }
       } catch (err) {
@@ -408,44 +416,24 @@ export const Dashboard: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${COLORS.BORDER.PRIMARY}`}></div>
-      </div>
-    );
+    return <Loading type="dashboard" />;
   }
 
   return (
-    <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
+    <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} transition-colors duration-300`}>
       {/* Hero Section with Image */}
-      <div className="relative h-64 md:h-80 overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src={getTravelImageUrl("travel adventure", 1920, 400)}
-            alt="Travel Adventure"
-            fill
-            className="object-cover"
-            priority
-            unoptimized
-          />
-          <div className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-80`}></div>
-        </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-            Welcome back, {profile?.username || "Traveller"}! 🌍
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 drop-shadow-md">
-            Ready for your next adventure?
-          </p>
-        </div>
-      </div>
+      <Hero
+        title={`Welcome back, ${profile?.username || "Traveller"}! 🌍`}
+        description="Ready for your next adventure?"
+        imageKeyword="travel adventure"
+      />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 -mt-8 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
         {/* Stats Cards Section */}
         <div className="mb-10">
-          <div className="flex items-center space-x-2 mb-6">
-            <TrendingUp className={`w-6 h-6 ${COLORS.TEXT.PRIMARY}`} />
-            <h2 className="text-2xl font-bold text-foreground">Your Progress Summary</h2>
+          <div className="flex items-center gap-2 mb-6">
+            <TrendingUp className={`w-6 h-6 ${COLORS.TEXT.PRIMARY} transition-colors duration-200`} />
+            <h2 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>Your Progress Summary</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard

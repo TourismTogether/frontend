@@ -8,6 +8,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { API_ENDPOINTS, getDestinationImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
+import Loading from "../../components/Loading/Loading";
+import Hero from "../../components/Hero/Hero";
 
 // Interface definitions
 export interface IDestination {
@@ -154,39 +156,20 @@ export const Destinations: React.FC = () => {
   ];
 
   if (loading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
-        <div className={`animate-spin rounded-full h-12 w-12 border-b-2 ${COLORS.BORDER.PRIMARY}`}></div>
-      </div>
-    );
+    return <Loading type="destinations" />;
   }
 
   return (
     <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
       {/* Hero Section */}
-      <div className="relative h-64 md:h-80 overflow-hidden">
-        <div className="absolute inset-0">
-          <Image
-            src={getDestinationImageUrl("travel destinations", 1920, 400)}
-            alt="Destinations"
-            fill
-            className="object-cover"
-            priority
-            unoptimized
-          />
-          <div className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-80`}></div>
-        </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 h-full flex flex-col justify-center">
-          <h1 className="text-4xl md:text-5xl font-bold text-white mb-2 drop-shadow-lg">
-            Explore Destinations 🌍
-          </h1>
-          <p className="text-lg md:text-xl text-white/90 drop-shadow-md">
-            Discover amazing places around the world ({destinations.length} destinations)
-          </p>
-        </div>
-      </div>
+      <Hero
+        title="Explore Destinations 🌍"
+        description={`Discover amazing places around the world`}
+        subtitle={`${destinations.length} destinations available`}
+        imageKeyword="travel destinations"
+      />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 -mt-8 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
         {/* Search & Filter */}
         <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 mb-8`}>
           <div className="flex flex-col md:flex-row gap-4">

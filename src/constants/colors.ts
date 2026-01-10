@@ -20,6 +20,8 @@ export const COLORS = {
     CARD: "bg-card",
     MUTED: "bg-muted",
     SECONDARY: "bg-secondary",
+    MUTED_HOVER: "hover:bg-muted",
+    MUTED_HOVER_OPACITY: "hover:bg-muted/80",
   },
 
   // Text Colors
@@ -28,6 +30,7 @@ export const COLORS = {
     MUTED: "text-muted-foreground",
     SECONDARY: "text-secondary-foreground",
     PRIMARY: "text-accent",
+    PRIMARY_HOVER: "hover:text-accent/80",
   },
 
   // Border Colors
@@ -74,6 +77,15 @@ export const COLORS = {
     TEXT_500: "text-emerald-500",
     TEXT_600: "text-emerald-600",
     BORDER_500: "border-emerald-500",
+  },
+
+  // Destructive Colors (for errors, delete actions)
+  DESTRUCTIVE: {
+    BACKGROUND: "bg-destructive",
+    TEXT: "text-destructive",
+    BORDER: "border-destructive",
+    TEXT_HOVER: "hover:text-destructive/80",
+    BACKGROUND_HOVER: "hover:bg-destructive/10",
   },
 
   // Status Colors
