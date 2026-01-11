@@ -254,10 +254,30 @@ export default function Diaries() {
         <Hero
           title="Travel Diary 📔"
           description="Capture and share your adventure memories"
+          proverb="A picture is worth a thousand words"
           imageKeyword="travel diary journal"
+          height="large"
+          features={[
+            {
+              icon: <BookOpen className="w-6 h-6" />,
+              title: "Write Your Story",
+              description: "Document your travel experiences with rich text, photos, and detailed descriptions of your adventures.",
+            },
+            {
+              icon: <Share2 className="w-6 h-6" />,
+              title: "Share & Inspire",
+              description: "Share your diaries with the community or keep them private. Inspire others with your travel stories.",
+            },
+            {
+              icon: <Eye className="w-6 h-6" />,
+              title: "Explore Diaries",
+              description: "Discover amazing travel stories from other travelers. Get inspired by their adventures and experiences.",
+            },
+          ]}
         />
 
         <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
+
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>

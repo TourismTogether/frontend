@@ -11,6 +11,7 @@ import {
   Sparkles,
   Sun,
   Moon,
+  Palette,
 } from "lucide-react";
 import { LoginForm } from "../../components/Auth/LoginForm";
 import { SignUpForm } from "../../components/Auth/SignUpForm";
@@ -18,6 +19,7 @@ import { GRADIENTS, COLORS } from "../../constants/colors";
 
 export const Auth: React.FC = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
@@ -51,22 +53,91 @@ export const Auth: React.FC = () => {
     <div
       className={`min-h-screen ${GRADIENTS.AUTH_BACKGROUND} flex items-center justify-center px-4 py-12 relative overflow-hidden`}
     >
-      {/* Theme Toggle Button */}
+      {/* Theme Switcher - 4 Modes */}
       {mounted && (
-        <button
-          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-          className={`absolute top-4 right-4 z-20 flex items-center justify-center p-3 ${COLORS.AUTH.GLASS_BG} backdrop-blur-md rounded-xl ${COLORS.AUTH.GLASS_BORDER} ${COLORS.AUTH.TEXT_WHITE} hover:bg-white/30 dark:hover:bg-white/10 transition-all duration-200 shadow-lg hover:shadow-xl`}
-          title={
-            theme === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode"
-          }
-          aria-label="Toggle dark mode"
-        >
-          {theme === "dark" ? (
-            <Sun className="w-5 h-5 transition-colors duration-200" />
-          ) : (
-            <Moon className="w-5 h-5 transition-colors duration-200" />
+        <div className="absolute top-4 right-4 z-20">
+          <button
+            onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+            onBlur={() => setTimeout(() => setIsThemeMenuOpen(false), 200)}
+            className={`flex items-center justify-center p-3 ${COLORS.AUTH.GLASS_BG} backdrop-blur-md rounded-xl ${COLORS.AUTH.GLASS_BORDER} ${COLORS.AUTH.TEXT_WHITE} hover:bg-white/30 transition-all duration-200 shadow-lg hover:shadow-xl`}
+            title="Change Theme"
+            aria-label="Theme switcher"
+          >
+            {theme === "light" ? (
+              <Sun className="w-5 h-5 transition-colors duration-200" />
+            ) : theme === "dark" ? (
+              <Moon className="w-5 h-5 transition-colors duration-200" />
+            ) : theme === "modern" ? (
+              <Sparkles className="w-5 h-5 transition-colors duration-200" />
+            ) : (
+              <Palette className="w-5 h-5 transition-colors duration-200" />
+            )}
+          </button>
+
+          {/* Theme Dropdown Menu */}
+          {isThemeMenuOpen && (
+            <div className="absolute right-0 top-full mt-2 w-40 bg-card border border-border rounded-lg shadow-lg z-50">
+              <div className="p-1">
+                <button
+                  onClick={() => {
+                    setTheme("light");
+                    setIsThemeMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all duration-200 ${
+                    theme === "light"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Sun className="w-4 h-4" />
+                  <span>Light</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setTheme("dark");
+                    setIsThemeMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all duration-200 ${
+                    theme === "dark"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Moon className="w-4 h-4" />
+                  <span>Dark</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setTheme("modern");
+                    setIsThemeMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all duration-200 ${
+                    theme === "modern"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Sparkles className="w-4 h-4" />
+                  <span>Modern</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setTheme("history");
+                    setIsThemeMenuOpen(false);
+                  }}
+                  className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all duration-200 ${
+                    theme === "history"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-foreground hover:bg-muted"
+                  }`}
+                >
+                  <Palette className="w-4 h-4" />
+                  <span>History</span>
+                </button>
+              </div>
+            </div>
           )}
-        </button>
+        </div>
       )}
 
       {/* Enhanced animated background elements for dark mode */}

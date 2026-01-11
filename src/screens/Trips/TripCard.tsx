@@ -1,6 +1,7 @@
 // src/components/TripCard.tsx
 import React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import {
   Calendar,
   DollarSign,
@@ -9,11 +10,13 @@ import {
   Edit,
   Trash2,
   Gauge,
+  Plane,
 } from "lucide-react";
 import { ITrip } from "./Trips";
-import { COLORS } from "../../constants/colors";
+import { COLORS, GRADIENTS } from "../../constants/colors";
 import { ANIMATIONS } from "../../constants/animations";
 import ShimmerCard from "../../components/Animations/ShimmerCard";
+import { getTravelImageUrl, getDestinationImageUrl } from "../../constants/api";
 
 interface TripCardProps {
   trip: ITrip;
@@ -21,19 +24,19 @@ interface TripCardProps {
   onDelete: () => void;
 }
 
-// Cải thiện màu sắc Status
+// Cải thiện màu sắc Status với backdrop blur
 const getStatusColor = (status: ITrip["status"]) => {
   switch (status) {
     case "planning":
-      return "bg-blue-500/10 text-blue-600 border-blue-500/30 dark:text-blue-400";
+      return "bg-blue-500/80 text-white border-blue-400/50 dark:bg-blue-600/80 dark:text-white dark:border-blue-400/50";
     case "ongoing":
-      return "bg-yellow-500/10 text-yellow-600 border-yellow-500/30 dark:text-yellow-400";
+      return "bg-yellow-500/80 text-white border-yellow-400/50 dark:bg-yellow-600/80 dark:text-white dark:border-yellow-400/50";
     case "completed":
-      return "bg-green-500/10 text-green-600 border-green-500/30 dark:text-green-400";
+      return "bg-green-500/80 text-white border-green-400/50 dark:bg-green-600/80 dark:text-white dark:border-green-400/50";
     case "cancelled":
-      return "bg-red-500/10 text-red-600 border-red-500/30 dark:text-red-400";
+      return "bg-red-500/80 text-white border-red-400/50 dark:bg-red-600/80 dark:text-white dark:border-red-400/50";
     default:
-      return "bg-gray-500/10 text-gray-500 border-gray-500/30 dark:text-gray-500";
+      return "bg-gray-500/80 text-white border-gray-400/50 dark:bg-gray-600/80 dark:text-white dark:border-gray-400/50";
   }
 };
 
@@ -75,25 +78,41 @@ export const TripCard: React.FC<TripCardProps> = ({
   const difficultLevel = trip.difficult || 0;
   const isDifficult = difficultLevel >= 3;
 
+  // Get image URL
+  const imageUrl = trip.destination?.images && Array.isArray(trip.destination.images) && trip.destination.images.length > 0
+    ? (typeof trip.destination.images[0] === "string" 
+        ? trip.destination.images[0] 
+        : (trip.destination.images[0] as { url: string })?.url)
+    : getDestinationImageUrl(destinationName, 600, 400);
+
   return (
     <ShimmerCard
-      className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 block relative group"
+      className="hover:shadow-2xl transition-all duration-300 block relative group overflow-hidden"
       shimmer={false}
     >
-      {/* Header Section with Title and Actions */}
-      <div className="relative p-5 pb-4">
-        {/* Action Buttons - Better positioned */}
-        <div className="absolute top-4 right-4 flex space-x-1.5 z-20">
+      {/* Image Header with Gradient Overlay */}
+      <Link href={`/trips/${trip.id}`} className="block relative h-48 overflow-hidden">
+        <Image
+          src={imageUrl}
+          alt={trip.title}
+          fill
+          className="object-cover transition-transform duration-500 group-hover:scale-110"
+          unoptimized
+        />
+        <div className={`absolute inset-0 ${GRADIENTS.PRIMARY_DARK} opacity-60 transition-opacity duration-300 group-hover:opacity-70`}></div>
+        
+        {/* Action Buttons - Overlay on image */}
+        <div className="absolute top-4 right-4 flex gap-2 z-20">
           <button
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               onEdit();
             }}
-            className={`p-1.5 ${COLORS.BACKGROUND.CARD} hover:bg-accent/10 ${COLORS.TEXT.MUTED} hover:text-accent rounded-lg transition-all duration-200 shadow-sm ${COLORS.BORDER.DEFAULT} hover:${COLORS.BORDER.PRIMARY}`}
+            className="p-2 bg-white/20 hover:bg-white/30 backdrop-blur-md text-white rounded-lg transition-all duration-200 shadow-lg hover:scale-110"
             title="Edit Trip"
           >
-            <Edit className="w-4 h-4 transition-colors duration-200" />
+            <Edit className="w-4 h-4" />
           </button>
           <button
             onClick={(e) => {
@@ -101,74 +120,80 @@ export const TripCard: React.FC<TripCardProps> = ({
               e.stopPropagation();
               onDelete();
             }}
-            className={`p-1.5 ${COLORS.BACKGROUND.CARD} hover:bg-destructive/10 ${COLORS.TEXT.MUTED} hover:text-destructive rounded-lg transition-all duration-200 shadow-sm ${COLORS.BORDER.DEFAULT} hover:border-destructive`}
+            className="p-2 bg-red-500/80 hover:bg-red-600 backdrop-blur-md text-white rounded-lg transition-all duration-200 shadow-lg hover:scale-110"
             title="Delete Trip"
           >
-            <Trash2 className="w-4 h-4 transition-colors duration-200" />
+            <Trash2 className="w-4 h-4" />
           </button>
         </div>
 
-        <Link href={`/trips/${trip.id}`} className="block">
-          {/* Title and Status */}
-          <div className="pr-20 mb-3">
-            <h3 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} line-clamp-2 group-hover:${COLORS.TEXT.PRIMARY} transition-colors duration-200 leading-snug`}>
-              {trip.title}
-            </h3>
-          </div>
+        {/* Status Badge */}
+        <div className="absolute top-4 left-4 z-20">
+          <span
+            className={`text-xs px-3 py-1.5 rounded-full font-semibold backdrop-blur-md ${getStatusColor(
+              trip.status
+            )} ${ANIMATIONS.PULSE.SOFT} border`}
+          >
+            {(trip.status || "UNKNOWN").toUpperCase()}
+          </span>
+        </div>
 
-          {/* Destination */}
-          <div className="flex items-center gap-2 mb-3">
-            <MapPin className={`w-4 h-4 ${COLORS.TEXT.PRIMARY} flex-shrink-0 transition-colors duration-200`} />
-            <span className={`text-sm font-medium ${COLORS.TEXT.MUTED} truncate transition-colors duration-200`}>
+        {/* Title and Destination Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-5 z-10">
+          <h3 className="text-2xl font-bold text-white mb-2 line-clamp-2 drop-shadow-lg">
+            {trip.title}
+          </h3>
+          <div className="flex items-center gap-2">
+            <MapPin className="w-4 h-4 text-white/90 shrink-0" />
+            <span className="text-sm font-medium text-white/90 truncate drop-shadow-md">
               {destinationName}
             </span>
-            <span
-              className={`ml-auto text-xs px-2.5 py-1 rounded-full font-semibold ${getStatusColor(
-                trip.status
-              )} ${ANIMATIONS.PULSE.SOFT}`}
-            >
-              {(trip.status || "UNKNOWN").toUpperCase()}
-            </span>
           </div>
-        </Link>
-      </div>
+        </div>
+      </Link>
 
       {/* Content Section */}
       <Link href={`/trips/${trip.id}`} className="block">
-        <div className="px-5 pb-5 space-y-4">
-          {/* Key Info Row - Compact */}
-          <div className="grid grid-cols-2 gap-3">
+        <div className="p-5 space-y-4">
+          {/* Key Info Grid */}
+          <div className="grid grid-cols-2 gap-4">
             {/* Date */}
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className={`w-4 h-4 ${COLORS.TEXT.MUTED} flex-shrink-0 transition-colors duration-200`} />
-              <span className={`${COLORS.TEXT.MUTED} truncate transition-colors duration-200`}>
+            <div className={`p-3 rounded-lg ${COLORS.BACKGROUND.MUTED} transition-colors duration-200`}>
+              <div className="flex items-center gap-2 mb-1">
+                <Calendar className={`w-4 h-4 ${COLORS.TEXT.PRIMARY} shrink-0`} />
+                <span className={`text-xs font-medium ${COLORS.TEXT.MUTED}`}>Date</span>
+              </div>
+              <span className={`text-sm font-semibold ${COLORS.TEXT.DEFAULT}`}>
                 {startDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })} - {endDate.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
               </span>
             </div>
 
             {/* Duration */}
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className={`w-4 h-4 ${COLORS.TEXT.MUTED} flex-shrink-0 transition-colors duration-200`} />
-              <span className={`${COLORS.TEXT.MUTED} font-medium transition-colors duration-200`}>{diffDays} {diffDays === 1 ? 'day' : 'days'}</span>
+            <div className={`p-3 rounded-lg ${COLORS.BACKGROUND.MUTED} transition-colors duration-200`}>
+              <div className="flex items-center gap-2 mb-1">
+                <Clock className={`w-4 h-4 ${COLORS.TEXT.PRIMARY} shrink-0`} />
+                <span className={`text-xs font-medium ${COLORS.TEXT.MUTED}`}>Duration</span>
+              </div>
+              <span className={`text-sm font-semibold ${COLORS.TEXT.DEFAULT}`}>{diffDays} {diffDays === 1 ? 'day' : 'days'}</span>
             </div>
           </div>
 
-          {/* Budget Section - Cleaner */}
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-sm">
-              <span className={`${COLORS.TEXT.MUTED} flex items-center gap-1.5 transition-colors duration-200`}>
-                <DollarSign className={`w-4 h-4 ${COLORS.TEXT.PRIMARY} transition-colors duration-200`} />
-                Budget
+          {/* Budget Section */}
+          <div className={`p-4 rounded-lg ${COLORS.BACKGROUND.MUTED} transition-colors duration-200`}>
+            <div className="flex items-center justify-between mb-3">
+              <span className={`${COLORS.TEXT.MUTED} flex items-center gap-2 text-sm font-medium`}>
+                <DollarSign className={`w-4 h-4 ${COLORS.TEXT.PRIMARY}`} />
+                Budget Progress
               </span>
-              <span className={`${COLORS.TEXT.DEFAULT} font-semibold transition-colors duration-200`}>
-                {formatCurrency(trip.spent_amount, trip.currency)} / {formatCurrency(trip.total_budget, trip.currency)}
+              <span className={`${COLORS.TEXT.DEFAULT} font-bold text-sm`}>
+                {percentageUsed.toFixed(0)}%
               </span>
             </div>
             
             {/* Progress Bar */}
-            <div className={`w-full ${COLORS.BACKGROUND.MUTED} rounded-full h-2 overflow-hidden transition-colors duration-200`}>
+            <div className={`w-full ${COLORS.BACKGROUND.DEFAULT} rounded-full h-3 overflow-hidden mb-2 transition-colors duration-200`}>
               <div
-                className={`h-2 rounded-full transition-all duration-500 ${
+                className={`h-3 rounded-full transition-all duration-500 ${
                   percentageUsed > 100 
                     ? "bg-destructive" 
                     : percentageUsed > 80 
@@ -181,26 +206,28 @@ export const TripCard: React.FC<TripCardProps> = ({
               ></div>
             </div>
             <div className="flex items-center justify-between text-xs">
-              <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200`}>Progress</span>
-              <span className={`font-semibold ${COLORS.TEXT.MUTED} transition-colors duration-200`}>{percentageUsed.toFixed(0)}%</span>
+              <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200`}>
+                {formatCurrency(trip.spent_amount, trip.currency)}
+              </span>
+              <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200`}>
+                {formatCurrency(trip.total_budget, trip.currency)}
+              </span>
             </div>
           </div>
 
-          {/* Additional Info - Only if needed */}
+          {/* Additional Info */}
           {(trip.departure || difficultLevel > 0) && (
-            <div className={`flex items-center gap-4 pt-2 border-t ${COLORS.BORDER.LIGHT} text-xs transition-colors duration-200`}>
+            <div className={`flex items-center gap-4 pt-3 border-t ${COLORS.BORDER.LIGHT} transition-colors duration-200`}>
               {trip.departure && (
-                <div className={`flex items-center gap-1.5 ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
-                  <MapPin className={`w-3.5 h-3.5 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
+                <div className={`flex items-center gap-2 text-sm ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
+                  <Plane className={`w-4 h-4 ${COLORS.TEXT.PRIMARY}`} />
                   <span className="truncate">{trip.departure}</span>
                 </div>
               )}
               {difficultLevel > 0 && (
-                <div className="flex items-center gap-1.5">
-                  <Gauge className={`w-3.5 h-3.5 transition-colors duration-200 ${isDifficult ? "text-destructive" : COLORS.TEXT.PRIMARY}`} />
-                  <span className={`font-medium transition-colors duration-200 ${isDifficult ? "text-destructive" : COLORS.TEXT.PRIMARY}`}>
-                    {difficultLevel}/5
-                  </span>
+                <div className={`flex items-center gap-2 text-sm ml-auto ${isDifficult ? "text-destructive" : COLORS.TEXT.PRIMARY}`}>
+                  <Gauge className="w-4 h-4" />
+                  <span className="font-semibold">Difficulty: {difficultLevel}/5</span>
                 </div>
               )}
             </div>

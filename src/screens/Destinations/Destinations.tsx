@@ -168,10 +168,30 @@ export const Destinations: React.FC = () => {
         title="Explore Destinations 🌍"
         description={`Discover amazing places around the world`}
         subtitle={`${destinations.length} destinations available`}
+        proverb="Seeing is believing"
         imageKeyword="travel destinations"
+        height="large"
+        features={[
+          {
+            icon: <Globe className="w-6 h-6" />,
+            title: "Global Exploration",
+            description: "Browse destinations from around the world. Find your perfect travel spot with detailed information.",
+          },
+          {
+            icon: <Star className="w-6 h-6" />,
+            title: "Ratings & Reviews",
+            description: "See what other travelers think. Read authentic reviews and ratings to make informed decisions.",
+          },
+          {
+            icon: <Calendar className="w-6 h-6" />,
+            title: "Best Seasons",
+            description: "Know the best time to visit. Get seasonal information to plan your trip at the perfect time.",
+          },
+        ]}
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
+
         {/* Search & Filter */}
         <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 mb-8`}>
           <div className="flex flex-col md:flex-row gap-4">

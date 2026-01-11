@@ -489,7 +489,29 @@ export const Dashboard: React.FC = () => {
       <Hero
         title={`Welcome back, ${profile?.username || "Traveller"}! 🌍`}
         description="Ready for your next adventure?"
+        proverb="Travel broadens the mind"
         imageKeyword="travel adventure"
+        height="large"
+        features={[
+          {
+            icon: <Map className="w-6 h-6" />,
+            title: "Trip Management",
+            description:
+              "Create, organize, and manage all your travel plans with ease. View your upcoming and past trips.",
+          },
+          {
+            icon: <MapPin className="w-6 h-6" />,
+            title: "Route Tracking",
+            description:
+              "Visualize your travel routes on interactive maps. See all your journey paths in one place.",
+          },
+          {
+            icon: <BarChart3 className="w-6 h-6" />,
+            title: "Statistics & Insights",
+            description:
+              "Track your travel statistics, view your progress, and get insights into your adventures.",
+          },
+        ]}
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">

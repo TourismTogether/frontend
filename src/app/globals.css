@@ -3,6 +3,8 @@
 @import "leaflet/dist/leaflet.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant modern (&:is(.modern *));
+@custom-variant history (&:is(.history *));
 
 @theme inline {
   --color-background: var(--background);
@@ -201,46 +203,153 @@
   --sidebar-ring: #22c55e; /* green-500 */
 
   /* Entity Colors - Đồng bộ với schema.sql (Dark Mode) */
-  /* USERS & ACCOUNT - Blue (lighter for dark mode) */
   --entity-users: #60a5fa; /* blue-400 */
   --entity-account: #3b82f6; /* blue-500 */
-
-  /* ADMIN - Red (lighter for dark mode) */
   --entity-admin: #f87171; /* red-400 */
-
-  /* SUPPORT_SOS_TEAM - Orange (lighter for dark mode) */
   --entity-support-sos: #fb923c; /* orange-400 */
-
-  /* TRAVELLER - Green (lighter for dark mode) */
   --entity-traveller: #34d399; /* emerald-400 */
-
-  /* REGION - Purple (lighter for dark mode) */
   --entity-region: #a78bfa; /* purple-400 */
-
-  /* DESTINATION - Cyan/Teal (lighter for dark mode) */
   --entity-destination: #22d3ee; /* cyan-400 */
-
-  /* TRIP - Amber/Yellow (lighter for dark mode) */
   --entity-trip: #fbbf24; /* amber-400 */
-
-  /* ROUTES - Emerald (lighter for dark mode) */
   --entity-routes: #34d399; /* emerald-400 */
-
-  /* COST - Rose/Pink (lighter for dark mode) */
   --entity-cost: #fb7185; /* rose-400 */
-
-  /* POST & POST_REPLY - Indigo (lighter for dark mode) */
   --entity-post: #818cf8; /* indigo-400 */
   --entity-post-reply: #a5b4fc; /* indigo-300 */
   --guidelines-bg: #1e3a8a; /* blue-900 */
   --guidelines-border: #1e40af; /* blue-800 */
   --guidelines-text: #93c5fd; /* blue-300 */
-
-  /* DIARY - Violet (lighter for dark mode) */
   --entity-diary: #c084fc; /* violet-400 */
-
-  /* SHARE_LOCATION - Sky (lighter for dark mode) */
   --entity-share-location: #38bdf8; /* sky-400 */
+}
+
+.modern {
+  /* Modern – Cyberpunk Cyan/Teal with Purple Theme */
+  --background: #0a0e27; /* dark blue-slate */
+  --foreground: #e0f2fe; /* cyan-50 */
+
+  --card: #1e293b; /* slate-800 */
+  --card-foreground: #e0f2fe; /* cyan-50 */
+
+  --popover: #1e293b;
+  --popover-foreground: #e0f2fe;
+
+  --primary: #06b6d4; /* cyan-500 */
+  --primary-foreground: #ffffff;
+
+  --secondary: #0c4a6e; /* cyan-900 */
+  --secondary-foreground: #67e8f9; /* cyan-200 */
+
+  --muted: #1e293b; /* slate-800 */
+  --muted-foreground: #94a3b8; /* slate-400 */
+
+  --accent: #8b5cf6; /* purple-500 */
+  --accent-foreground: #ffffff;
+
+  --destructive: #ef4444; /* red-500 */
+  --border: #334155; /* slate-700 */
+  --input: #334155;
+  --ring: #06b6d4; /* cyan-500 */
+
+  /* Chart colors - modern (cyan/teal/purple theme) */
+  --chart-1: #06b6d4; /* cyan-500 */
+  --chart-2: #14b8a6; /* teal-500 */
+  --chart-3: #8b5cf6; /* purple-500 */
+  --chart-4: #a855f7; /* violet-500 */
+  --chart-5: #22d3ee; /* cyan-400 */
+
+  /* Sidebar modern */
+  --sidebar: #1e293b; /* slate-800 */
+  --sidebar-foreground: #e0f2fe; /* cyan-50 */
+  --sidebar-primary: #06b6d4; /* cyan-500 */
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #0c4a6e; /* cyan-900 */
+  --sidebar-accent-foreground: #67e8f9; /* cyan-200 */
+  --sidebar-border: #334155; /* slate-700 */
+  --sidebar-ring: #06b6d4; /* cyan-500 */
+
+  /* Entity Colors - Modern Mode */
+  --entity-users: #3b82f6; /* blue-500 */
+  --entity-account: #2563eb; /* blue-600 */
+  --entity-admin: #ef4444; /* red-500 */
+  --entity-support-sos: #f97316; /* orange-500 */
+  --entity-traveller: #10b981; /* emerald-500 */
+  --entity-region: #8b5cf6; /* purple-500 */
+  --entity-destination: #06b6d4; /* cyan-500 */
+  --entity-trip: #f59e0b; /* amber-500 */
+  --entity-routes: #10b981; /* emerald-500 */
+  --entity-cost: #f43f5e; /* rose-500 */
+  --entity-post: #6366f1; /* indigo-500 */
+  --entity-post-reply: #818cf8; /* indigo-400 */
+  --guidelines-bg: #eef2ff; /* indigo-50 */
+  --guidelines-border: #c7d2fe; /* indigo-200 */
+  --guidelines-text: #4338ca; /* indigo-700 */
+  --entity-diary: #a855f7; /* violet-500 */
+  --entity-share-location: #0ea5e9; /* sky-500 */
+}
+
+.history {
+  /* History – Vintage Sepia/Brown Theme */
+  --background: #fef3c7; /* amber-100 */
+  --foreground: #78350f; /* amber-900 */
+
+  --card: #fef9e7; /* amber-50 */
+  --card-foreground: #78350f; /* amber-900 */
+
+  --popover: #fef9e7;
+  --popover-foreground: #78350f;
+
+  --primary: #d97706; /* amber-600 */
+  --primary-foreground: #ffffff;
+
+  --secondary: #fde68a; /* amber-200 */
+  --secondary-foreground: #92400e; /* amber-800 */
+
+  --muted: #fef3c7; /* amber-100 */
+  --muted-foreground: #a16207; /* amber-700 */
+
+  --accent: #b45309; /* amber-700 */
+  --accent-foreground: #ffffff;
+
+  --destructive: #dc2626; /* red-600 */
+  --border: #fcd34d; /* amber-300 */
+  --input: #fcd34d;
+  --ring: #d97706; /* amber-600 */
+
+  /* Chart colors - history (sepia/brown theme) */
+  --chart-1: #d97706; /* amber-600 */
+  --chart-2: #b45309; /* amber-700 */
+  --chart-3: #92400e; /* amber-800 */
+  --chart-4: #78350f; /* amber-900 */
+  --chart-5: #a16207; /* amber-700 */
+
+  /* Sidebar history */
+  --sidebar: #fef9e7; /* amber-50 */
+  --sidebar-foreground: #78350f; /* amber-900 */
+  --sidebar-primary: #d97706; /* amber-600 */
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #fde68a; /* amber-200 */
+  --sidebar-accent-foreground: #92400e; /* amber-800 */
+  --sidebar-border: #fcd34d; /* amber-300 */
+  --sidebar-ring: #d97706; /* amber-600 */
+
+  /* Entity Colors - History Mode (warmer tones) */
+  --entity-users: #3b82f6; /* blue-500 */
+  --entity-account: #2563eb; /* blue-600 */
+  --entity-admin: #dc2626; /* red-600 */
+  --entity-support-sos: #ea580c; /* orange-600 */
+  --entity-traveller: #059669; /* emerald-600 */
+  --entity-region: #7c3aed; /* violet-600 */
+  --entity-destination: #0891b2; /* cyan-600 */
+  --entity-trip: #d97706; /* amber-600 */
+  --entity-routes: #059669; /* emerald-600 */
+  --entity-cost: #db2777; /* pink-600 */
+  --entity-post: #4f46e5; /* indigo-600 */
+  --entity-post-reply: #6366f1; /* indigo-500 */
+  --guidelines-bg: #fef3c7; /* amber-100 */
+  --guidelines-border: #fcd34d; /* amber-300 */
+  --guidelines-text: #78350f; /* amber-900 */
+  --entity-diary: #9333ea; /* violet-600 */
+  --entity-share-location: #0284c7; /* sky-600 */
 }
 
 @layer base {
@@ -252,7 +361,7 @@
   }
 }
 
-/* ===== Themed vertical scrollbar (light/dark) ===== */
+/* ===== Themed vertical scrollbar (all themes) ===== */
 :root {
   --sb-track: var(--secondary);
   --sb-thumb: color-mix(in oklab, var(--accent) 60%, #000 10%);
@@ -264,6 +373,20 @@
   --sb-track: var(--secondary);
   --sb-thumb: color-mix(in oklab, var(--accent) 70%, #fff 10%);
   --sb-thumb-hover: color-mix(in oklab, var(--accent) 85%, #fff 5%);
+  --sb-corner: var(--card);
+}
+
+.modern {
+  --sb-track: var(--secondary);
+  --sb-thumb: color-mix(in oklab, var(--accent) 60%, #000 10%);
+  --sb-thumb-hover: color-mix(in oklab, var(--accent) 75%, #000 5%);
+  --sb-corner: var(--card);
+}
+
+.history {
+  --sb-track: var(--secondary);
+  --sb-thumb: color-mix(in oklab, var(--accent) 60%, #000 10%);
+  --sb-thumb-hover: color-mix(in oklab, var(--accent) 75%, #000 5%);
   --sb-corner: var(--card);
 }
 

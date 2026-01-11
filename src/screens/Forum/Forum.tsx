@@ -5,10 +5,12 @@ import Image from "next/image";
 import {
   Clock,
   MessageCircle,
+  MessageSquare,
   Plus,
   TrendingUp,
   Filter,
   User,
+  Users,
   Heart,
   Globe,
   Sparkles,
@@ -21,6 +23,7 @@ import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
+import FeatureIntro from "../../components/FeatureIntro/FeatureIntro";
 import { ANIMATIONS } from "../../constants/animations";
 import ShimmerCard from "../../components/Animations/ShimmerCard";
 
@@ -369,11 +372,33 @@ export const Forum: React.FC = () => {
 
   return (
     <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
-      {/* Hero Section */}
+      {/* Hero Section with integrated features */}
       <Hero
         title="Community Forum 💬"
         description="Share experiences, ask questions, and connect with travelers"
+        proverb="Travel broadens the mind"
         imageKeyword="community discussion forum"
+        height="large"
+        features={[
+          {
+            icon: <MessageSquare className="w-6 h-6" />,
+            title: "Share Experiences",
+            description:
+              "Post your travel stories, photos, and tips. Inspire others with your adventures.",
+          },
+          {
+            icon: <Users className="w-6 h-6" />,
+            title: "Connect & Discuss",
+            description:
+              "Engage in conversations, ask questions, and get advice from experienced travelers.",
+          },
+          {
+            icon: <TrendingUp className="w-6 h-6" />,
+            title: "Discover Tips",
+            description:
+              "Browse trending topics, popular destinations, and valuable travel insights from the community.",
+          },
+        ]}
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
