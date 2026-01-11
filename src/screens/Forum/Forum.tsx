@@ -111,7 +111,9 @@ export const Forum: React.FC = () => {
       }
 
       const rawData = await res.json();
-      const rawPosts: PostApiResponse[] = Array.isArray(rawData) ? rawData : rawData.data || [];
+      const rawPosts: PostApiResponse[] = Array.isArray(rawData)
+        ? rawData
+        : rawData.data || [];
 
       // Fetch user info for posts
       const postUserIds: string[] = [
@@ -127,7 +129,8 @@ export const Forum: React.FC = () => {
       // Fetch user details for each post author
       if (postUserIds.length > 0) {
         const userPromises = postUserIds.map(async (userId: string) => {
-          if (!userId || userId === "NaN" || userId === "undefined") return null;
+          if (!userId || userId === "NaN" || userId === "undefined")
+            return null;
           try {
             const userRes = await fetch(API_ENDPOINTS.USERS.BY_ID(userId), {
               credentials: "include",
@@ -168,6 +171,7 @@ export const Forum: React.FC = () => {
           user_id: userId,
           title: post.title,
           content: post.content,
+          image: post.image || null,
           tags: post.tags || "",
           last_activity_at: post.updated_at || post.created_at,
           reply_count: (post.reply_count || 0) as 0,
@@ -227,7 +231,12 @@ export const Forum: React.FC = () => {
       const commentPromises = posts.map(async (post) => {
         try {
           // Validate post ID before fetching replies
-          if (!post.id || post.id === "NaN" || post.id === "undefined" || String(post.id).trim() === "") {
+          if (
+            !post.id ||
+            post.id === "NaN" ||
+            post.id === "undefined" ||
+            String(post.id).trim() === ""
+          ) {
             console.warn("Invalid post ID, skipping replies fetch:", post.id);
             return;
           }
@@ -236,7 +245,11 @@ export const Forum: React.FC = () => {
             const repliesWithUsers = await Promise.all(
               replies.slice(0, 2).map(async (reply: IPostReply) => {
                 try {
-                  if (!reply.user_id || reply.user_id === "NaN" || reply.user_id === "undefined") {
+                  if (
+                    !reply.user_id ||
+                    reply.user_id === "NaN" ||
+                    reply.user_id === "undefined"
+                  ) {
                     return {
                       ...reply,
                       profiles: {
@@ -317,7 +330,8 @@ export const Forum: React.FC = () => {
   if (activeTab === "my-posts" && user) {
     filteredPosts = filteredPosts.filter(
       (post) =>
-        post.user_id === String(user.id) || String(post.user_id) === String(user.id)
+        post.user_id === String(user.id) ||
+        String(post.user_id) === String(user.id)
     );
   }
 
@@ -347,7 +361,8 @@ export const Forum: React.FC = () => {
 
   const myPostsCount = user
     ? posts.filter(
-        (p) => p.user_id === String(user.id) || String(p.user_id) === String(user.id)
+        (p) =>
+          p.user_id === String(user.id) || String(p.user_id) === String(user.id)
       ).length
     : 0;
   const publicPostsCount = posts.length;
@@ -382,7 +397,9 @@ export const Forum: React.FC = () => {
         </div>
 
         {/* Tabs Section */}
-        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-2 mb-6`}>
+        <div
+          className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-2 mb-6`}
+        >
           <div className="flex gap-2">
             <button
               onClick={() => {
@@ -438,7 +455,9 @@ export const Forum: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           <div className="lg:col-span-3 space-y-4">
             {filteredPosts.length === 0 ? (
-              <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border-2 border-dashed rounded-xl shadow-lg p-16 text-center`}>
+              <div
+                className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border-2 border-dashed rounded-xl shadow-lg p-16 text-center`}
+              >
                 <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden">
                   <Image
                     src={getTravelImageUrl("no posts discussion", 200, 200)}
@@ -448,7 +467,9 @@ export const Forum: React.FC = () => {
                     unoptimized
                   />
                 </div>
-                <MessageCircle className={`w-16 h-16 ${COLORS.TEXT.MUTED} mx-auto mb-4`} />
+                <MessageCircle
+                  className={`w-16 h-16 ${COLORS.TEXT.MUTED} mx-auto mb-4`}
+                />
                 <h3 className={`text-xl font-bold ${COLORS.TEXT.DEFAULT} mb-2`}>
                   No posts found
                 </h3>
@@ -481,160 +502,202 @@ export const Forum: React.FC = () => {
                     className="hover:shadow-xl transition-all duration-300 hover:-translate-y-1 group overflow-hidden"
                     shimmer={false}
                   >
-                  <div className="p-6">
-                    <div className="flex items-start gap-4">
-                      {/* Avatar */}
-                      <div className={`w-14 h-14 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white group-hover:ring-accent/50 transition-all ${ANIMATIONS.PULSE.GENTLE}`}>
-                        {post.profiles?.avatar_url ? (
-                          <Image
-                            src={post.profiles.avatar_url}
-                            alt={post.profiles.full_name || "User"}
-                            width={56}
-                            height={56}
-                            className="rounded-full object-cover"
-                            unoptimized
-                          />
-                        ) : (
-                          <span className="text-xl font-bold text-white">
-                            {post.profiles?.full_name
-                              ?.charAt(0)
-                              .toUpperCase() || "U"}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex-1 min-w-0">
-                        {/* Category and Pinned Badge */}
-                        <div className="flex items-center gap-2 mb-3 flex-wrap">
-                          <span
-                            className="text-xs px-3 py-1.5 rounded-full font-semibold border-2 transition-all group-hover:scale-105"
-                            style={{
-                              backgroundColor: `${post.forum_categories?.color}15`,
-                              borderColor: post.forum_categories?.color,
-                              color: post.forum_categories?.color,
-                            }}
-                          >
-                            {post.forum_categories?.name || "General"}
-                          </span>
-                          {post.is_pinned && (
-                            <span className="text-xs bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 px-2.5 py-1 rounded-full font-semibold border border-yellow-300 flex items-center gap-1">
-                              <span>📌</span>
-                              <span>Pinned</span>
+                    <div className="p-6">
+                      <div className="flex items-start gap-4">
+                        {/* Avatar */}
+                        <div
+                          className={`w-14 h-14 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white group-hover:ring-accent/50 transition-all ${ANIMATIONS.PULSE.GENTLE}`}
+                        >
+                          {post.profiles?.avatar_url ? (
+                            <Image
+                              src={post.profiles.avatar_url}
+                              alt={post.profiles.full_name || "User"}
+                              width={56}
+                              height={56}
+                              className="rounded-full object-cover"
+                              unoptimized
+                            />
+                          ) : (
+                            <span className="text-xl font-bold text-white">
+                              {post.profiles?.full_name
+                                ?.charAt(0)
+                                .toUpperCase() || "U"}
                             </span>
                           )}
                         </div>
 
-                        {/* Title */}
-                        <h3 className={`text-xl font-bold ${COLORS.TEXT.DEFAULT} mb-2 group-hover:${COLORS.TEXT.PRIMARY} transition-colors line-clamp-2`}>
-                          {post.title}
-                        </h3>
-
-                        {/* Post Image */}
-                        {post.image && (
-                          <div className={`mb-3 rounded-lg overflow-hidden ${COLORS.BORDER.DEFAULT} border`}>
-                            <Image
-                              src={post.image}
-                              alt={post.title}
-                              width={600}
-                              height={200}
-                              className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                              unoptimized
-                              onError={(e) => {
-                                e.currentTarget.style.display = "none";
+                        <div className="flex-1 min-w-0">
+                          {/* Category and Pinned Badge */}
+                          <div className="flex items-center gap-2 mb-3 flex-wrap">
+                            <span
+                              className="text-xs px-3 py-1.5 rounded-full font-semibold border-2 transition-all group-hover:scale-105"
+                              style={{
+                                backgroundColor: `${post.forum_categories?.color}15`,
+                                borderColor: post.forum_categories?.color,
+                                color: post.forum_categories?.color,
                               }}
-                            />
+                            >
+                              {post.forum_categories?.name || "General"}
+                            </span>
+                            {post.is_pinned && (
+                              <span className="text-xs bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 px-2.5 py-1 rounded-full font-semibold border border-yellow-300 flex items-center gap-1">
+                                <span>📌</span>
+                                <span>Pinned</span>
+                              </span>
+                            )}
                           </div>
-                        )}
 
-                        {/* Content Preview */}
-                        <p className={`${COLORS.TEXT.MUTED} text-sm mb-4 line-clamp-2 leading-relaxed`}>
-                          {post.content}
-                        </p>
+                          {/* Title */}
+                          <h3
+                            className={`text-xl font-bold ${COLORS.TEXT.DEFAULT} mb-2 group-hover:${COLORS.TEXT.PRIMARY} transition-colors line-clamp-2`}
+                          >
+                            {post.title}
+                          </h3>
 
-                        {/* Comments Preview */}
-                        {postComments[post.id] &&
-                          postComments[post.id].length > 0 && (
-                            <div className={`mb-4 space-y-2 border-t ${COLORS.BORDER.DEFAULT} pt-3`}>
-                              <div className={`text-xs font-semibold ${COLORS.TEXT.MUTED} mb-2`}>
-                                Recent Comments
-                              </div>
-                              {postComments[post.id].map((comment) => (
-                                <div
-                                  key={comment.id}
-                                  className={`flex gap-2 ${COLORS.BACKGROUND.MUTED} rounded-lg p-2.5 hover:${COLORS.BACKGROUND.SECONDARY} transition-colors`}
-                                >
-                                  <div className={`w-6 h-6 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0`}>
-                                    {comment.profiles?.avatar_url ? (
-                                      <Image
-                                        src={comment.profiles.avatar_url}
-                                        alt={comment.profiles.full_name || "User"}
-                                        width={24}
-                                        height={24}
-                                        className="rounded-full object-cover"
-                                        unoptimized
-                                      />
-                                    ) : (
-                                      <span className="text-xs font-bold text-white">
-                                        {comment.profiles?.full_name
-                                          ?.charAt(0)
-                                          .toUpperCase() || "U"}
-                                      </span>
-                                    )}
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <div className="flex items-center gap-2 mb-1">
-                                      <span className={`text-xs font-semibold ${COLORS.TEXT.DEFAULT}`}>
-                                        {comment.profiles?.full_name || "User"}
-                                      </span>
-                                    </div>
-                                    <p className={`text-xs ${COLORS.TEXT.MUTED} line-clamp-2`}>
-                                      {comment.content}
-                                    </p>
-                                  </div>
-                                </div>
-                              ))}
-                              {post.reply_count &&
-                                post.reply_count > postComments[post.id].length && (
-                                <div className={`text-xs ${COLORS.TEXT.MUTED} text-center pt-1`}>
-                                  +
-                                  {post.reply_count -
-                                    postComments[post.id].length}{" "}
-                                  more comment
-                                  {post.reply_count -
-                                    postComments[post.id].length !==
-                                  1
-                                    ? "s"
-                                    : ""}
-                                </div>
-                              )}
+                          {/* Post Image */}
+                          {post.image && (
+                            <div
+                              className={`mb-3 rounded-lg overflow-hidden ${COLORS.BORDER.DEFAULT} border ${COLORS.BACKGROUND.MUTED} transition-colors duration-200`}
+                            >
+                              <Image
+                                src={post.image}
+                                alt={post.title}
+                                width={600}
+                                height={200}
+                                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                                unoptimized
+                                onError={(e) => {
+                                  const target = e.currentTarget;
+                                  const parent = target.parentElement;
+                                  if (parent) {
+                                    parent.style.display = "none";
+                                  }
+                                }}
+                              />
                             </div>
                           )}
 
-                        {/* Meta Info */}
-                        <div className={`flex flex-wrap items-center gap-4 text-sm ${COLORS.TEXT.MUTED}`}>
-                          <span className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}>
-                            <MessageCircle className={`w-4 h-4 ${COLORS.TEXT.PRIMARY}`} />
-                            <span className="font-medium">
-                              {post.reply_count || 0}
+                          {/* Content Preview */}
+                          <p
+                            className={`${COLORS.TEXT.MUTED} text-sm mb-4 line-clamp-2 leading-relaxed`}
+                          >
+                            {post.content}
+                          </p>
+
+                          {/* Comments Preview */}
+                          {postComments[post.id] &&
+                            postComments[post.id].length > 0 && (
+                              <div
+                                className={`mb-4 space-y-2 border-t ${COLORS.BORDER.DEFAULT} pt-3`}
+                              >
+                                <div
+                                  className={`text-xs font-semibold ${COLORS.TEXT.MUTED} mb-2`}
+                                >
+                                  Recent Comments
+                                </div>
+                                {postComments[post.id].map((comment) => (
+                                  <div
+                                    key={comment.id}
+                                    className={`flex gap-2 ${COLORS.BACKGROUND.MUTED} rounded-lg p-2.5 hover:${COLORS.BACKGROUND.SECONDARY} transition-colors`}
+                                  >
+                                    <div
+                                      className={`w-6 h-6 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0`}
+                                    >
+                                      {comment.profiles?.avatar_url ? (
+                                        <Image
+                                          src={comment.profiles.avatar_url}
+                                          alt={
+                                            comment.profiles.full_name || "User"
+                                          }
+                                          width={24}
+                                          height={24}
+                                          className="rounded-full object-cover"
+                                          unoptimized
+                                        />
+                                      ) : (
+                                        <span className="text-xs font-bold text-white">
+                                          {comment.profiles?.full_name
+                                            ?.charAt(0)
+                                            .toUpperCase() || "U"}
+                                        </span>
+                                      )}
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <span
+                                          className={`text-xs font-semibold ${COLORS.TEXT.DEFAULT}`}
+                                        >
+                                          {comment.profiles?.full_name ||
+                                            "User"}
+                                        </span>
+                                      </div>
+                                      <p
+                                        className={`text-xs ${COLORS.TEXT.MUTED} line-clamp-2`}
+                                      >
+                                        {comment.content}
+                                      </p>
+                                    </div>
+                                  </div>
+                                ))}
+                                {post.reply_count &&
+                                  post.reply_count >
+                                    postComments[post.id].length && (
+                                    <div
+                                      className={`text-xs ${COLORS.TEXT.MUTED} text-center pt-1`}
+                                    >
+                                      +
+                                      {post.reply_count -
+                                        postComments[post.id].length}{" "}
+                                      more comment
+                                      {post.reply_count -
+                                        postComments[post.id].length !==
+                                      1
+                                        ? "s"
+                                        : ""}
+                                    </div>
+                                  )}
+                              </div>
+                            )}
+
+                          {/* Meta Info */}
+                          <div
+                            className={`flex flex-wrap items-center gap-4 text-sm ${COLORS.TEXT.MUTED}`}
+                          >
+                            <span
+                              className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}
+                            >
+                              <MessageCircle
+                                className={`w-4 h-4 ${COLORS.TEXT.PRIMARY}`}
+                              />
+                              <span className="font-medium">
+                                {post.reply_count || 0}
+                              </span>
                             </span>
-                          </span>
-                          <span className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}>
-                            <Heart className="w-4 h-4 text-red-500" />
-                            <span className="font-medium">
-                              {post.total_likes || 0}
+                            <span
+                              className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}
+                            >
+                              <Heart className="w-4 h-4 text-red-500" />
+                              <span className="font-medium">
+                                {post.total_likes || 0}
+                              </span>
                             </span>
-                          </span>
-                          <span className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}>
-                            <Clock className="w-4 h-4" />
-                            <span>{formatTimeAgo(post.last_activity_at)}</span>
-                          </span>
-                          <span className={`${COLORS.TEXT.DEFAULT} font-semibold ml-auto`}>
-                            {post.profiles?.full_name || "User"}
-                          </span>
+                            <span
+                              className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}
+                            >
+                              <Clock className="w-4 h-4" />
+                              <span>
+                                {formatTimeAgo(post.last_activity_at)}
+                              </span>
+                            </span>
+                            <span
+                              className={`${COLORS.TEXT.DEFAULT} font-semibold ml-auto`}
+                            >
+                              {post.profiles?.full_name || "User"}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
                   </ShimmerCard>
                 </Link>
               ))
@@ -643,21 +706,39 @@ export const Forum: React.FC = () => {
 
           <div className="space-y-6">
             {/* Filters */}
-            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6`}>
-              <h3 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-4 flex items-center`}>
+            <div
+              className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6`}
+            >
+              <h3
+                className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-4 flex items-center`}
+              >
                 <Filter className={`w-5 h-5 mr-2 ${COLORS.TEXT.PRIMARY}`} />
                 Sort & Filter
               </h3>
 
               <div className="mb-4">
-                <label className={`text-xs font-semibold ${COLORS.TEXT.MUTED} uppercase tracking-wide mb-3 block`}>
+                <label
+                  className={`text-xs font-semibold ${COLORS.TEXT.MUTED} uppercase tracking-wide mb-3 block`}
+                >
                   Sort By
                 </label>
                 <div className="space-y-2">
                   {[
-                    { value: "recent" as SortType, label: "Most Recent", icon: Clock },
-                    { value: "popular" as SortType, label: "Most Popular", icon: Heart },
-                    { value: "trending" as SortType, label: "Trending", icon: Sparkles },
+                    {
+                      value: "recent" as SortType,
+                      label: "Most Recent",
+                      icon: Clock,
+                    },
+                    {
+                      value: "popular" as SortType,
+                      label: "Most Popular",
+                      icon: Heart,
+                    },
+                    {
+                      value: "trending" as SortType,
+                      label: "Trending",
+                      icon: Sparkles,
+                    },
                   ].map((option) => {
                     const Icon = option.icon;
                     return (
@@ -680,8 +761,12 @@ export const Forum: React.FC = () => {
             </div>
 
             {/* Categories Sidebar */}
-            <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6`}>
-              <h3 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-4 flex items-center`}>
+            <div
+              className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6`}
+            >
+              <h3
+                className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-4 flex items-center`}
+              >
                 <TrendingUp className={`w-5 h-5 mr-2 ${COLORS.TEXT.PRIMARY}`} />
                 Categories
               </h3>
@@ -758,7 +843,9 @@ export const Forum: React.FC = () => {
             </div>
 
             {/* Forum Guidelines */}
-            <div className={`${GRADIENTS.PRIMARY} rounded-xl shadow-lg p-6 text-white`}>
+            <div
+              className={`${GRADIENTS.PRIMARY} rounded-xl shadow-lg p-6 text-white`}
+            >
               <h3 className="font-bold text-lg mb-4">Forum Guidelines</h3>
               <ul className="text-sm space-y-2.5">
                 <li className="flex items-start gap-2">
