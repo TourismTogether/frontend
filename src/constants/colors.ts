@@ -118,65 +118,65 @@ export const COLORS = {
     POST: "bg-post text-white",
   },
 
-  // Auth Page Colors (Light & Dark Mode)
+  // Auth Page Colors (All 4 Themes)
   AUTH: {
-    // Background - Light Mode
-    CARD: "bg-card/95 dark:bg-slate-800/80 dark:bg-slate-900/90",
-    CARD_BLUR: "backdrop-blur-lg dark:backdrop-blur-xl",
+    // Background - All Themes
+    CARD: "bg-card/95 dark:bg-slate-800/80 modern:bg-slate-800/80 history:bg-card/95",
+    CARD_BLUR: "backdrop-blur-lg dark:backdrop-blur-xl modern:backdrop-blur-xl history:backdrop-blur-lg",
     
     // Text Colors
     TEXT_WHITE: "text-white",
-    TEXT_LIGHT: "text-white dark:text-slate-100",
-    TEXT_MUTED: "text-muted-foreground dark:text-slate-300 dark:text-slate-400",
-    TEXT_LABEL: "text-foreground dark:text-slate-200 dark:text-slate-100",
+    TEXT_LIGHT: "text-white dark:text-slate-100 modern:text-cyan-50 history:text-amber-900",
+    TEXT_MUTED: "text-muted-foreground dark:text-slate-300 modern:text-slate-400 history:text-amber-700",
+    TEXT_LABEL: "text-foreground dark:text-slate-200 modern:text-cyan-100 history:text-amber-900",
     
     // Border Colors
-    BORDER_CARD: "border-border dark:border-slate-700/50 dark:border-slate-700/30",
-    BORDER_HOVER: "hover:border-accent/30 dark:hover:border-emerald-500/30 dark:hover:border-emerald-400/30",
-    BORDER_INPUT: "border-border dark:border-slate-600/50 dark:border-slate-700/50",
-    BORDER_FOCUS: "focus:border-accent/50 dark:focus:border-emerald-500/50 dark:focus:border-emerald-400/50",
+    BORDER_CARD: "border-border dark:border-slate-700/50 modern:border-cyan-500/30 history:border-amber-300",
+    BORDER_HOVER: "hover:border-accent/30 dark:hover:border-emerald-500/30 modern:hover:border-cyan-400/50 history:hover:border-amber-600/30",
+    BORDER_INPUT: "border-border dark:border-slate-600/50 modern:border-cyan-500/30 history:border-amber-300",
+    BORDER_FOCUS: "focus:border-accent/50 dark:focus:border-emerald-500/50 modern:focus:border-cyan-400/70 history:focus:border-amber-600/50",
     
     // Input Colors
-    INPUT_BG: "bg-background dark:bg-slate-700/50 dark:bg-slate-800/50",
-    INPUT_TEXT: "text-foreground dark:text-slate-100",
-    INPUT_PLACEHOLDER: "placeholder:text-muted-foreground dark:placeholder:text-slate-400 dark:placeholder:text-slate-500",
-    INPUT_FOCUS_RING: "focus:ring-accent/20 dark:focus:ring-emerald-500/20 dark:focus:ring-emerald-400/20",
+    INPUT_BG: "bg-background dark:bg-slate-700/50 modern:bg-slate-700/50 history:bg-amber-50",
+    INPUT_TEXT: "text-foreground dark:text-slate-100 modern:text-cyan-50 history:text-amber-900",
+    INPUT_PLACEHOLDER: "placeholder:text-muted-foreground dark:placeholder:text-slate-400 modern:placeholder:text-slate-400 history:placeholder:text-amber-600",
+    INPUT_FOCUS_RING: "focus:ring-accent/20 dark:focus:ring-emerald-500/20 modern:focus:ring-cyan-500/30 history:focus:ring-amber-600/20",
     
     // Icon Colors
-    ICON_MUTED: "text-muted-foreground dark:text-slate-400 dark:text-slate-500",
-    ICON_EMERALD: "text-emerald-500 dark:text-emerald-400 dark:text-emerald-300",
-    ICON_WHITE: "text-white dark:text-emerald-400 dark:text-emerald-300",
+    ICON_MUTED: "text-muted-foreground dark:text-slate-400 modern:text-slate-400 history:text-amber-700",
+    ICON_EMERALD: "text-emerald-500 dark:text-emerald-400 modern:text-cyan-400 history:text-amber-600",
+    ICON_WHITE: "text-white dark:text-emerald-400 modern:text-cyan-300 history:text-amber-800",
     
     // Link Colors
-    LINK: "text-accent dark:text-emerald-400 dark:text-emerald-300",
-    LINK_HOVER: "hover:text-accent/80 dark:hover:text-emerald-300 dark:hover:text-emerald-200",
+    LINK: "text-accent dark:text-emerald-400 modern:text-cyan-400 history:text-amber-700",
+    LINK_HOVER: "hover:text-accent/80 dark:hover:text-emerald-300 modern:hover:text-cyan-300 history:hover:text-amber-800",
     
     // Glassmorphism
-    GLASS_BG: "bg-white/20 dark:bg-white/10 dark:bg-white/5",
-    GLASS_BORDER: "border-white/20 dark:border-white/10 dark:border-white/5",
-    GLASS_HOVER: "hover:bg-white/20 dark:hover:bg-white/10",
+    GLASS_BG: "bg-white/20 dark:bg-white/10 modern:bg-cyan-500/10 history:bg-amber-50/30",
+    GLASS_BORDER: "border-white/20 dark:border-white/10 modern:border-cyan-400/20 history:border-amber-200/30",
+    GLASS_HOVER: "hover:bg-white/20 dark:hover:bg-white/10 modern:hover:bg-cyan-500/15 history:hover:bg-amber-50/40",
   },
 } as const;
 
-// Gradient combinations
+// Gradient combinations (All 4 Themes)
 export const GRADIENTS = {
-  PRIMARY: "bg-gradient-to-r from-green-500 to-emerald-500",
-  PRIMARY_LIGHT: "bg-gradient-to-r from-green-400 to-emerald-400",
-  PRIMARY_DARK: "bg-gradient-to-r from-green-600 to-emerald-600",
-  CARD: "bg-gradient-to-br from-white to-green-50",
-  HERO: "bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500",
+  PRIMARY: "bg-gradient-to-r from-green-500 to-emerald-500 dark:from-green-500 dark:to-emerald-500 modern:from-cyan-500 modern:to-teal-500 history:from-amber-600 history:to-amber-700",
+  PRIMARY_LIGHT: "bg-gradient-to-r from-green-400 to-emerald-400 dark:from-green-400 dark:to-emerald-400 modern:from-cyan-400 modern:to-teal-400 history:from-amber-500 history:to-amber-600",
+  PRIMARY_DARK: "bg-gradient-to-r from-green-600 to-emerald-600 dark:from-green-600 dark:to-emerald-600 modern:from-cyan-600 modern:to-teal-600 history:from-amber-700 history:to-amber-800",
+  CARD: "bg-gradient-to-br from-white to-green-50 dark:from-slate-800 dark:to-slate-900 modern:from-slate-800 modern:to-slate-900 history:from-amber-50 history:to-amber-100",
+  HERO: "bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 dark:from-green-500 dark:via-emerald-500 dark:to-teal-500 modern:from-cyan-600 modern:via-teal-600 modern:to-purple-600 history:from-amber-600 history:via-amber-700 history:to-orange-600",
   
-  // Auth Page Gradients (Light & Dark Mode)
-  AUTH_BACKGROUND: "bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 dark:from-slate-950",
-  AUTH_TITLE: "bg-gradient-to-r from-white to-emerald-100 bg-clip-text text-transparent",
-  AUTH_HEADING: "bg-gradient-to-r from-green-600 to-emerald-600 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400 bg-clip-text text-transparent",
-  AUTH_BUTTON: "bg-gradient-to-r from-green-600 to-emerald-600 dark:from-emerald-500 dark:via-green-500 dark:to-teal-500",
-  AUTH_BUTTON_HOVER: "hover:from-green-700 hover:to-emerald-700 dark:hover:from-emerald-600 dark:hover:via-green-600 dark:hover:to-teal-600",
-  AUTH_FEATURE_ICON: "bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-400/20 dark:to-teal-400/20",
+  // Auth Page Gradients (All 4 Themes)
+  AUTH_BACKGROUND: "bg-gradient-to-br from-green-500 via-emerald-500 to-teal-500 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 modern:from-cyan-900 modern:via-teal-800 modern:to-purple-900 history:from-amber-600 history:via-orange-600 history:to-amber-700",
+  AUTH_TITLE: "bg-gradient-to-r from-white to-emerald-100 dark:from-white dark:to-emerald-100 modern:from-cyan-200 modern:to-teal-200 history:from-amber-900 history:to-amber-800 bg-clip-text text-transparent",
+  AUTH_HEADING: "bg-gradient-to-r from-green-600 to-emerald-600 dark:from-emerald-400 dark:via-green-400 dark:to-teal-400 modern:from-cyan-400 modern:via-teal-400 modern:to-purple-400 history:from-amber-800 history:via-amber-700 history:to-orange-700 bg-clip-text text-transparent",
+  AUTH_BUTTON: "bg-gradient-to-r from-green-600 to-emerald-600 dark:from-emerald-500 dark:via-green-500 dark:to-teal-500 modern:from-cyan-500 modern:via-teal-500 modern:to-purple-500 history:from-amber-700 history:via-amber-600 history:to-orange-600",
+  AUTH_BUTTON_HOVER: "hover:from-green-700 hover:to-emerald-700 dark:hover:from-emerald-600 dark:hover:via-green-600 dark:hover:to-teal-600 modern:hover:from-cyan-600 modern:hover:via-teal-600 modern:hover:to-purple-600 history:hover:from-amber-800 history:hover:via-amber-700 history:hover:to-orange-700",
+  AUTH_FEATURE_ICON: "bg-gradient-to-br from-emerald-500/20 to-teal-500/20 dark:from-emerald-400/20 dark:to-teal-400/20 modern:from-cyan-500/20 modern:to-teal-500/20 history:from-amber-500/20 history:to-orange-500/20",
   
-  // Background Orbs (for animations - Light & Dark Mode)
-  AUTH_ORB_EMERALD: "bg-white/10 dark:bg-emerald-500/20 dark:bg-emerald-400/10",
-  AUTH_ORB_TEAL: "bg-white/10 dark:bg-teal-500/20 dark:bg-teal-400/10",
-  AUTH_ORB_GREEN: "bg-white/5 dark:bg-green-500/10 dark:bg-green-400/5",
-  AUTH_ORB_CYAN: "bg-white/5 dark:bg-cyan-500/10 dark:bg-cyan-400/5",
+  // Background Orbs (for animations - All 4 Themes)
+  AUTH_ORB_EMERALD: "bg-white/10 dark:bg-emerald-500/20 modern:bg-cyan-500/20 history:bg-amber-500/20",
+  AUTH_ORB_TEAL: "bg-white/10 dark:bg-teal-500/20 modern:bg-teal-500/20 history:bg-orange-500/20",
+  AUTH_ORB_GREEN: "bg-white/5 dark:bg-green-500/10 modern:bg-cyan-500/10 history:bg-amber-500/10",
+  AUTH_ORB_CYAN: "bg-white/5 dark:bg-cyan-500/10 modern:bg-purple-500/10 history:bg-orange-500/10",
 } as const;

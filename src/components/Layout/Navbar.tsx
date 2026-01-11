@@ -21,6 +21,8 @@ import {
   Shield,
   Sun,
   Moon,
+  Palette,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { EmergencyModal } from "../Emergency/EmergencyModal";
@@ -34,6 +36,7 @@ export const Navbar: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State cho Mobile Menu
   const [showEmergency, setShowEmergency] = useState(false); // State cho Emergency Modal
   const [isSupporter, setIsSupporter] = useState(false); // State cho Supporter check
+  const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false); // State cho Theme Menu
   const [mounted, setMounted] = useState(false); // Prevent hydration mismatch
 
   // Prevent hydration mismatch for theme
@@ -145,24 +148,91 @@ export const Navbar: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
-            {/* Dark Mode Toggle Button */}
+            {/* Theme Switcher - 4 Modes */}
             {mounted && (
-              <button
-                onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
-                className="flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
-                title={
-                  theme === "dark"
-                    ? "Switch to Light Mode"
-                    : "Switch to Dark Mode"
-                }
-                aria-label="Toggle dark mode"
-              >
-                {theme === "dark" ? (
-                  <Sun className="w-5 h-5 transition-colors duration-200" />
-                ) : (
-                  <Moon className="w-5 h-5 transition-colors duration-200" />
+              <div className="relative">
+                <button
+                  onClick={() => setIsThemeMenuOpen(!isThemeMenuOpen)}
+                  onBlur={() => setTimeout(() => setIsThemeMenuOpen(false), 200)}
+                  className="flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all duration-200"
+                  title="Change Theme"
+                  aria-label="Theme switcher"
+                >
+                  {theme === "light" ? (
+                    <Sun className="w-5 h-5 transition-colors duration-200" />
+                  ) : theme === "dark" ? (
+                    <Moon className="w-5 h-5 transition-colors duration-200" />
+                  ) : theme === "modern" ? (
+                    <Sparkles className="w-5 h-5 transition-colors duration-200" />
+                  ) : (
+                    <Palette className="w-5 h-5 transition-colors duration-200" />
+                  )}
+                </button>
+                
+                {/* Theme Dropdown Menu */}
+                {isThemeMenuOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-40 bg-card border border-border rounded-lg shadow-lg z-50">
+                    <div className="p-1">
+                      <button
+                        onClick={() => {
+                          setTheme("light");
+                          setIsThemeMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all duration-200 ${
+                          theme === "light"
+                            ? "bg-accent text-accent-foreground"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <Sun className="w-4 h-4" />
+                        <span>Light</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTheme("dark");
+                          setIsThemeMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all duration-200 ${
+                          theme === "dark"
+                            ? "bg-accent text-accent-foreground"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <Moon className="w-4 h-4" />
+                        <span>Dark</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTheme("modern");
+                          setIsThemeMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all duration-200 ${
+                          theme === "modern"
+                            ? "bg-accent text-accent-foreground"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>Modern</span>
+                      </button>
+                      <button
+                        onClick={() => {
+                          setTheme("history");
+                          setIsThemeMenuOpen(false);
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-md text-sm transition-all duration-200 ${
+                          theme === "history"
+                            ? "bg-accent text-accent-foreground"
+                            : "text-foreground hover:bg-muted"
+                        }`}
+                      >
+                        <Palette className="w-4 h-4" />
+                        <span>History</span>
+                      </button>
+                    </div>
+                  </div>
                 )}
-              </button>
+              </div>
             )}
 
             {/* Weather Icon Button */}
