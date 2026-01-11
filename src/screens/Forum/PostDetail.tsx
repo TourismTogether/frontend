@@ -323,13 +323,13 @@ export default function PostDetail({ postData }: PostDetailProps) {
     const categoryColor = getCategoryColor(categoryName);
 
     return (
-        <div className={`min-h-screen bg-background pt-8 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-300`}>
+        <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} pt-8 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-300`}>
             <div className="max-w-5xl mx-auto min-w-7xl">
                 {/* Header Section */}
                 <div className="mb-6">
                     <button
                         onClick={() => router.back()}
-                        className={`flex items-center ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} mb-6 transition-all duration-200 font-semibold group`}
+                        className={`flex items-center ${COLORS.TEXT.MUTED} ${COLORS.TEXT.PRIMARY_HOVER} mb-6 transition-all duration-200 font-semibold group`}
                     >
                         <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
                         <span>Back to Forum</span>
@@ -361,7 +361,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                 <div className={`${COLORS.BACKGROUND.CARD} rounded-2xl shadow-xl ${COLORS.BORDER.DEFAULT} overflow-hidden mb-6 transition-all duration-300`}>
                     {/* Post Image Header */}
                     {postData.image && (
-                        <div className="w-full h-64 sm:h-80 overflow-hidden bg-linear-to-br from-blue-100 to-indigo-100">
+                        <div className={`w-full h-64 sm:h-80 overflow-hidden ${COLORS.BACKGROUND.MUTED} transition-colors duration-200`}>
                             <img
                                 src={postData.image}
                                 alt={postData.title}
@@ -385,7 +385,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                     className={`text-3xl sm:text-4xl font-bold w-full p-4 border-2 ${COLORS.BORDER.DEFAULT} rounded-xl mb-4 outline-none focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.MUTED}`}
                                 />
                             ) : (
-                                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold bg-linear-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent mb-4 leading-tight">
+                                <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold ${COLORS.TEXT.DEFAULT} mb-4 leading-tight transition-colors duration-200`}>
                                     {postData.title}
                                 </h1>
                             )}

@@ -63,12 +63,16 @@ interface RouteResponse {
   trip_id?: number;
   title?: string;
   description?: string;
+  // camelCase (from route.model.ts)
   latStart?: number;
   lngStart?: number;
-  lat_end?: number;
-  lng_end?: number;
   latEnd?: number;
   lngEnd?: number;
+  // snake_case (from trip.model.ts - SELECT r.*)
+  lat_start?: number;
+  lng_start?: number;
+  lat_end?: number;
+  lng_end?: number;
   details?: string[];
   created_at?: string;
   updated_at?: string;
@@ -308,10 +312,14 @@ export const Dashboard: React.FC = () => {
             return routes
               .map((r: RouteResponse) => {
                 // Parse coordinates - handle both camelCase and snake_case, similar to DetailTrip
-                const latStart = Number(r.latStart ?? r.latStart ?? NaN);
-                const lngStart = Number(r.lngStart ?? r.lngStart ?? NaN);
-                const latEnd = Number(r.latEnd ?? r.lat_end ?? NaN);
-                const lngEnd = Number(r.lngEnd ?? r.lng_end ?? NaN);
+                const latStart = Number(
+                  r.latStart ?? (r as any).lat_start ?? NaN
+                );
+                const lngStart = Number(
+                  r.lngStart ?? (r as any).lng_start ?? NaN
+                );
+                const latEnd = Number(r.latEnd ?? (r as any).lat_end ?? NaN);
+                const lngEnd = Number(r.lngEnd ?? (r as any).lng_end ?? NaN);
 
                 console.log(`[Dashboard] Route ${r.id} coordinates:`, {
                   latStart,

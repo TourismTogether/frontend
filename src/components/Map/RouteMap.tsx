@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
+import { useTheme } from "next-themes";
 import {
   MapContainer,
   TileLayer,
@@ -197,10 +198,13 @@ function FitBounds({ routes }: { routes: IRoute[] }) {
 function createRouteMarkerIcon(
   routeNumber: number,
   color: string,
-  isStart: boolean = false
+  isStart: boolean = false,
+  isDark: boolean = false
 ) {
   const size = isStart ? 40 : 35;
   const fontSize = isStart ? "14px" : "12px";
+  const borderColor = isDark ? "#1e293b" : "white";
+  const shadowColor = isDark ? "rgba(0,0,0,0.6)" : "rgba(0,0,0,0.3)";
 
   return L.divIcon({
     className: "custom-route-marker",
@@ -210,8 +214,8 @@ function createRouteMarkerIcon(
         width: ${size}px;
         height: ${size}px;
         border-radius: 50%;
-        border: 4px solid white;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        border: 4px solid ${borderColor};
+        box-shadow: 0 4px 12px ${shadowColor};
         display: flex;
         align-items: center;
         justify-content: center;
@@ -229,10 +233,12 @@ function createRouteMarkerIcon(
 }
 
 // Create start/end marker icons
-function createSpecialMarkerIcon(type: "start" | "end", routeNumber: number) {
+function createSpecialMarkerIcon(type: "start" | "end", routeNumber: number, isDark: boolean = false) {
   const color = type === "start" ? "#10b981" : "#ef4444";
   const label = type === "start" ? "START" : "END";
   const size = 50;
+  const borderColor = isDark ? "#1e293b" : "white";
+  const shadowColor = isDark ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.4)";
 
   return L.divIcon({
     className: "custom-special-marker",
@@ -248,8 +254,8 @@ function createSpecialMarkerIcon(type: "start" | "end", routeNumber: number) {
           height: ${size}px;
           border-radius: 50% 50% 50% 0;
           transform: rotate(-45deg);
-          border: 4px solid white;
-          box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+          border: 4px solid ${borderColor};
+          box-shadow: 0 4px 12px ${shadowColor};
         "></div>
         <div style="
           position: absolute;
@@ -276,12 +282,21 @@ export const RouteMap: React.FC<RouteMapProps> = ({
   center,
   zoom = 10,
 }) => {
+  const { theme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  const isDark = mounted && theme === "dark";
+  
   // State to store route paths
   const [routePaths, setRoutePaths] = useState<Map<string, [number, number][]>>(
     new Map()
   );
   const [loadingPaths, setLoadingPaths] = useState(false);
   const [isLegendOpen, setIsLegendOpen] = useState(true);
+
+  // Prevent hydration mismatch for theme
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   // Filter out routes with invalid coordinates
   const validRoutes = useMemo(() => {
@@ -506,8 +521,8 @@ export const RouteMap: React.FC<RouteMapProps> = ({
                   position={[route.latStart, route.lngStart]}
                   icon={
                     index === 0
-                      ? createSpecialMarkerIcon("start", routeNumber)
-                      : createRouteMarkerIcon(routeNumber, color, true)
+                      ? createSpecialMarkerIcon("start", routeNumber, isDark)
+                      : createRouteMarkerIcon(routeNumber, color, true, isDark)
                   }
                 >
                   <Popup className="route-popup">
@@ -563,8 +578,8 @@ export const RouteMap: React.FC<RouteMapProps> = ({
                   position={[route.latEnd, route.lngEnd]}
                   icon={
                     index === validRoutes.length - 1
-                      ? createSpecialMarkerIcon("end", routeNumber)
-                      : createRouteMarkerIcon(routeNumber, color, false)
+                      ? createSpecialMarkerIcon("end", routeNumber, isDark)
+                      : createRouteMarkerIcon(routeNumber, color, false, isDark)
                   }
                 >
                   <Popup className="route-popup">
@@ -602,7 +617,7 @@ export const RouteMap: React.FC<RouteMapProps> = ({
               {isEndPointShared && index < validRoutes.length - 1 && (
                 <Marker
                   position={[route.latEnd, route.lngEnd]}
-                  icon={createRouteMarkerIcon(routeNumber, color, false)}
+                  icon={createRouteMarkerIcon(routeNumber, color, false, isDark)}
                 >
                   <Popup className="route-popup">
                     <div className={`p-3 min-w-[200px] ${COLORS.BACKGROUND.CARD} transition-colors duration-200`}>

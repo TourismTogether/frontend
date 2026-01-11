@@ -324,13 +324,6 @@ export const Profile: React.FC = () => {
   return (
     <>
       <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
-        {/* Hero Section */}
-        <Hero
-          title={`${displayName}'s Profile`}
-          description={account?.email || profile?.email || ""}
-          imageKeyword={displayName}
-        />
-
         <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
           {/* Profile Header Card */}
           <div

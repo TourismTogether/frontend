@@ -1160,17 +1160,17 @@ export const DetailTrip: React.FC<DetailTripProps> = ({ params }) => {
         {/* Trip Route Map - Enhanced */}
         {trip.routes.length > 0 && (
           <div
-            className={`mt-8 bg-white rounded-2xl border border-gray-200 p-6 shadow-lg transition-opacity ${
+            className={`mt-8 ${COLORS.BACKGROUND.CARD} rounded-2xl ${COLORS.BORDER.DEFAULT} border p-6 shadow-lg transition-all duration-200 ${
               isAddingRoute ? "opacity-50" : "opacity-100"
             }`}
           >
-            <h2 className="text-2xl font-bold text-gray-900 mb-5 flex items-center">
-              <div className="p-2 bg-indigo-100 rounded-lg mr-3">
-                <MapPin className="h-6 w-6 text-indigo-600" />
+            <h2 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT} mb-5 flex items-center transition-colors duration-200`}>
+              <div className={`p-2 ${COLORS.PRIMARY.LIGHT} rounded-lg mr-3`}>
+                <MapPin className={`h-6 w-6 ${COLORS.PRIMARY.TEXT}`} />
               </div>
               Trip Route Map
             </h2>
-            <div className="rounded-xl overflow-hidden border border-gray-200">
+            <div className={`rounded-xl overflow-hidden ${COLORS.BORDER.DEFAULT} border transition-colors duration-200`}>
               <RouteMap
                 routes={trip.routes}
                 height="500px"
