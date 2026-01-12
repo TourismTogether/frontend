@@ -14,6 +14,9 @@ import {
   Heart,
   Globe,
   Sparkles,
+  Search,
+  Send,
+  X,
 } from "lucide-react";
 import Link from "next/link";
 import React, { useEffect, useState } from "react";
@@ -91,6 +94,17 @@ export const Forum: React.FC = () => {
   const [sortBy, setSortBy] = useState<SortType>("recent");
   const [postComments, setPostComments] = useState<
     Record<string, IPostReply[]>
+  >({});
+  const [searchQuery, setSearchQuery] = useState<string>("");
+  const [expandedCommentPostId, setExpandedCommentPostId] = useState<
+    string | null
+  >(null);
+  const [commentTexts, setCommentTexts] = useState<Record<string, string>>({});
+  const [isSubmittingComment, setIsSubmittingComment] = useState<
+    Record<string, boolean>
+  >({});
+  const [postLikes, setPostLikes] = useState<
+    Record<string, { isLiked: boolean; count: number }>
   >({});
 
   useEffect(() => {
@@ -177,12 +191,13 @@ export const Forum: React.FC = () => {
           image: post.image || null,
           tags: post.tags || "",
           last_activity_at: post.updated_at || post.created_at,
-          reply_count: (post.reply_count || 0) as 0,
+          reply_count: post.reply_count || 0,
           total_views: post.total_views || 0,
           total_likes: post.total_likes || 0,
           created_at: post.created_at,
           updated_at: post.updated_at,
-          is_pinned: (post.is_pinned || false) as false,
+          is_pinned: post.is_pinned || false,
+          is_liked: (post as any).is_liked || false,
           forum_categories: {
             name: categoryName,
             color: getCategoryColor(categoryName),
@@ -198,6 +213,16 @@ export const Forum: React.FC = () => {
       });
 
       setPosts(transformedPosts);
+
+      // Initialize likes state
+      const likesMap: Record<string, { isLiked: boolean; count: number }> = {};
+      transformedPosts.forEach((post) => {
+        likesMap[post.id] = {
+          isLiked: post.is_liked || false,
+          count: post.total_likes || 0,
+        };
+      });
+      setPostLikes(likesMap);
 
       const uniqueCategories = Array.from(
         new Set(
@@ -327,7 +352,7 @@ export const Forum: React.FC = () => {
     return <Loading type="forum" />;
   }
 
-  // Filter posts based on active tab, category
+  // Filter posts based on active tab, category, and search query
   let filteredPosts = posts;
 
   if (activeTab === "my-posts" && user) {
@@ -341,6 +366,18 @@ export const Forum: React.FC = () => {
   if (selectedCategory) {
     filteredPosts = filteredPosts.filter(
       (post) => post.forum_categories?.name === selectedCategory
+    );
+  }
+
+  // Filter by search query
+  if (searchQuery.trim()) {
+    const query = searchQuery.toLowerCase();
+    filteredPosts = filteredPosts.filter(
+      (post) =>
+        post.title.toLowerCase().includes(query) ||
+        post.content.toLowerCase().includes(query) ||
+        post.tags?.toLowerCase().includes(query) ||
+        post.profiles?.full_name?.toLowerCase().includes(query)
     );
   }
 
@@ -369,6 +406,142 @@ export const Forum: React.FC = () => {
       ).length
     : 0;
   const publicPostsCount = posts.length;
+
+  const handleToggleLike = async (postId: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!user) {
+      alert("Vui lòng đăng nhập để like!");
+      return;
+    }
+
+    const currentLike = postLikes[postId] || { isLiked: false, count: 0 };
+    const originalLiked = currentLike.isLiked;
+    const originalCount = currentLike.count;
+
+    // Optimistic update
+    setPostLikes((prev) => ({
+      ...prev,
+      [postId]: {
+        isLiked: !originalLiked,
+        count: originalLiked ? originalCount - 1 : originalCount + 1,
+      },
+    }));
+
+    // Update posts state
+    setPosts((prevPosts) =>
+      prevPosts.map(
+        (post): IPost =>
+          post.id === postId
+            ? {
+                ...post,
+                total_likes: originalLiked
+                  ? (post.total_likes || 0) - 1
+                  : (post.total_likes || 0) + 1,
+              }
+            : post
+      )
+    );
+
+    try {
+      await forumService.toggleLike(postId, user.id);
+    } catch (error) {
+      console.error("Error toggling like:", error);
+      // Revert on error
+      setPostLikes((prev) => ({
+        ...prev,
+        [postId]: {
+          isLiked: originalLiked,
+          count: originalCount,
+        },
+      }));
+      setPosts((prevPosts) =>
+        prevPosts.map(
+          (post): IPost =>
+            post.id === postId ? { ...post, total_likes: originalCount } : post
+        )
+      );
+      alert("Không thể like bài viết vào lúc này.");
+    }
+  };
+
+  const handleSubmitComment = async (postId: string) => {
+    if (!user) {
+      alert("Vui lòng đăng nhập để bình luận!");
+      return;
+    }
+
+    const commentText = commentTexts[postId]?.trim();
+    if (!commentText) return;
+
+    setIsSubmittingComment((prev) => ({ ...prev, [postId]: true }));
+
+    try {
+      const newReply = await forumService.createReply(
+        postId,
+        commentText,
+        user.id
+      );
+
+      // Fetch user info for the new reply
+      const API_URL =
+        process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+      const userRes = await fetch(`${API_URL}/users/${user.id}`, {
+        credentials: "include",
+      });
+
+      let userInfo = {
+        id: user.id,
+        full_name: user.full_name || "User",
+        avatar_url: user.avatar_url || "",
+        account_id: user.account_id || "",
+        phone: user.phone || "",
+      };
+
+      if (userRes.ok) {
+        const userData = await userRes.json();
+        const data = userData.data || userData;
+        userInfo = {
+          id: data.id || user.id,
+          full_name: data.full_name || user.full_name || "User",
+          avatar_url: data.avatar_url || user.avatar_url || "",
+          account_id: data.account_id || user.account_id || "",
+          phone: data.phone || user.phone || "",
+        };
+      }
+
+      const replyWithUser: IPostReply = {
+        ...newReply,
+        profiles: userInfo as any,
+      };
+
+      // Update comments for this post
+      setPostComments((prev) => ({
+        ...prev,
+        [postId]: [replyWithUser, ...(prev[postId] || [])],
+      }));
+
+      // Update post reply count
+      setPosts((prevPosts) =>
+        prevPosts.map(
+          (post): IPost =>
+            post.id === postId
+              ? { ...post, reply_count: (post.reply_count || 0) + 1 }
+              : post
+        )
+      );
+
+      // Clear comment text
+      setCommentTexts((prev) => ({ ...prev, [postId]: "" }));
+      setExpandedCommentPostId(null);
+    } catch (error) {
+      console.error("Error submitting comment:", error);
+      alert("Không thể gửi bình luận vào lúc này.");
+    } finally {
+      setIsSubmittingComment((prev) => ({ ...prev, [postId]: false }));
+    }
+  };
 
   return (
     <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
@@ -419,6 +592,38 @@ export const Forum: React.FC = () => {
             <Plus className={`w-5 h-5 ${ANIMATIONS.ROTATE.MEDIUM}`} />
             <span>New Post</span>
           </Link>
+        </div>
+
+        {/* Search Bar */}
+        <div
+          className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-4 mb-6`}
+        >
+          <div className="relative">
+            <Search
+              className={`absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 ${COLORS.TEXT.MUTED}`}
+            />
+            <input
+              type="text"
+              placeholder="Search posts by title, content, tags, or author..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className={`w-full pl-10 pr-10 py-3 ${COLORS.BACKGROUND.MUTED} ${COLORS.BORDER.DEFAULT} border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent ${COLORS.TEXT.DEFAULT} placeholder:${COLORS.TEXT.MUTED}`}
+            />
+            {searchQuery && (
+              <button
+                onClick={() => setSearchQuery("")}
+                className={`absolute right-3 top-1/2 transform -translate-y-1/2 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.DEFAULT} transition-colors`}
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+          {searchQuery && (
+            <div className={`mt-2 text-sm ${COLORS.TEXT.MUTED}`}>
+              Found {filteredPosts.length} post
+              {filteredPosts.length !== 1 ? "s" : ""} matching "{searchQuery}"
+            </div>
+          )}
         </div>
 
         {/* Tabs Section */}
@@ -517,10 +722,9 @@ export const Forum: React.FC = () => {
               </div>
             ) : (
               filteredPosts.map((post, index) => (
-                <Link
+                <div
                   key={post.id}
-                  href={`/forum/${post.id}`}
-                  className={`${ANIMATIONS.FADE.IN_UP} block`}
+                  className={`${ANIMATIONS.FADE.IN_UP}`}
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <ShimmerCard
@@ -528,203 +732,312 @@ export const Forum: React.FC = () => {
                     shimmer={false}
                   >
                     <div className="p-6">
-                      <div className="flex items-start gap-4">
-                        {/* Avatar */}
-                        <div
-                          className={`w-14 h-14 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white group-hover:ring-accent/50 transition-all ${ANIMATIONS.PULSE.GENTLE}`}
-                        >
-                          {post.profiles?.avatar_url ? (
-                            <Image
-                              src={post.profiles.avatar_url}
-                              alt={post.profiles.full_name || "User"}
-                              width={56}
-                              height={56}
-                              className="rounded-full object-cover"
-                              unoptimized
-                            />
-                          ) : (
-                            <span className="text-xl font-bold text-white">
-                              {post.profiles?.full_name
-                                ?.charAt(0)
-                                .toUpperCase() || "U"}
-                            </span>
-                          )}
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          {/* Category and Pinned Badge */}
-                          <div className="flex items-center gap-2 mb-3 flex-wrap">
-                            <span
-                              className="text-xs px-3 py-1.5 rounded-full font-semibold border-2 transition-all group-hover:scale-105"
-                              style={{
-                                backgroundColor: `${post.forum_categories?.color}15`,
-                                borderColor: post.forum_categories?.color,
-                                color: post.forum_categories?.color,
-                              }}
-                            >
-                              {post.forum_categories?.name || "General"}
-                            </span>
-                            {post.is_pinned && (
-                              <span className="text-xs bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 px-2.5 py-1 rounded-full font-semibold border border-yellow-300 flex items-center gap-1">
-                                <span>📌</span>
-                                <span>Pinned</span>
+                      <Link href={`/forum/${post.id}`} className="block">
+                        <div className="flex items-start gap-4">
+                          {/* Avatar */}
+                          <div
+                            className={`w-14 h-14 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0 shadow-lg ring-2 ring-white group-hover:ring-accent/50 transition-all ${ANIMATIONS.PULSE.GENTLE}`}
+                          >
+                            {post.profiles?.avatar_url ? (
+                              <Image
+                                src={post.profiles.avatar_url}
+                                alt={post.profiles.full_name || "User"}
+                                width={56}
+                                height={56}
+                                className="rounded-full object-cover"
+                                unoptimized
+                              />
+                            ) : (
+                              <span className="text-xl font-bold text-white">
+                                {post.profiles?.full_name
+                                  ?.charAt(0)
+                                  .toUpperCase() || "U"}
                               </span>
                             )}
                           </div>
 
-                          {/* Title */}
-                          <h3
-                            className={`text-xl font-bold ${COLORS.TEXT.DEFAULT} mb-2 group-hover:${COLORS.TEXT.PRIMARY} transition-colors line-clamp-2`}
-                          >
-                            {post.title}
-                          </h3>
-
-                          {/* Post Image */}
-                          {post.image && (
-                            <div
-                              className={`mb-3 rounded-lg overflow-hidden ${COLORS.BORDER.DEFAULT} border ${COLORS.BACKGROUND.MUTED} transition-colors duration-200`}
-                            >
-                              <Image
-                                src={post.image}
-                                alt={post.title}
-                                width={600}
-                                height={200}
-                                className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
-                                unoptimized
-                                onError={(e) => {
-                                  const target = e.currentTarget;
-                                  const parent = target.parentElement;
-                                  if (parent) {
-                                    parent.style.display = "none";
-                                  }
+                          <div className="flex-1 min-w-0">
+                            {/* Category and Pinned Badge */}
+                            <div className="flex items-center gap-2 mb-3 flex-wrap">
+                              <span
+                                className="text-xs px-3 py-1.5 rounded-full font-semibold border-2 transition-all group-hover:scale-105"
+                                style={{
+                                  backgroundColor: `${post.forum_categories?.color}15`,
+                                  borderColor: post.forum_categories?.color,
+                                  color: post.forum_categories?.color,
                                 }}
-                              />
-                            </div>
-                          )}
-
-                          {/* Content Preview */}
-                          <p
-                            className={`${COLORS.TEXT.MUTED} text-sm mb-4 line-clamp-2 leading-relaxed`}
-                          >
-                            {post.content}
-                          </p>
-
-                          {/* Comments Preview */}
-                          {postComments[post.id] &&
-                            postComments[post.id].length > 0 && (
-                              <div
-                                className={`mb-4 space-y-2 border-t ${COLORS.BORDER.DEFAULT} pt-3`}
                               >
-                                <div
-                                  className={`text-xs font-semibold ${COLORS.TEXT.MUTED} mb-2`}
-                                >
-                                  Recent Comments
-                                </div>
-                                {postComments[post.id].map((comment) => (
-                                  <div
-                                    key={comment.id}
-                                    className={`flex gap-2 ${COLORS.BACKGROUND.MUTED} rounded-lg p-2.5 hover:${COLORS.BACKGROUND.SECONDARY} transition-colors`}
-                                  >
-                                    <div
-                                      className={`w-6 h-6 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0`}
-                                    >
-                                      {comment.profiles?.avatar_url ? (
-                                        <Image
-                                          src={comment.profiles.avatar_url}
-                                          alt={
-                                            comment.profiles.full_name || "User"
-                                          }
-                                          width={24}
-                                          height={24}
-                                          className="rounded-full object-cover"
-                                          unoptimized
-                                        />
-                                      ) : (
-                                        <span className="text-xs font-bold text-white">
-                                          {comment.profiles?.full_name
-                                            ?.charAt(0)
-                                            .toUpperCase() || "U"}
-                                        </span>
-                                      )}
-                                    </div>
-                                    <div className="flex-1 min-w-0">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <span
-                                          className={`text-xs font-semibold ${COLORS.TEXT.DEFAULT}`}
-                                        >
-                                          {comment.profiles?.full_name ||
-                                            "User"}
-                                        </span>
-                                      </div>
-                                      <p
-                                        className={`text-xs ${COLORS.TEXT.MUTED} line-clamp-2`}
-                                      >
-                                        {comment.content}
-                                      </p>
-                                    </div>
-                                  </div>
-                                ))}
-                                {post.reply_count &&
-                                  post.reply_count >
-                                    postComments[post.id].length && (
-                                    <div
-                                      className={`text-xs ${COLORS.TEXT.MUTED} text-center pt-1`}
-                                    >
-                                      +
-                                      {post.reply_count -
-                                        postComments[post.id].length}{" "}
-                                      more comment
-                                      {post.reply_count -
-                                        postComments[post.id].length !==
-                                      1
-                                        ? "s"
-                                        : ""}
-                                    </div>
-                                  )}
+                                {post.forum_categories?.name || "General"}
+                              </span>
+                              {post.is_pinned && (
+                                <span className="text-xs bg-gradient-to-r from-yellow-100 to-amber-100 text-yellow-800 px-2.5 py-1 rounded-full font-semibold border border-yellow-300 flex items-center gap-1">
+                                  <span>📌</span>
+                                  <span>Pinned</span>
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Title */}
+                            <h3
+                              className={`text-xl font-bold ${COLORS.TEXT.DEFAULT} mb-2 group-hover:${COLORS.TEXT.PRIMARY} transition-colors line-clamp-2`}
+                            >
+                              {post.title}
+                            </h3>
+
+                            {/* Post Image */}
+                            {post.image && (
+                              <div
+                                className={`mb-3 rounded-lg overflow-hidden ${COLORS.BORDER.DEFAULT} border ${COLORS.BACKGROUND.MUTED} transition-colors duration-200`}
+                              >
+                                <Image
+                                  src={post.image}
+                                  alt={post.title}
+                                  width={600}
+                                  height={200}
+                                  className="w-full h-48 object-cover group-hover:scale-105 transition-transform duration-300"
+                                  unoptimized
+                                  onError={(e) => {
+                                    const target = e.currentTarget;
+                                    const parent = target.parentElement;
+                                    if (parent) {
+                                      parent.style.display = "none";
+                                    }
+                                  }}
+                                />
                               </div>
                             )}
 
-                          {/* Meta Info */}
-                          <div
-                            className={`flex flex-wrap items-center gap-4 text-sm ${COLORS.TEXT.MUTED}`}
-                          >
-                            <span
-                              className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}
+                            {/* Content Preview */}
+                            <p
+                              className={`${COLORS.TEXT.MUTED} text-sm mb-4 line-clamp-2 leading-relaxed`}
                             >
-                              <MessageCircle
-                                className={`w-4 h-4 ${COLORS.TEXT.PRIMARY}`}
-                              />
-                              <span className="font-medium">
-                                {post.reply_count || 0}
+                              {post.content}
+                            </p>
+
+                            {/* Comments Preview */}
+                            {postComments[post.id] &&
+                              postComments[post.id].length > 0 && (
+                                <div
+                                  className={`mb-4 space-y-2 border-t ${COLORS.BORDER.DEFAULT} pt-3`}
+                                >
+                                  <div
+                                    className={`text-xs font-semibold ${COLORS.TEXT.MUTED} mb-2`}
+                                  >
+                                    Recent Comments
+                                  </div>
+                                  {postComments[post.id].map((comment) => (
+                                    <div
+                                      key={comment.id}
+                                      className={`flex gap-2 ${COLORS.BACKGROUND.MUTED} rounded-lg p-2.5 hover:${COLORS.BACKGROUND.SECONDARY} transition-colors`}
+                                    >
+                                      <div
+                                        className={`w-6 h-6 ${GRADIENTS.PRIMARY} rounded-full flex items-center justify-center shrink-0`}
+                                      >
+                                        {comment.profiles?.avatar_url ? (
+                                          <Image
+                                            src={comment.profiles.avatar_url}
+                                            alt={
+                                              comment.profiles.full_name ||
+                                              "User"
+                                            }
+                                            width={24}
+                                            height={24}
+                                            className="rounded-full object-cover"
+                                            unoptimized
+                                          />
+                                        ) : (
+                                          <span className="text-xs font-bold text-white">
+                                            {comment.profiles?.full_name
+                                              ?.charAt(0)
+                                              .toUpperCase() || "U"}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <div className="flex items-center gap-2 mb-1">
+                                          <span
+                                            className={`text-xs font-semibold ${COLORS.TEXT.DEFAULT}`}
+                                          >
+                                            {comment.profiles?.full_name ||
+                                              "User"}
+                                          </span>
+                                        </div>
+                                        <p
+                                          className={`text-xs ${COLORS.TEXT.MUTED} line-clamp-2`}
+                                        >
+                                          {comment.content}
+                                        </p>
+                                      </div>
+                                    </div>
+                                  ))}
+                                  {post.reply_count &&
+                                    post.reply_count >
+                                      postComments[post.id].length && (
+                                      <div
+                                        className={`text-xs ${COLORS.TEXT.MUTED} text-center pt-1`}
+                                      >
+                                        +
+                                        {post.reply_count -
+                                          postComments[post.id].length}{" "}
+                                        more comment
+                                        {post.reply_count -
+                                          postComments[post.id].length !==
+                                        1
+                                          ? "s"
+                                          : ""}
+                                      </div>
+                                    )}
+                                </div>
+                              )}
+
+                            {/* Meta Info */}
+                            <div
+                              className={`flex flex-wrap items-center gap-4 text-sm ${COLORS.TEXT.MUTED}`}
+                            >
+                              <span
+                                className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}
+                              >
+                                <MessageCircle
+                                  className={`w-4 h-4 ${COLORS.TEXT.PRIMARY}`}
+                                />
+                                <span className="font-medium">
+                                  {post.reply_count || 0}
+                                </span>
                               </span>
-                            </span>
-                            <span
-                              className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}
-                            >
-                              <Heart className="w-4 h-4 text-red-500" />
-                              <span className="font-medium">
-                                {post.total_likes || 0}
+                              <button
+                                onClick={(e) => handleToggleLike(post.id, e)}
+                                className={`flex items-center gap-1.5 ${
+                                  COLORS.BACKGROUND.MUTED
+                                } px-3 py-1 rounded-lg transition-all duration-200 hover:scale-105 ${
+                                  postLikes[post.id]?.isLiked
+                                    ? "text-red-600 bg-red-50 hover:bg-red-100"
+                                    : `${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.SECONDARY}`
+                                }`}
+                              >
+                                <Heart
+                                  className={`w-4 h-4 ${
+                                    postLikes[post.id]?.isLiked
+                                      ? "fill-current text-red-600"
+                                      : "text-red-500"
+                                  }`}
+                                />
+                                <span className="font-medium">
+                                  {postLikes[post.id]?.count ??
+                                    post.total_likes ??
+                                    0}
+                                </span>
+                              </button>
+                              <span
+                                className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}
+                              >
+                                <Clock className="w-4 h-4" />
+                                <span>
+                                  {formatTimeAgo(post.last_activity_at)}
+                                </span>
                               </span>
-                            </span>
-                            <span
-                              className={`flex items-center gap-1.5 ${COLORS.BACKGROUND.MUTED} px-3 py-1 rounded-lg`}
-                            >
-                              <Clock className="w-4 h-4" />
-                              <span>
-                                {formatTimeAgo(post.last_activity_at)}
+                              <span
+                                className={`${COLORS.TEXT.DEFAULT} font-semibold ml-auto`}
+                              >
+                                {post.profiles?.full_name || "User"}
                               </span>
-                            </span>
-                            <span
-                              className={`${COLORS.TEXT.DEFAULT} font-semibold ml-auto`}
-                            >
-                              {post.profiles?.full_name || "User"}
-                            </span>
+                            </div>
                           </div>
                         </div>
+                      </Link>
+
+                      {/* Inline Comment Form */}
+                      <div
+                        className={`mt-4 pt-4 border-t ${COLORS.BORDER.DEFAULT}`}
+                      >
+                        {expandedCommentPostId === post.id ? (
+                          <div
+                            className={`${COLORS.BACKGROUND.MUTED} rounded-lg p-3 sm:p-4`}
+                          >
+                            <div className="flex gap-2 mb-3">
+                              {user?.avatar_url ? (
+                                <img
+                                  src={user.avatar_url}
+                                  alt={user.full_name || "You"}
+                                  className="w-8 h-8 rounded-full object-cover border-2 border-white"
+                                />
+                              ) : (
+                                <div
+                                  className={`w-8 h-8 rounded-full ${GRADIENTS.PRIMARY} flex items-center justify-center border-2 border-white`}
+                                >
+                                  <User className="w-4 h-4 text-white" />
+                                </div>
+                              )}
+                              <div className="flex-1">
+                                <textarea
+                                  value={commentTexts[post.id] || ""}
+                                  onChange={(e) =>
+                                    setCommentTexts((prev) => ({
+                                      ...prev,
+                                      [post.id]: e.target.value,
+                                    }))
+                                  }
+                                  placeholder={
+                                    user
+                                      ? "Write a comment..."
+                                      : "Please login to comment"
+                                  }
+                                  className={`w-full p-2 ${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-lg focus:outline-none focus:ring-2 focus:ring-accent resize-none text-sm min-h-[60px] ${COLORS.TEXT.DEFAULT} placeholder:${COLORS.TEXT.MUTED}`}
+                                  maxLength={500}
+                                  disabled={!user}
+                                  rows={2}
+                                />
+                              </div>
+                            </div>
+                            <div className="flex justify-end gap-2">
+                              <button
+                                onClick={() => {
+                                  setExpandedCommentPostId(null);
+                                  setCommentTexts((prev) => ({
+                                    ...prev,
+                                    [post.id]: "",
+                                  }));
+                                }}
+                                className={`px-3 py-1.5 text-xs font-semibold ${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.SECONDARY} rounded-lg transition-colors`}
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={() => handleSubmitComment(post.id)}
+                                disabled={
+                                  !commentTexts[post.id]?.trim() ||
+                                  !user ||
+                                  isSubmittingComment[post.id]
+                                }
+                                className="flex items-center gap-1.5 px-4 py-1.5 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                              >
+                                <Send className="w-3 h-3" />
+                                {isSubmittingComment[post.id]
+                                  ? "Posting..."
+                                  : "Post"}
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <button
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              if (!user) {
+                                alert("Vui lòng đăng nhập để bình luận!");
+                                return;
+                              }
+                              setExpandedCommentPostId(post.id);
+                            }}
+                            className={`w-full flex items-center justify-center gap-2 px-4 py-2 ${COLORS.BACKGROUND.MUTED} hover:${COLORS.BACKGROUND.SECONDARY} ${COLORS.TEXT.MUTED} rounded-lg transition-colors text-sm font-medium`}
+                          >
+                            <MessageCircle className="w-4 h-4" />
+                            <span>Add a comment...</span>
+                          </button>
+                        )}
                       </div>
                     </div>
                   </ShimmerCard>
-                </Link>
+                </div>
               ))
             )}
           </div>

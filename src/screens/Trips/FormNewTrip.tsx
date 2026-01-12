@@ -9,11 +9,17 @@ import dynamic from "next/dynamic";
 
 // Dynamically import LocationPicker to avoid SSR issues
 const LocationPicker = dynamic(
-  () => import("@/components/Map/LocationPicker").then((mod) => ({ default: mod.LocationPicker })),
+  () =>
+    import("@/components/Map/LocationPicker").then((mod) => ({
+      default: mod.LocationPicker,
+    })),
   {
     ssr: false,
     loading: () => (
-      <div className="w-full rounded-lg overflow-hidden border border-gray-300 bg-gray-100 flex items-center justify-center" style={{ height: '250px' }}>
+      <div
+        className="w-full rounded-lg overflow-hidden border border-gray-300 bg-gray-100 flex items-center justify-center"
+        style={{ height: "250px" }}
+      >
         <p className="text-gray-500 text-sm">Loading map...</p>
       </div>
     ),
@@ -92,7 +98,10 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
   const [loading, setLoading] = useState(false);
   const [fetchingDestinations, setFetchingDestinations] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [departureLocation, setDepartureLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [departureLocation, setDepartureLocation] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
 
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -160,7 +169,7 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
     >
   ) => {
     const { name, value, type } = e.target;
-    
+
     setFormData((prev) => {
       const updatedData = {
         ...prev,
@@ -171,24 +180,20 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
             : value,
       };
 
-      // Ép end_date luôn sau start_date
+      // Đảm bảo end_date >= start_date (cho phép cùng ngày)
       if (name === "start_date" && value && updatedData.end_date) {
         const startDate = new Date(value);
         const endDate = new Date(updatedData.end_date);
-        if (endDate <= startDate) {
-          // Set end_date = start_date + 1 ngày
-          const nextDay = new Date(startDate);
-          nextDay.setDate(nextDay.getDate() + 1);
-          updatedData.end_date = nextDay.toISOString().substring(0, 10);
+        if (endDate < startDate) {
+          // Nếu end_date < start_date, set end_date = start_date (cho phép cùng ngày)
+          updatedData.end_date = value;
         }
       } else if (name === "end_date" && value && updatedData.start_date) {
         const startDate = new Date(updatedData.start_date);
         const endDate = new Date(value);
-        if (endDate <= startDate) {
-          // Set end_date = start_date + 1 ngày
-          const nextDay = new Date(startDate);
-          nextDay.setDate(nextDay.getDate() + 1);
-          updatedData.end_date = nextDay.toISOString().substring(0, 10);
+        if (endDate < startDate) {
+          // Nếu end_date < start_date, set end_date = start_date (cho phép cùng ngày)
+          updatedData.end_date = updatedData.start_date;
         }
       }
 
@@ -225,6 +230,17 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
       setError("Please select a destination to create a trip.");
       setLoading(false);
       return;
+    }
+
+    // Kiểm tra ngày: end_date phải >= start_date (cho phép cùng ngày)
+    if (formData.start_date && formData.end_date) {
+      const startDate = new Date(formData.start_date);
+      const endDate = new Date(formData.end_date);
+      if (endDate < startDate) {
+        setError("Ngày kết thúc phải sau hoặc bằng ngày bắt đầu.");
+        setLoading(false);
+        return;
+      }
     }
 
     // Kiểm tra budget tối thiểu (tùy chọn, thêm để tránh 0)
@@ -456,11 +472,7 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
                 type="date"
                 value={formData.end_date}
                 onChange={handleChange}
-                min={formData.start_date ? (() => {
-                  const startDate = new Date(formData.start_date);
-                  startDate.setDate(startDate.getDate() + 1);
-                  return startDate.toISOString().substring(0, 10);
-                })() : undefined}
+                min={formData.start_date || undefined}
                 required
                 disabled={isFormDisabled}
                 className="w-full p-3 border border-border rounded-lg bg-input text-foreground focus:ring-trip focus:border-trip transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -573,21 +585,33 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
               className="w-full p-3 border border-border rounded-lg bg-input text-foreground focus:ring-trip focus:border-trip transition-colors disabled:opacity-50 disabled:cursor-not-allowed mb-2"
             />
             <div className="mt-2">
-              <p className="text-xs text-muted-foreground mb-2">Or pick a location on the map:</p>
+              <p className="text-xs text-muted-foreground mb-2">
+                Or pick a location on the map:
+              </p>
               <LocationPicker
                 onLocationSelect={(lat, lng) => {
                   setDepartureLocation({ lat, lng });
                   // Optionally reverse geocode to get location name
-                  fetch(`https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`)
-                    .then(res => res.json())
-                    .then(data => {
-                      const locationName = data.address?.city || data.address?.town || data.address?.village || 
-                                        data.address?.county || data.display_name || '';
+                  fetch(
+                    `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`
+                  )
+                    .then((res) => res.json())
+                    .then((data) => {
+                      const locationName =
+                        data.address?.city ||
+                        data.address?.town ||
+                        data.address?.village ||
+                        data.address?.county ||
+                        data.display_name ||
+                        "";
                       if (locationName) {
-                        setFormData(prev => ({ ...prev, departure: locationName }));
+                        setFormData((prev) => ({
+                          ...prev,
+                          departure: locationName,
+                        }));
                       }
                     })
-                    .catch(err => console.error("Geocoding error:", err));
+                    .catch((err) => console.error("Geocoding error:", err));
                 }}
                 initialLat={departureLocation?.lat}
                 initialLng={departureLocation?.lng}
@@ -595,7 +619,8 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
               />
               {departureLocation && (
                 <p className="text-xs text-muted-foreground mt-2">
-                  Selected: {departureLocation.lat.toFixed(4)}, {departureLocation.lng.toFixed(4)}
+                  Selected: {departureLocation.lat.toFixed(4)},{" "}
+                  {departureLocation.lng.toFixed(4)}
                 </p>
               )}
             </div>

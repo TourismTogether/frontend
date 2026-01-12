@@ -348,6 +348,7 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
+import { COLORS, GRADIENTS } from "@/constants/colors";
 import CreateReviewModal from "./CreateReviewModal";
 import ReviewItem from "./ReviewItem";
 
@@ -472,13 +473,13 @@ export default function DestinationReviews({ destinationId }: Props) {
   }, [destinationId]);
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-gray-50 via-white to-gray-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} transition-colors duration-300`}>
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => router.back()}
-            className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-6 transition-colors font-medium group"
+            className={`flex items-center ${COLORS.TEXT.MUTED} ${COLORS.TEXT.PRIMARY_HOVER} mb-6 transition-colors font-medium group`}
           >
             <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform" />
             Quay lại
@@ -486,11 +487,11 @@ export default function DestinationReviews({ destinationId }: Props) {
 
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-4xl sm:text-5xl font-extrabold text-gray-900 dark:text-white mb-2">
+              <h1 className={`text-3xl sm:text-4xl md:text-5xl font-extrabold ${COLORS.TEXT.DEFAULT} mb-2 transition-colors duration-200`}>
                 Đánh giá địa điểm
               </h1>
               {destinationName && (
-                <p className="text-lg text-gray-600 dark:text-gray-400">
+                <p className={`text-base sm:text-lg ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                   {destinationName}
                 </p>
               )}
@@ -499,26 +500,26 @@ export default function DestinationReviews({ destinationId }: Props) {
             {user && (
               <button
                 onClick={() => setOpen(true)}
-                className="flex items-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold"
+                className={`flex items-center gap-2 ${GRADIENTS.PRIMARY} text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold`}
               >
-                <MessageSquare className="w-5 h-5" />
-                <span>Viết đánh giá</span>
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="text-sm sm:text-base">Viết đánh giá</span>
               </button>
             )}
           </div>
 
           {/* Stats Card */}
           {stats.totalReviews > 0 && (
-            <div className="mt-6 bg-linear-to-br from-yellow-50 to-orange-50 dark:from-yellow-900/20 dark:to-orange-900/20 rounded-2xl p-6 border-2 border-yellow-200 dark:border-yellow-800">
-              <div className="flex items-center gap-6">
-                <div className="flex items-center justify-center w-16 h-16 bg-yellow-400 dark:bg-yellow-500 rounded-full">
-                  <Star className="w-8 h-8 text-white fill-white" />
+            <div className={`mt-6 ${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border-2 rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-lg transition-colors duration-200`}>
+              <div className="flex items-center gap-4 sm:gap-6">
+                <div className={`flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 ${GRADIENTS.PRIMARY} rounded-full shadow-md`}>
+                  <Star className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 text-white fill-white" />
                 </div>
                 <div>
-                  <div className="text-4xl font-bold text-gray-900 dark:text-white mb-1">
+                  <div className={`text-2xl sm:text-3xl md:text-4xl font-bold ${COLORS.TEXT.DEFAULT} mb-1 transition-colors duration-200`}>
                     {stats.averageRating.toFixed(1)}
                   </div>
-                  <div className="text-sm text-gray-600 dark:text-gray-400">
+                  <div className={`text-xs sm:text-sm ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                     Dựa trên {stats.totalReviews}{" "}
                     {stats.totalReviews === 1 ? "đánh giá" : "đánh giá"}
                   </div>
@@ -530,30 +531,30 @@ export default function DestinationReviews({ destinationId }: Props) {
 
         {/* Reviews List */}
         {loading ? (
-          <div className="flex justify-center items-center py-20">
+          <div className="flex justify-center items-center py-12 sm:py-16 md:py-20">
             <div className="text-center">
-              <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto mb-4" />
-              <p className="text-gray-600 dark:text-gray-400">
+              <Loader2 className={`w-10 h-10 sm:w-12 sm:h-12 animate-spin ${COLORS.PRIMARY.TEXT} mx-auto mb-4`} />
+              <p className={`text-sm sm:text-base ${COLORS.TEXT.MUTED} transition-colors duration-200`}>
                 Đang tải đánh giá...
               </p>
             </div>
           </div>
         ) : reviews.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg p-16 text-center border-2 border-dashed border-gray-300 dark:border-gray-700">
-            <MessageSquare className="w-16 h-16 text-gray-400 dark:text-gray-500 mx-auto mb-4" />
-            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+          <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border-2 border-dashed rounded-xl sm:rounded-2xl shadow-lg p-8 sm:p-12 md:p-16 text-center transition-colors duration-200`}>
+            <MessageSquare className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 ${COLORS.TEXT.MUTED} mx-auto mb-4 transition-colors duration-200`} />
+            <h3 className={`text-xl sm:text-2xl font-bold ${COLORS.TEXT.DEFAULT} mb-2 transition-colors duration-200`}>
               Chưa có đánh giá nào
             </h3>
-            <p className="text-gray-600 dark:text-gray-400 mb-6">
+            <p className={`text-sm sm:text-base ${COLORS.TEXT.MUTED} mb-6 transition-colors duration-200`}>
               Hãy là người đầu tiên đánh giá địa điểm này!
             </p>
             {user && (
               <button
                 onClick={() => setOpen(true)}
-                className="inline-flex items-center gap-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-semibold"
+                className={`inline-flex items-center gap-2 ${GRADIENTS.PRIMARY} text-white px-5 sm:px-6 py-2.5 sm:py-3 rounded-lg sm:rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl font-semibold transform hover:scale-105`}
               >
-                <MessageSquare className="w-5 h-5" />
-                <span>Viết đánh giá đầu tiên</span>
+                <MessageSquare className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="text-sm sm:text-base">Viết đánh giá đầu tiên</span>
               </button>
             )}
           </div>

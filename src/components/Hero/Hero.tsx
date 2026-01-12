@@ -227,9 +227,9 @@ export const Hero: React.FC<HeroProps> = ({
   }, [controls]);
 
   const heightClasses = {
-    small: "h-64 md:h-80",
-    medium: "h-80 md:h-96 lg:h-[500px]",
-    large: "h-96 md:h-[600px] lg:h-[700px]",
+    small: "min-h-[12rem] sm:min-h-[16rem] md:h-80",
+    medium: "min-h-[16rem] sm:min-h-[20rem] md:h-96 lg:h-[500px]",
+    large: "min-h-[20rem] sm:min-h-[24rem] md:h-[500px] lg:h-[600px] xl:h-[700px]",
   };
 
   const finalImageUrl = imageUrl || getTravelImageUrl(imageKeyword, 1920, 800);
@@ -418,12 +418,12 @@ export const Hero: React.FC<HeroProps> = ({
       <ShimmerEffect />
 
       {/* Content */}
-      <div className="relative z-10 h-full flex flex-col justify-center">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <div className="relative z-10 h-full flex flex-col justify-center py-4 sm:py-6 md:py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-5 md:px-6 lg:px-8 w-full">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={controls}
-            className="flex flex-col items-start space-y-6"
+            className="flex flex-col items-center md:items-start space-y-2 sm:space-y-3 md:space-y-4 lg:space-y-5 xl:space-y-6"
           >
             {/* Icon/Emoji */}
             {icon && (
@@ -431,7 +431,7 @@ export const Hero: React.FC<HeroProps> = ({
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.2, duration: 0.5 }}
-                className="mb-2"
+                className="mb-1 sm:mb-2 scale-90 sm:scale-100"
               >
                 {icon}
               </motion.div>
@@ -442,7 +442,7 @@ export const Hero: React.FC<HeroProps> = ({
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3, duration: 0.6 }}
-              className={`text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold mb-4 leading-tight ${getTitleGradient()} drop-shadow-2xl`}
+              className={`text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl 2xl:text-7xl font-extrabold mb-1 sm:mb-2 md:mb-3 lg:mb-4 leading-tight text-center md:text-left ${getTitleGradient()} drop-shadow-2xl break-words`}
             >
               {title}
             </motion.h1>
@@ -453,7 +453,7 @@ export const Hero: React.FC<HeroProps> = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5, duration: 0.6 }}
-                className={`text-lg sm:text-xl md:text-2xl lg:text-3xl ${getDescriptionColor()} drop-shadow-lg mb-2 max-w-4xl leading-relaxed font-medium`}
+                className={`text-sm sm:text-base md:text-lg lg:text-xl xl:text-2xl text-center md:text-left ${getDescriptionColor()} drop-shadow-lg mb-1 sm:mb-2 max-w-full sm:max-w-2xl md:max-w-3xl lg:max-w-4xl leading-relaxed font-medium break-words`}
               >
                 {description}
               </motion.p>
@@ -465,7 +465,7 @@ export const Hero: React.FC<HeroProps> = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.7, duration: 0.6 }}
-                className={`text-sm sm:text-base md:text-lg ${getSubtitleColor()} drop-shadow-md`}
+                className={`text-xs sm:text-sm md:text-base lg:text-lg text-center md:text-left ${getSubtitleColor()} drop-shadow-md`}
               >
                 {subtitle}
               </motion.p>
@@ -477,7 +477,7 @@ export const Hero: React.FC<HeroProps> = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.8, duration: 0.6 }}
-                className={`text-base sm:text-lg md:text-xl italic ${getProverbColor()} drop-shadow-lg mt-2 max-w-3xl font-medium`}
+                className={`text-xs sm:text-sm md:text-base lg:text-lg italic text-center md:text-left ${getProverbColor()} drop-shadow-lg mt-1 sm:mt-2 max-w-full sm:max-w-2xl md:max-w-3xl font-medium break-words`}
               >
                 "{proverb}"
               </motion.p>
@@ -489,7 +489,7 @@ export const Hero: React.FC<HeroProps> = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.9, duration: 0.6 }}
-                className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 w-full max-w-4xl"
+                className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 md:gap-4 mt-4 sm:mt-6 md:mt-8 w-full max-w-full sm:max-w-2xl md:max-w-4xl"
               >
                 {stats.map((stat, index) => (
                   <motion.div
@@ -505,18 +505,18 @@ export const Hero: React.FC<HeroProps> = ({
                         : currentTheme === "history"
                         ? "bg-white/15 border-amber-200/30"
                         : "bg-white/20 border-white/30"
-                    } border rounded-xl p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105`}
+                    } border rounded-lg sm:rounded-xl p-2 sm:p-3 md:p-4 shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 text-center`}
                   >
                     {stat.icon && (
-                      <div className={`mb-2 ${getStatIconColor()}`}>
+                      <div className={`mb-1 sm:mb-2 ${getStatIconColor()} scale-90 sm:scale-100 mx-auto`}>
                         {stat.icon}
                       </div>
                     )}
-                    <div className="text-2xl font-bold mb-1 text-white">
+                    <div className="text-lg sm:text-xl md:text-2xl font-bold mb-0.5 sm:mb-1 text-white">
                       {stat.value}
                     </div>
                     <div
-                      className={`text-xs font-medium ${getStatLabelColor()}`}
+                      className={`text-[10px] sm:text-xs font-medium ${getStatLabelColor()}`}
                     >
                       {stat.label}
                     </div>
@@ -525,15 +525,15 @@ export const Hero: React.FC<HeroProps> = ({
               </motion.div>
             )}
 
-            {/* Features Grid - Integrated into Hero */}
+            {/* Features Grid - Integrated into Hero - Hidden on mobile */}
             {features && features.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1, duration: 0.6 }}
-                className="mt-8 w-full max-w-6xl"
+                className="hidden md:block mt-4 sm:mt-6 md:mt-8 w-full max-w-full sm:max-w-4xl md:max-w-6xl"
               >
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                   {features.map((feature, index) => (
                     <motion.div
                       key={index}
@@ -548,16 +548,16 @@ export const Hero: React.FC<HeroProps> = ({
                           : currentTheme === "history"
                           ? "bg-white/20 border-amber-200/40"
                           : "bg-white/25 border-white/40"
-                      } border rounded-xl p-4 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105`}
+                      } border rounded-lg sm:rounded-xl p-3 sm:p-4 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-105`}
                     >
-                      <div className={`mb-3 ${getFeatureIconColor()}`}>
+                      <div className={`mb-2 sm:mb-3 ${getFeatureIconColor()} scale-90 sm:scale-100`}>
                         {feature.icon}
                       </div>
-                      <h3 className="text-lg font-bold mb-2 text-white">
+                      <h3 className="text-base sm:text-lg font-bold mb-1 sm:mb-2 text-white">
                         {feature.title}
                       </h3>
                       <p
-                        className={`text-sm ${getFeatureTextColor()} leading-relaxed`}
+                        className={`text-xs sm:text-sm ${getFeatureTextColor()} leading-relaxed`}
                       >
                         {feature.description}
                       </p>
@@ -573,7 +573,7 @@ export const Hero: React.FC<HeroProps> = ({
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 1.2, duration: 0.6 }}
-                className="mt-6 w-full"
+                className="mt-4 sm:mt-5 md:mt-6 w-full"
               >
                 {children}
               </motion.div>
@@ -584,7 +584,7 @@ export const Hero: React.FC<HeroProps> = ({
 
       {/* Decorative bottom wave with gradient */}
       <div
-        className={`absolute bottom-0 left-0 right-0 h-20 ${getBottomWaveGradient()} pointer-events-none transition-colors duration-500`}
+        className={`absolute bottom-0 left-0 right-0 h-12 sm:h-16 md:h-20 ${getBottomWaveGradient()} pointer-events-none transition-colors duration-500`}
       ></div>
     </div>
   );
