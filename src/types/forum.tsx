@@ -22,11 +22,11 @@ export interface IPost {
     tags: string;
     total_views: number;
     total_likes: number;
-    reply_count: 0;
+    reply_count: number;
     created_at: string;
     updated_at: string;
     last_activity_at: string;
-    is_pinned: false;
+    is_pinned: boolean;
     is_liked?: boolean;
     forum_categories: {
         name: string;

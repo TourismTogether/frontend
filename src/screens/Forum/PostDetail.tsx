@@ -323,45 +323,46 @@ export default function PostDetail({ postData }: PostDetailProps) {
     const categoryColor = getCategoryColor(categoryName);
 
     return (
-        <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} pt-8 pb-20 px-4 sm:px-6 lg:px-8 transition-colors duration-300`}>
-            <div className="max-w-5xl mx-auto min-w-7xl">
+        <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT} pt-4 sm:pt-6 md:pt-8 pb-12 sm:pb-16 md:pb-20 px-3 sm:px-4 md:px-6 lg:px-8 transition-colors duration-300`}>
+            <div className="max-w-5xl mx-auto w-full">
                 {/* Header Section */}
-                <div className="mb-6">
+                <div className="mb-4 sm:mb-6">
                     <button
                         onClick={() => router.back()}
-                        className={`flex items-center ${COLORS.TEXT.MUTED} ${COLORS.TEXT.PRIMARY_HOVER} mb-6 transition-all duration-200 font-semibold group`}
+                        className={`flex items-center ${COLORS.TEXT.MUTED} ${COLORS.TEXT.PRIMARY_HOVER} mb-4 sm:mb-6 transition-all duration-200 font-semibold group text-sm sm:text-base`}
                     >
-                        <ArrowLeft className="w-5 h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
-                        <span>Back to Forum</span>
+                        <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-2 group-hover:-translate-x-1 transition-transform duration-200" />
+                        <span className="hidden sm:inline">Back to Forum</span>
+                        <span className="sm:hidden">Back</span>
                     </button>
 
                     {/* Owner Actions */}
                     {isOwner && (
-                        <div className="flex gap-3 mb-6">
+                        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mb-4 sm:mb-6">
                             <button
                                 onClick={() => setIsEditingMode(!isEditingMode)}
-                                className="flex items-center px-5 py-2.5 bg-linear-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-200 text-sm font-semibold border-2 border-blue-200 hover:shadow-lg hover:scale-105"
+                                className="flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 bg-linear-to-r from-blue-50 to-indigo-50 text-blue-700 rounded-lg sm:rounded-xl hover:from-blue-100 hover:to-indigo-100 transition-all duration-200 text-xs sm:text-sm font-semibold border-2 border-blue-200 hover:shadow-lg hover:scale-105"
                             >
-                                <Edit3 className="w-4 h-4 mr-2" />
-                                {isEditingMode ? "Cancel" : "Edit Post"}
+                                <Edit3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                                {isEditingMode ? "Cancel" : "Edit"}
                             </button>
                             <button
                                 onClick={handleDelete}
                                 disabled={isDeleting}
-                                className="flex items-center px-5 py-2.5 bg-linear-to-r from-red-50 to-pink-50 text-red-700 rounded-xl hover:from-red-100 hover:to-pink-100 transition-all duration-200 text-sm font-semibold border-2 border-red-200 hover:shadow-lg hover:scale-105 disabled:opacity-50"
+                                className="flex items-center justify-center px-4 sm:px-5 py-2 sm:py-2.5 bg-linear-to-r from-red-50 to-pink-50 text-red-700 rounded-lg sm:rounded-xl hover:from-red-100 hover:to-pink-100 transition-all duration-200 text-xs sm:text-sm font-semibold border-2 border-red-200 hover:shadow-lg hover:scale-105 disabled:opacity-50"
                             >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                {isDeleting ? "Deleting..." : "Delete Post"}
+                                <Trash2 className="w-3 h-3 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
+                                {isDeleting ? "Deleting..." : "Delete"}
                             </button>
                         </div>
                     )}
                 </div>
 
                 {/* Main Post Card */}
-                <div className={`${COLORS.BACKGROUND.CARD} rounded-2xl shadow-xl ${COLORS.BORDER.DEFAULT} overflow-hidden mb-6 transition-all duration-300`}>
+                <div className={`${COLORS.BACKGROUND.CARD} rounded-xl sm:rounded-2xl shadow-xl ${COLORS.BORDER.DEFAULT} overflow-hidden mb-4 sm:mb-6 transition-all duration-300`}>
                     {/* Post Image Header */}
                     {postData.image && (
-                        <div className={`w-full h-64 sm:h-80 overflow-hidden ${COLORS.BACKGROUND.MUTED} transition-colors duration-200`}>
+                        <div className={`w-full h-48 sm:h-64 md:h-80 overflow-hidden ${COLORS.BACKGROUND.MUTED} transition-colors duration-200`}>
                             <img
                                 src={postData.image}
                                 alt={postData.title}
@@ -370,9 +371,9 @@ export default function PostDetail({ postData }: PostDetailProps) {
                         </div>
                     )}
 
-                    <div className="p-6 sm:p-8 lg:p-10">
+                    <div className="p-4 sm:p-6 md:p-8 lg:p-10">
                         {/* Title Section */}
-                        <div className="mb-6">
+                        <div className="mb-4 sm:mb-6">
                             {isEditingMode ? (
                                 <input
                                     id="edit-title"
@@ -382,10 +383,10 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                     onChange={(e) =>
                                         setEditTitle(e.target.value)
                                     }
-                                    className={`text-3xl sm:text-4xl font-bold w-full p-4 border-2 ${COLORS.BORDER.DEFAULT} rounded-xl mb-4 outline-none focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.MUTED}`}
+                                    className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold w-full p-3 sm:p-4 border-2 ${COLORS.BORDER.DEFAULT} rounded-lg sm:rounded-xl mb-3 sm:mb-4 outline-none focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.MUTED}`}
                                 />
                             ) : (
-                                <h1 className={`text-3xl sm:text-4xl lg:text-5xl font-extrabold ${COLORS.TEXT.DEFAULT} mb-4 leading-tight transition-colors duration-200`}>
+                                <h1 className={`text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-extrabold ${COLORS.TEXT.DEFAULT} mb-3 sm:mb-4 leading-tight transition-colors duration-200 break-words`}>
                                     {postData.title}
                                 </h1>
                             )}
@@ -412,9 +413,9 @@ export default function PostDetail({ postData }: PostDetailProps) {
                         </div>
 
                         {/* Post Meta Info */}
-                        <div className={`flex flex-wrap items-center gap-4 text-sm mb-6 pb-6 border-b ${COLORS.BORDER.LIGHT} transition-colors duration-200`}>
-                            <div className={`flex items-center gap-2 ${COLORS.BACKGROUND.MUTED} px-4 py-2 rounded-lg transition-colors duration-200`}>
-                                <div className={`w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 ${COLORS.BACKGROUND.CARD} shadow-md transition-colors duration-200`}>
+                        <div className={`flex flex-wrap items-center gap-2 sm:gap-3 md:gap-4 text-xs sm:text-sm mb-4 sm:mb-6 pb-4 sm:pb-6 border-b ${COLORS.BORDER.LIGHT} transition-colors duration-200`}>
+                            <div className={`flex items-center gap-1.5 sm:gap-2 ${COLORS.BACKGROUND.MUTED} px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg transition-colors duration-200`}>
+                                <div className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full overflow-hidden bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center border-2 ${COLORS.BACKGROUND.CARD} shadow-md transition-colors duration-200`}>
                                     {postAuthor?.avatar_url ||
                                     postData.profiles?.avatar_url ? (
                                         <img
@@ -434,29 +435,32 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                     )}
                                 </div>
                                 <div>
-                                    <div className={`font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200`}>
+                                    <div className={`font-bold ${COLORS.TEXT.DEFAULT} transition-colors duration-200 text-xs sm:text-sm`}>
                                         {postAuthor?.full_name ||
                                             postData.profiles?.full_name ||
                                             "User"}
                                     </div>
-                                    <div className={`text-xs ${COLORS.TEXT.MUTED} flex items-center gap-1 transition-colors duration-200`}>
-                                        <Clock className="w-3 h-3 transition-colors duration-200" />
+                                    <div className={`text-[10px] sm:text-xs ${COLORS.TEXT.MUTED} flex items-center gap-1 transition-colors duration-200`}>
+                                        <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 transition-colors duration-200" />
                                         {formatTimeAgo(postData.created_at)}
                                     </div>
                                 </div>
                             </div>
 
-                            <div className={`flex items-center gap-2 ${COLORS.BACKGROUND.MUTED} px-4 py-2 rounded-lg transition-colors duration-200`}>
-                                <Calendar className={`w-4 h-4 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
-                                <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200`}>
+                            <div className={`flex items-center gap-1.5 sm:gap-2 ${COLORS.BACKGROUND.MUTED} px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg transition-colors duration-200`}>
+                                <Calendar className={`w-3 h-3 sm:w-4 sm:h-4 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
+                                <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200 hidden sm:inline`}>
                                     {formatDate(postData.created_at)}
+                                </span>
+                                <span className={`${COLORS.TEXT.MUTED} transition-colors duration-200 sm:hidden`}>
+                                    {formatDate(postData.created_at).split(' ')[0]}
                                 </span>
                             </div>
 
-                            <div className={`flex items-center gap-2 ${COLORS.BACKGROUND.MUTED} px-4 py-2 rounded-lg transition-colors duration-200`}>
-                                <Eye className={`w-4 h-4 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
+                            <div className={`flex items-center gap-1.5 sm:gap-2 ${COLORS.BACKGROUND.MUTED} px-2 sm:px-3 md:px-4 py-1.5 sm:py-2 rounded-lg transition-colors duration-200`}>
+                                <Eye className={`w-3 h-3 sm:w-4 sm:h-4 ${COLORS.TEXT.MUTED} transition-colors duration-200`} />
                                 <span className={`${COLORS.TEXT.MUTED} font-medium transition-colors duration-200`}>
-                                    {postData.total_views || 0} views
+                                    {postData.total_views || 0} <span className="hidden sm:inline">views</span>
                                 </span>
                             </div>
                         </div>
@@ -528,33 +532,33 @@ export default function PostDetail({ postData }: PostDetailProps) {
                         )}
 
                         {/* Actions Bar */}
-                        <div className={`flex items-center gap-4 py-6 border-t border-b ${COLORS.BORDER.DEFAULT} mb-8 ${COLORS.BACKGROUND.MUTED} rounded-xl px-6`}>
+                        <div className={`flex items-center gap-2 sm:gap-3 md:gap-4 py-4 sm:py-5 md:py-6 border-t border-b ${COLORS.BORDER.DEFAULT} mb-6 sm:mb-8 ${COLORS.BACKGROUND.MUTED} rounded-lg sm:rounded-xl px-3 sm:px-4 md:px-6`}>
                             <button
                                 onClick={handleToggleLike}
-                                className={`flex items-center gap-2 px-6 py-3 rounded-xl transition-all duration-200 font-semibold transform hover:scale-105 ${
+                                className={`flex items-center gap-1 sm:gap-2 px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl transition-all duration-200 font-semibold transform hover:scale-105 ${
                                     isLiked
                                         ? "text-red-600 bg-red-50 hover:bg-red-100 shadow-md"
                                         : `${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.CARD} shadow-sm`
                                 }`}
                             >
                                 <Heart
-                                    className={`w-5 h-5 ${
+                                    className={`w-4 h-4 sm:w-5 sm:h-5 ${
                                         isLiked ? "fill-current" : ""
                                     }`}
                                 />
-                                <span className="font-bold text-lg">
+                                <span className="font-bold text-sm sm:text-base md:text-lg">
                                     {likesCount || 0}
                                 </span>
-                                <span className="text-sm">Likes</span>
+                                <span className="text-xs sm:text-sm hidden sm:inline">Likes</span>
                             </button>
-                            <div className={`flex items-center gap-2 ${COLORS.TEXT.MUTED} px-6 py-3 rounded-xl ${COLORS.BACKGROUND.CARD} shadow-sm`}>
-                                <MessageCircle className="w-5 h-5 text-blue-600" />
-                                <span className="font-bold text-lg">
+                            <div className={`flex items-center gap-1 sm:gap-2 ${COLORS.TEXT.MUTED} px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl ${COLORS.BACKGROUND.CARD} shadow-sm`}>
+                                <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                                <span className="font-bold text-sm sm:text-base md:text-lg">
                                     {replies.length ||
                                         postData.reply_count ||
                                         0}
                                 </span>
-                                <span className="text-sm">
+                                <span className="text-xs sm:text-sm hidden sm:inline">
                                     {replies.length === 1
                                         ? "Comment"
                                         : "Comments"}
@@ -562,22 +566,22 @@ export default function PostDetail({ postData }: PostDetailProps) {
                             </div>
                             <button
                                 onClick={handleShare}
-                                className={`flex items-center gap-2 ${COLORS.TEXT.MUTED} px-6 py-3 rounded-xl ${COLORS.BACKGROUND.CARD} shadow-sm hover:${COLORS.BACKGROUND.MUTED_HOVER} transition-all duration-200 cursor-pointer transform hover:scale-105`}
+                                className={`flex items-center gap-1 sm:gap-2 ${COLORS.TEXT.MUTED} px-3 sm:px-4 md:px-6 py-2 sm:py-2.5 md:py-3 rounded-lg sm:rounded-xl ${COLORS.BACKGROUND.CARD} shadow-sm hover:${COLORS.BACKGROUND.MUTED_HOVER} transition-all duration-200 cursor-pointer transform hover:scale-105`}
                             >
-                                <Share2 className="w-5 h-5" />
-                                <span className="text-sm font-semibold">
+                                <Share2 className="w-4 h-4 sm:w-5 sm:h-5" />
+                                <span className="text-xs sm:text-sm font-semibold hidden sm:inline">
                                     {isCopied ? "Copied!" : "Share"}
                                 </span>
                             </button>
                         </div>
 
                         {/* Comments Section */}
-                        <div className={`border ${COLORS.BORDER.DEFAULT} rounded-2xl p-6 sm:p-8 ${COLORS.BACKGROUND.CARD} shadow-lg`}>
-                            <div className="flex items-center justify-between mb-6">
-                                <h3 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT} flex items-center`}>
-                                    <MessageCircle className="w-6 h-6 mr-3 text-blue-600" />
-                                    Comments
-                                    <span className="ml-3 px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-sm font-semibold">
+                        <div className={`border ${COLORS.BORDER.DEFAULT} rounded-xl sm:rounded-2xl p-4 sm:p-6 md:p-8 ${COLORS.BACKGROUND.CARD} shadow-lg`}>
+                            <div className="flex items-center justify-between mb-4 sm:mb-6">
+                                <h3 className={`text-lg sm:text-xl md:text-2xl font-bold ${COLORS.TEXT.DEFAULT} flex items-center flex-wrap gap-2`}>
+                                    <MessageCircle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
+                                    <span>Comments</span>
+                                    <span className="px-2 sm:px-3 py-0.5 sm:py-1 bg-blue-100 text-blue-700 rounded-full text-xs sm:text-sm font-semibold">
                                         {replies.length ||
                                             postData.reply_count ||
                                             0}
@@ -586,22 +590,22 @@ export default function PostDetail({ postData }: PostDetailProps) {
                             </div>
 
                             {/* Comment Input Box */}
-                            <div className="mb-8">
-                                <div className={`border-2 ${COLORS.BORDER.DEFAULT} rounded-2xl ${COLORS.BACKGROUND.CARD} p-5 focus-within:ring-2 focus-within:ring-accent focus-within:${COLORS.BORDER.PRIMARY} transition-all shadow-sm`}>
-                                    <div className="flex gap-3 mb-3">
+                            <div className="mb-6 sm:mb-8">
+                                <div className={`border-2 ${COLORS.BORDER.DEFAULT} rounded-xl sm:rounded-2xl ${COLORS.BACKGROUND.CARD} p-3 sm:p-4 md:p-5 focus-within:ring-2 focus-within:ring-accent focus-within:${COLORS.BORDER.PRIMARY} transition-all shadow-sm`}>
+                                    <div className="flex gap-2 sm:gap-3 mb-2 sm:mb-3">
                                         {user?.avatar_url ? (
                                             <img
                                                 src={user.avatar_url}
                                                 alt={user.full_name || "You"}
-                                                className={`w-10 h-10 rounded-full object-cover border-2 ${COLORS.BORDER.DEFAULT}`}
+                                                className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full object-cover border-2 ${COLORS.BORDER.DEFAULT}`}
                                             />
                                         ) : (
-                                            <div className={`w-10 h-10 rounded-full ${GRADIENTS.PRIMARY} flex items-center justify-center border-2 ${COLORS.BORDER.DEFAULT}`}>
-                                                <UserIcon className="w-5 h-5 text-white" />
+                                            <div className={`w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full ${GRADIENTS.PRIMARY} flex items-center justify-center border-2 ${COLORS.BORDER.DEFAULT}`}>
+                                                <UserIcon className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                                             </div>
                                         )}
                                         <div className="flex-1">
-                                            <div className={`text-sm font-semibold ${COLORS.TEXT.DEFAULT} mb-1`}>
+                                            <div className={`text-xs sm:text-sm font-semibold ${COLORS.TEXT.DEFAULT} mb-1`}>
                                                 {user?.full_name || "Guest"}
                                             </div>
                                         </div>
@@ -616,12 +620,12 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                 ? "Share your thoughts..."
                                                 : "Please login to comment"
                                         }
-                                        className={`w-full bg-transparent border-none focus:outline-none resize-none min-h-[120px] ${COLORS.TEXT.DEFAULT} ${COLORS.TEXT.MUTED} placeholder:${COLORS.TEXT.MUTED} text-base`}
+                                        className={`w-full bg-transparent border-none focus:outline-none resize-none min-h-[80px] sm:min-h-[100px] md:min-h-[120px] ${COLORS.TEXT.DEFAULT} ${COLORS.TEXT.MUTED} placeholder:${COLORS.TEXT.MUTED} text-sm sm:text-base`}
                                         maxLength={2000}
                                         disabled={!user}
                                     />
-                                    <div className={`flex justify-between items-center mt-4 pt-4 border-t ${COLORS.BORDER.DEFAULT}`}>
-                                        <span className={`text-xs ${COLORS.TEXT.MUTED}`}>
+                                    <div className={`flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-0 mt-3 sm:mt-4 pt-3 sm:pt-4 border-t ${COLORS.BORDER.DEFAULT}`}>
+                                        <span className={`text-[10px] sm:text-xs ${COLORS.TEXT.MUTED}`}>
                                             {replyText.length}/2000 characters
                                         </span>
                                         <button
@@ -629,9 +633,9 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                             disabled={
                                                 !replyText.trim() || !user
                                             }
-                                            className="flex items-center space-x-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105"
+                                            className="flex items-center space-x-1 sm:space-x-2 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:scale-105 w-full sm:w-auto justify-center"
                                         >
-                                            <Send className="w-4 h-4" />
+                                            <Send className="w-3 h-3 sm:w-4 sm:h-4" />
                                             <span>Post Comment</span>
                                         </button>
                                     </div>
@@ -640,17 +644,17 @@ export default function PostDetail({ postData }: PostDetailProps) {
 
                             {/* Comments List */}
                             {replies.length === 0 ? (
-                                <div className={`${COLORS.BACKGROUND.MUTED} rounded-2xl p-16 text-center border-2 border-dashed ${COLORS.BORDER.DEFAULT}`}>
-                                    <MessageCircle className={`w-16 h-16 ${COLORS.TEXT.MUTED} mx-auto mb-4`} />
-                                    <h4 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-2`}>
+                                <div className={`${COLORS.BACKGROUND.MUTED} rounded-xl sm:rounded-2xl p-8 sm:p-12 md:p-16 text-center border-2 border-dashed ${COLORS.BORDER.DEFAULT}`}>
+                                    <MessageCircle className={`w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 ${COLORS.TEXT.MUTED} mx-auto mb-3 sm:mb-4`} />
+                                    <h4 className={`text-base sm:text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-2`}>
                                         No comments yet
                                     </h4>
-                                    <p className={`${COLORS.TEXT.MUTED} font-medium`}>
+                                    <p className={`text-sm sm:text-base ${COLORS.TEXT.MUTED} font-medium`}>
                                         Be the first to share your thoughts!
                                     </p>
                                 </div>
                             ) : (
-                                <div className="space-y-6">
+                                <div className="space-y-4 sm:space-y-5 md:space-y-6">
                                     {replies.map((reply) => {
                                         const isMyReply =
                                             user?.id === reply.user_id ||
@@ -662,11 +666,11 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                         return (
                                             <div
                                                 key={reply.id}
-                                                className="flex gap-4 group animate-in fade-in slide-in-from-bottom-2 duration-300"
+                                                className="flex gap-2 sm:gap-3 md:gap-4 group animate-in fade-in slide-in-from-bottom-2 duration-300"
                                             >
                                                 {/* Avatar */}
                                                 <div className="shrink-0">
-                                                    <div className="w-10 h-10 rounded-full bg-linear-to-tr from-blue-500 to-indigo-600 p-0.5 shadow-md">
+                                                    <div className="w-8 h-8 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full bg-linear-to-tr from-blue-500 to-indigo-600 p-0.5 shadow-md">
                                                         {reply.profiles
                                                             ?.avatar_url ? (
                                                             <img
@@ -691,29 +695,29 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                 </div>
 
                                                 {/* Comment Content */}
-                                                <div className="flex-1 space-y-2">
+                                                <div className="flex-1 space-y-1.5 sm:space-y-2 min-w-0">
                                                     <div
-                                                        className={`relative p-4 rounded-2xl shadow-sm border transition-all duration-200 ${
+                                                        className={`relative p-3 sm:p-4 rounded-lg sm:rounded-xl md:rounded-2xl shadow-sm border transition-all duration-200 ${
                                                             isMyReply
                                                                 ? `${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.PRIMARY} hover:${COLORS.BORDER.PRIMARY}`
                                                                 : `${COLORS.BACKGROUND.MUTED} ${COLORS.BORDER.DEFAULT}`
                                                         }`}
                                                     >
-                                                        <div className="flex justify-between items-center mb-2">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className={`font-bold ${COLORS.TEXT.DEFAULT} text-sm`}>
+                                                        <div className="flex justify-between items-start sm:items-center mb-2 gap-2">
+                                                            <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap min-w-0">
+                                                                <span className={`font-bold ${COLORS.TEXT.DEFAULT} text-xs sm:text-sm truncate`}>
                                                                     {reply
                                                                         .profiles
                                                                         ?.full_name ||
                                                                         "User"}
                                                                 </span>
                                                                 {isMyReply && (
-                                                                    <span className="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                                                                    <span className="text-[9px] sm:text-[10px] bg-blue-100 text-blue-600 px-1.5 sm:px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0">
                                                                         You
                                                                     </span>
                                                                 )}
-                                                                <span className={`text-xs ${COLORS.TEXT.MUTED} font-medium flex items-center gap-1`}>
-                                                                    <span className="text-[8px]">
+                                                                <span className={`text-[10px] sm:text-xs ${COLORS.TEXT.MUTED} font-medium flex items-center gap-1 shrink-0`}>
+                                                                    <span className="text-[7px] sm:text-[8px]">
                                                                         ●
                                                                     </span>
                                                                     {formatTimeAgo(
@@ -724,7 +728,7 @@ export default function PostDetail({ postData }: PostDetailProps) {
 
                                                             {isMyReply &&
                                                                 !isEditingThis && (
-                                                                    <div className="flex gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                                                                    <div className="flex gap-0.5 sm:gap-1 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                                                         <button
                                                                             onClick={() => {
                                                                                 setEditingReplyId(
@@ -734,10 +738,10 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                                                     reply.content
                                                                                 );
                                                                             }}
-                                                                            className={`p-1.5 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.PRIMARY} hover:${COLORS.PRIMARY.LIGHT} rounded-lg transition-all`}
+                                                                            className={`p-1 sm:p-1.5 ${COLORS.TEXT.MUTED} hover:${COLORS.TEXT.PRIMARY} hover:${COLORS.PRIMARY.LIGHT} rounded-lg transition-all`}
                                                                             title="Edit comment"
                                                                         >
-                                                                            <Edit3 className="w-4 h-4" />
+                                                                            <Edit3 className="w-3 h-3 sm:w-4 sm:h-4" />
                                                                         </button>
                                                                         <button
                                                                             onClick={() =>
@@ -745,17 +749,17 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                                                     reply.id
                                                                                 )
                                                                             }
-                                                                            className={`p-1.5 ${COLORS.TEXT.MUTED} hover:${COLORS.DESTRUCTIVE.TEXT} hover:${COLORS.DESTRUCTIVE.BACKGROUND_HOVER} rounded-lg transition-all`}
+                                                                            className={`p-1 sm:p-1.5 ${COLORS.TEXT.MUTED} hover:${COLORS.DESTRUCTIVE.TEXT} hover:${COLORS.DESTRUCTIVE.BACKGROUND_HOVER} rounded-lg transition-all`}
                                                                             title="Delete comment"
                                                                         >
-                                                                            <Trash2 className="w-4 h-4" />
+                                                                            <Trash2 className="w-3 h-3 sm:w-4 sm:h-4" />
                                                                         </button>
                                                                     </div>
                                                                 )}
                                                         </div>
 
                                                         {isEditingThis ? (
-                                                            <div className="mt-2 space-y-3">
+                                                            <div className="mt-2 space-y-2 sm:space-y-3">
                                                                 <textarea
                                                                     autoFocus
                                                                     value={
@@ -770,16 +774,16 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                                                 .value
                                                                         )
                                                                     }
-                                                                    className={`w-full p-3 border-2 ${COLORS.BORDER.PRIMARY} rounded-xl focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} outline-none ${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} text-sm min-h-[100px] resize-none`}
+                                                                    className={`w-full p-2 sm:p-3 border-2 ${COLORS.BORDER.PRIMARY} rounded-lg sm:rounded-xl focus:ring-2 focus:ring-accent focus:${COLORS.BORDER.PRIMARY} outline-none ${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} text-xs sm:text-sm min-h-[80px] sm:min-h-[100px] resize-none`}
                                                                 />
-                                                                <div className="flex justify-end gap-2">
+                                                                <div className="flex flex-col sm:flex-row justify-end gap-2">
                                                                     <button
                                                                         onClick={() =>
                                                                             setEditingReplyId(
                                                                                 null
                                                                             )
                                                                         }
-                                                                        className={`px-4 py-1.5 text-xs font-bold ${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.MUTED_HOVER} rounded-lg transition-colors`}
+                                                                        className={`px-3 sm:px-4 py-1.5 text-xs font-bold ${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.MUTED_HOVER} rounded-lg transition-colors`}
                                                                     >
                                                                         Cancel
                                                                     </button>
@@ -793,16 +797,16 @@ export default function PostDetail({ postData }: PostDetailProps) {
                                                                             isUpdatingReply ||
                                                                             !editReplyText.trim()
                                                                         }
-                                                                        className="px-4 py-1.5 text-xs font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-sm transition-all"
+                                                                        className="px-3 sm:px-4 py-1.5 text-xs font-bold bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 shadow-sm transition-all"
                                                                     >
                                                                         {isUpdatingReply
                                                                             ? "Saving..."
-                                                                            : "Save Changes"}
+                                                                            : "Save"}
                                                                     </button>
                                                                 </div>
                                                             </div>
                                                         ) : (
-                                                            <p className={`${COLORS.TEXT.DEFAULT} leading-relaxed text-sm whitespace-pre-wrap`}>
+                                                            <p className={`${COLORS.TEXT.DEFAULT} leading-relaxed text-xs sm:text-sm whitespace-pre-wrap break-words`}>
                                                                 {reply.content}
                                                             </p>
                                                         )}
