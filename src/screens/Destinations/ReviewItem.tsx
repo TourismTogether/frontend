@@ -166,7 +166,7 @@ export default function ReviewItem({
               <button
                 onClick={() => setOpenEdit(true)}
                 disabled={deleting}
-                className={`flex items-center gap-1.5 ${COLORS.PRIMARY.TEXT} ${COLORS.PRIMARY.TEXT_HOVER} font-medium transition-colors text-xs sm:text-sm`}
+                className={`flex items-center gap-1.5 ${COLORS.PRIMARY.TEXT} ${COLORS.TEXT.PRIMARY_HOVER} font-medium transition-colors text-xs sm:text-sm`}
               >
                 <Edit2 className="w-3 h-3 sm:w-4 sm:h-4" />
                 Sửa
