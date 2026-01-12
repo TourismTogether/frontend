@@ -1,11 +1,25 @@
 "use client";
 
 import React from "react";
-import { BookOpen, MapPin, Wallet, MessageCircle, Globe, Loader2 } from "lucide-react";
+import {
+  BookOpen,
+  MapPin,
+  Wallet,
+  MessageCircle,
+  Globe,
+  Loader2,
+} from "lucide-react";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 
 interface LoadingProps {
-  type?: "default" | "diaries" | "trips" | "destinations" | "forum" | "profile" | "dashboard";
+  type?:
+    | "default"
+    | "diaries"
+    | "trips"
+    | "destinations"
+    | "forum"
+    | "profile"
+    | "dashboard";
   message?: string;
   fullScreen?: boolean;
 }
@@ -115,7 +129,9 @@ export const SkeletonCard: React.FC<SkeletonCardProps> = ({
       className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg overflow-hidden animate-pulse transition-colors duration-300`}
     >
       {showImage && (
-        <div className={`h-48 ${COLORS.BACKGROUND.MUTED} relative transition-colors duration-300`}>
+        <div
+          className={`h-48 ${COLORS.BACKGROUND.MUTED} relative transition-colors duration-300`}
+        >
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
         </div>
       )}
@@ -175,7 +191,11 @@ export const SkeletonGrid: React.FC<SkeletonGridProps> = ({
   return (
     <div className={`grid ${gridCols[columns]} gap-6`}>
       {[...Array(count)].map((_, index) => (
-        <SkeletonCard key={index} showImage={showImage} showActions={showActions} />
+        <SkeletonCard
+          key={index}
+          showImage={showImage}
+          showActions={showActions}
+        />
       ))}
     </div>
   );
