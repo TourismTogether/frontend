@@ -401,131 +401,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         throw new Error(result.message || "Sign in failed");
       }
 
-      // Directly set user from response instead of calling fetchUser
-      if (result.data?.user) {
-        setUser(result.data.user);
-        setAccount(result.data.account ?? null);
+      await fetchUser();
 
-        // Check if user is admin
-        try {
-          if (!result.data.user.id || result.data.user.id === "NaN" || result.data.user.id === "undefined") {
-            setIsAdmin(false);
-          } else {
-            const adminRes = await fetch(API_ENDPOINTS.ADMINS.BY_ID(String(result.data.user.id)), {
-              credentials: "include",
-            });
-            if (adminRes.ok) {
-              const adminResult = await adminRes.json();
-              setIsAdmin(adminResult.status === 200 && adminResult.data !== null);
-            } else {
-              setIsAdmin(false);
-            }
-          }
-        } catch {
-          setIsAdmin(false);
-        }
-
-        // Get user location
-        let userLat = DEFAULT_LATITUDE;
-        let userLng = DEFAULT_LONGITUDE;
-        try {
-          const location = await getUserLocation();
-          userLat = location.lat;
-          userLng = location.lng;
-        } catch {
-          // Use default coordinates if location retrieval fails
-        }
-
-        // Update or create traveller with location
-        try {
-          const travellerRes = await fetch(
-            API_ENDPOINTS.TRAVELLERS.BY_ID(String(result.data.user.id)),
-            {
-              credentials: "include",
-            }
-          );
-
-          if (travellerRes.ok) {
-            const travellerResult = await travellerRes.json();
-            if (travellerResult.status === 200) {
-              // Update existing traveller with location
-              await fetch(API_ENDPOINTS.TRAVELLERS.UPDATE(String(result.data.user.id)), {
-                method: "PATCH",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                  latitude: userLat,
-                  longitude: userLng,
-                }),
-              });
-              setProfile({
-                ...result.data.user,
-                ...travellerResult.data,
-                email: result.data.account?.email,
-                latitude: userLat,
-                longitude: userLng,
-              });
-            } else {
-              // Create new traveller
-              await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({
-                  user_id: result.data.user.id,
-                  bio: "",
-                  is_shared_location: false,
-                  latitude: userLat,
-                  longitude: userLng,
-                  is_safe: true,
-                  emergency_contacts: [],
-                }),
-              });
-              setProfile({
-                ...result.data.user,
-                email: result.data.account?.email,
-                latitude: userLat,
-                longitude: userLng,
-              });
-            }
-          } else {
-            // Create new traveller if fetch failed
-            await fetch(API_ENDPOINTS.TRAVELLERS.CREATE, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include",
-              body: JSON.stringify({
-                user_id: result.data.user.id,
-                bio: "",
-                is_shared_location: false,
-                latitude: userLat,
-                longitude: userLng,
-                is_safe: true,
-                emergency_contacts: [],
-              }),
-            });
-            setProfile({
-              ...result.data.user,
-              email: result.data.account?.email,
-              latitude: userLat,
-              longitude: userLng,
-            });
-          }
-        } catch {
-          // Fallback if traveller operations fail
-          setProfile({
-            ...result.data.user,
-            email: result.data.account?.email,
-            latitude: userLat,
-            longitude: userLng,
-          });
-        }
-      }
-
+    } catch (error: any) {
       setLoading(false);
-    } catch (error) {
+      throw error instanceof Error
+        ? error
+        : new Error("Email or password is incorrect");
+    } finally {
       setLoading(false);
-      throw error;
     }
   };
 
