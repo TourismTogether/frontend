@@ -15,11 +15,13 @@ import {
   List,
   Clock,
   Gauge,
+  UserPlus,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { FormNewTrip } from "./FormNewTrip";
 import { TripCard } from "./TripCard";
 import { EditTripModal } from "./EditTripModal";
+import { JoinTripModal } from "./JoinTripModal";
 import { API_ENDPOINTS, getTravelImageUrl } from "../../constants/api";
 import { COLORS, GRADIENTS } from "../../constants/colors";
 import Loading from "../../components/Loading/Loading";
@@ -128,6 +130,7 @@ export const Trips: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [selectedTrip, setSelectedTrip] = useState<ITrip | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>("grid");
 
@@ -223,6 +226,9 @@ export const Trips: React.FC = () => {
 
   const handleOpenAddModal = () => setIsAddModalOpen(true);
   const handleCloseAddModal = () => setIsAddModalOpen(false);
+
+  const handleOpenJoinModal = () => setIsJoinModalOpen(true);
+  const handleCloseJoinModal = () => setIsJoinModalOpen(false);
 
   const handleOpenEditModal = (trip: ITrip) => {
     setSelectedTrip(trip);
@@ -417,6 +423,14 @@ export const Trips: React.FC = () => {
                 <List className="w-4 h-4" />
               </button>
             </div>
+
+            <button
+              onClick={handleOpenJoinModal}
+              className={`flex items-center justify-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition-all duration-200 shadow-lg hover:shadow-xl transform hover:scale-105 font-semibold`}
+            >
+              <UserPlus className="w-5 h-5" />
+              <span>Tham gia chuyến đi</span>
+            </button>
 
             <button
               onClick={handleOpenAddModal}
@@ -683,6 +697,12 @@ export const Trips: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={handleCloseAddModal}
         onTripCreated={handleTripActionSuccess}
+      />
+
+      <JoinTripModal
+        isOpen={isJoinModalOpen}
+        onClose={handleCloseJoinModal}
+        onJoinSuccess={handleTripActionSuccess}
       />
 
       {selectedTrip && (
