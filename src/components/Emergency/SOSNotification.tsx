@@ -15,6 +15,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useTheme } from "next-themes";
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -39,6 +40,7 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
   currentUserId,
   isSupporter = false,
 }) => {
+  const { theme } = useTheme();
   const { user } = useAuth();
   const [sosAlerts, setSOSAlerts] = useState<SOSAlert[]>([]);
   const [isOpen, setIsOpen] = useState(false);
@@ -115,22 +117,22 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
 
   const getAlertColor = (alert: SOSAlert): string => {
     if (alert.is_safe) {
-      return "border-green-500 bg-green-50";
+      return "border-green-500 dark:border-green-600 bg-green-50 dark:bg-green-950/30";
     }
     if (alert.emergency_contacts && alert.emergency_contacts.includes(currentUserId || '')) {
-      return "border-red-500 bg-red-50";
+      return "border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-950/30";
     }
-    return "border-yellow-500 bg-yellow-50";
+    return "border-yellow-500 dark:border-yellow-600 bg-yellow-50 dark:bg-yellow-950/30";
   };
 
   const getAlertBadgeColor = (alert: SOSAlert): string => {
     if (alert.is_safe) {
-      return "bg-green-500";
+      return "bg-green-500 dark:bg-green-600";
     }
     if (alert.emergency_contacts && alert.emergency_contacts.includes(currentUserId || '')) {
-      return "bg-red-500";
+      return "bg-red-500 dark:bg-red-600";
     }
-    return "bg-yellow-500";
+    return "bg-yellow-500 dark:bg-yellow-600";
   };
 
   const getAlertLabel = (alert: SOSAlert): string => {
@@ -143,11 +145,23 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
     return "Cần hỗ trợ";
   };
 
+  const getHeaderGradient = () => {
+    switch (theme) {
+      case 'dark':
+        return 'from-orange-600 to-red-600';
+      case 'modern':
+        return 'from-purple-600 to-pink-600';
+      case 'history':
+        return 'from-amber-600 to-orange-600';
+      default: // light
+        return 'from-orange-500 to-red-500';
+    }
+  };
+
   const pendingAlerts = sosAlerts.filter((a) => !a.is_safe);
   const urgentAlerts = sosAlerts.filter(
     (a) => !a.is_safe && a.emergency_contacts && a.emergency_contacts.includes(currentUserId || '')
   );
-
 
   if (!isSupporter) return null;
 
@@ -156,14 +170,14 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
       {/* Notification Bell Icon */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="relative flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-orange-500 hover:bg-orange-500/10 transition-all duration-200"
+        className="relative flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-orange-500 dark:hover:text-orange-400 hover:bg-orange-500/10 dark:hover:bg-orange-500/20 transition-all duration-200"
         title="SOS Alerts"
       >
         <Bell className="w-5 h-5" />
         {pendingAlerts.length > 0 && (
           <span
             className={`absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center text-xs font-bold text-white rounded-full px-1 ${
-              urgentAlerts.length > 0 ? "bg-red-500 animate-pulse" : "bg-yellow-500"
+              urgentAlerts.length > 0 ? "bg-red-500 dark:bg-red-600 animate-pulse" : "bg-yellow-500 dark:bg-yellow-600"
             }`}
           >
             {pendingAlerts.length}
@@ -183,7 +197,7 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
           {/* Panel */}
           <div className="absolute right-0 top-12 w-96 max-h-[80vh] bg-card rounded-xl shadow-2xl border border-border overflow-hidden z-50 animate-in fade-in slide-in-from-top-2 duration-200">
             {/* Header */}
-            <div className="bg-gradient-to-r from-orange-500 to-red-500 px-4 py-3 flex items-center justify-between">
+            <div className={`bg-gradient-to-r ${getHeaderGradient()} px-4 py-3 flex items-center justify-between`}>
               <div className="flex items-center space-x-2">
                 <AlertTriangle className="w-5 h-5 text-white" />
                 <h3 className="font-bold text-white">SOS Alerts</h3>
@@ -205,7 +219,7 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
             <div className="max-h-[60vh] overflow-y-auto">
               {loading ? (
                 <div className="flex justify-center py-8">
-                  <Loader2 className="w-6 h-6 text-orange-500 animate-spin" />
+                  <Loader2 className="w-6 h-6 text-primary animate-spin" />
                 </div>
               ) : sosAlerts.length === 0 ? (
                 <div className="text-center py-8 px-4">
@@ -246,18 +260,16 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
                           </div>
                         </div>
                         <span
-                          className={`text-xs font-medium text-white px-2 py-1 rounded-full ${getAlertBadgeColor(
-                            alert
-                          )}`}
+                          className={`text-xs font-medium text-white px-2 py-1 rounded-full ${getAlertBadgeColor(alert)}`}
                         >
                           {getAlertLabel(alert)}
                         </span>
                       </div>
 
                       {/* Location Info */}
-                      <div className="bg-background/50 rounded-lg p-2 mb-3 flex items-center space-x-2">
-                        <MapPin className="w-4 h-4 text-destination flex-shrink-0" />
-                        <span className="text-xs text-muted-foreground truncate">
+                      <div className="bg-background/50 dark:bg-background/30 rounded-lg p-2 mb-3 flex items-center space-x-2">
+                        <MapPin className="w-4 h-4 text-primary flex-shrink-0" />
+                        <span className="text-xs text-muted-foreground truncate font-mono">
                           {alert.latitude.toFixed(6)}, {alert.longitude.toFixed(6)}
                         </span>
                       </div>
@@ -281,7 +293,7 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
                         <div className="flex space-x-2">
                           <button
                             onClick={() => openGoogleMaps(alert.latitude, alert.longitude)}
-                            className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors text-sm"
+                            className="flex-1 flex items-center justify-center space-x-1 px-3 py-2 bg-blue-500 dark:bg-blue-600 hover:bg-blue-600 dark:hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
                           >
                             <Navigation className="w-4 h-4" />
                             <span>Chỉ đường</span>
@@ -289,7 +301,7 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
                           {alert.user_phone && (
                             <button
                               onClick={() => handleCall(alert.user_phone!)}
-                              className="flex items-center justify-center px-3 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
+                              className="flex items-center justify-center px-3 py-2 bg-green-500 dark:bg-green-600 hover:bg-green-600 dark:hover:bg-green-700 text-white rounded-lg transition-colors"
                             >
                               <PhoneCall className="w-4 h-4" />
                             </button>
@@ -297,7 +309,7 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
                           <button
                             onClick={() => handleMarkAsProcessed(alert.user_id)}
                             disabled={processingId === alert.user_id}
-                            className="flex items-center justify-center px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors disabled:opacity-50"
+                            className="flex items-center justify-center px-3 py-2 bg-emerald-500 dark:bg-emerald-600 hover:bg-emerald-600 dark:hover:bg-emerald-700 text-white rounded-lg transition-colors disabled:opacity-50"
                           >
                             {processingId === alert.user_id ? (
                               <Loader2 className="w-4 h-4 animate-spin" />
@@ -310,7 +322,7 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
 
                       {/* Processed badge */}
                       {alert.is_safe && (
-                        <div className="flex items-center justify-center space-x-2 text-green-600 bg-green-100 rounded-lg py-2">
+                        <div className="flex items-center justify-center space-x-2 text-green-600 dark:text-green-400 bg-green-100 dark:bg-green-900/30 rounded-lg py-2">
                           <CheckCircle className="w-4 h-4" />
                           <span className="text-sm font-medium">Đã xử lý xong</span>
                         </div>
@@ -327,21 +339,21 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <div className="flex items-center space-x-4">
                     <span className="flex items-center space-x-1">
-                      <span className="w-2 h-2 bg-red-500 rounded-full"></span>
+                      <span className="w-2 h-2 bg-red-500 dark:bg-red-400 rounded-full"></span>
                       <span>Trực tiếp</span>
                     </span>
                     <span className="flex items-center space-x-1">
-                      <span className="w-2 h-2 bg-yellow-500 rounded-full"></span>
+                      <span className="w-2 h-2 bg-yellow-500 dark:bg-yellow-400 rounded-full"></span>
                       <span>Chung</span>
                     </span>
                     <span className="flex items-center space-x-1">
-                      <span className="w-2 h-2 bg-green-500 rounded-full"></span>
+                      <span className="w-2 h-2 bg-green-500 dark:bg-green-400 rounded-full"></span>
                       <span>Đã xử lý</span>
                     </span>
                   </div>
                   <button
                     onClick={fetchSOSAlerts}
-                    className="text-traveller hover:underline"
+                    className="text-primary hover:underline"
                   >
                     Làm mới
                   </button>
@@ -354,4 +366,3 @@ export const SOSNotification: React.FC<SOSNotificationProps> = ({
     </div>
   );
 };
-

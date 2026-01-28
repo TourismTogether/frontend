@@ -121,13 +121,6 @@ export const API_ENDPOINTS = {
     CREATE: `${API_BASE_URL}/travellers`,
   },
 
-  // Admins
-  ADMINS: {
-    BASE: `${API_BASE_URL}/admins`,
-    BY_ID: (userId: string | number) => `${API_BASE_URL}/admins/${userId}`,
-    CREATE: `${API_BASE_URL}/admins`,
-  },
-
   // Accounts
   ACCOUNTS: {
     BASE: `${API_BASE_URL}/accounts`,
@@ -142,15 +135,6 @@ export const API_ENDPOINTS = {
     CREATE: `${API_BASE_URL}/costs`,
     UPDATE: (id: number) => `${API_BASE_URL}/costs/${id}`,
     DELETE: (id: number) => `${API_BASE_URL}/costs/${id}`,
-  },
-
-  // Admin
-  ADMIN: {
-    USERS: `${API_BASE_URL}/admin/users`,
-    DESTINATIONS: `${API_BASE_URL}/admin/destinations`,
-    REGIONS: `${API_BASE_URL}/admin/regions`,
-    SUPPORT_TEAM: `${API_BASE_URL}/admin/support-team`,
-    SOS: `${API_BASE_URL}/admin/sos`,
   },
 
   // AI Route Planner

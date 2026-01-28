@@ -224,7 +224,7 @@ const QuickAccessItem: React.FC<QuickAccessItemProps> = ({
 };
 
 export const Dashboard: React.FC = () => {
-  const { user, profile, isAdmin } = useAuth();
+  const { user, profile, isSupporter } = useAuth();
   const [stats, setStats] = useState<DashboardStats>({
     totalRoutes: 0,
     totalTrips: 0,
@@ -736,12 +736,12 @@ export const Dashboard: React.FC = () => {
                 link="/weather"
                 gradient="bg-gradient-to-r from-cyan-500 to-teal-500"
               />
-              {isAdmin && (
+              {isSupporter && (
                 <QuickAccessItem
                   icon={Shield}
-                  label="Admin Panel"
-                  link="/admin"
-                  gradient="bg-gradient-to-r from-red-500 to-rose-500"
+                  label="Supporter Dashboard"
+                  link="/supporter"
+                  gradient="bg-gradient-to-r from-orange-500 to-red-500"
                 />
               )}
             </div>
