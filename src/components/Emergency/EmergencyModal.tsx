@@ -11,9 +11,9 @@ import {
   CheckCircle,
   Loader2,
   PhoneCall,
-  Navigation
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from 'next-themes';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -36,13 +36,12 @@ interface EmergencyModalProps {
 }
 
 export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose }) => {
+  const { theme } = useTheme();
   const { profile, user } = useAuth();
   const [supportTeam, setSupportTeam] = useState<SupportMember[]>([]);
   const [loading, setLoading] = useState(true);
   const [sosActivated, setSosActivated] = useState(false);
-  const [selectedSupport, setSelectedSupport] = useState<SupportMember | null>(
-    null
-  );
+  const [selectedSupport, setSelectedSupport] = useState<SupportMember | null>(null);
   const [userLocation, setUserLocation] = useState<{
     lat: number;
     lng: number;
@@ -53,15 +52,9 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     if (isOpen) {
       fetchSupportTeam();
       getUserLocation();
-    }
-  }, [isOpen]);
-
-  // Check SOS status when modal opens and when supportTeam is loaded
-  useEffect(() => {
-    if (isOpen && supportTeam.length >= 0) {
       checkSOSStatus();
     }
-  }, [isOpen, supportTeam]);
+  }, [isOpen]);
 
   // Check SOS status periodically when SOS is activated
   useEffect(() => {
@@ -69,7 +62,7 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
 
     const checkInterval = setInterval(async () => {
       await checkSOSStatus();
-    }, 5000); // Check every 5 seconds
+    }, 5000);
 
     return () => clearInterval(checkInterval);
   }, [sosActivated, isOpen]);
@@ -84,7 +77,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
           });
         },
         () => {
-          // Location access denied or unavailable - use default
           setUserLocation({
             lat: 10.762892238148003,
             lng: 106.68248479264726,
@@ -96,7 +88,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
         }
       );
     } else {
-      // Geolocation not supported - use default
       setUserLocation({
         lat: 10.762892238148003,
         lng: 106.68248479264726,
@@ -118,18 +109,15 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
         const isSafe = result.data.is_safe !== false;
         const isShared = result.data.is_shared_location === true;
         
-        // If SOS was processed (is_safe = true), automatically deactivate
         if (isSafe || !isShared) {
           if (sosActivated) {
-            // Show notification that SOS has been resolved
-            alert('SOS has been resolved by a supporter. Thank you!');
+            alert('SOS đã được xử lý bởi supporter. Cảm ơn bạn!');
           }
           setSosActivated(false);
           setSelectedSupport(null);
         } else {
           setSosActivated(true);
           
-          // Update selected support if emergency_contacts exists
           if (result.data.emergency_contacts && Array.isArray(result.data.emergency_contacts) && result.data.emergency_contacts.length > 0) {
             const supporterId = result.data.emergency_contacts[0];
             const supporter = supportTeam.find(s => s.user_id === supporterId);
@@ -152,7 +140,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     try {
       setLoading(true);
 
-      // Fetch all supporters from backend API
       const supportersRes = await fetch(`${API_URL}/supporters`, {
         credentials: 'include',
       });
@@ -164,8 +151,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
       }
 
       const supporters = supportersResult.data;
-
-      // Filter available supporters (or use all if none available)
       const availableSupporters = supporters.filter((s: { is_available: boolean }) => s.is_available);
       const supportersToUse = availableSupporters.length > 0 ? availableSupporters : supporters;
 
@@ -174,7 +159,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
         return;
       }
 
-      // Fetch user info for each supporter
       const supportersWithUsers: SupportMember[] = await Promise.all(
         supportersToUse.map(async (supporter: { user_id: string; is_available: boolean }) => {
           try {
@@ -212,22 +196,19 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
   };
 
   const handleSOS = async () => {
-    // Get user ID from profile or user
     const userId = profile?.user_id || profile?.id || user?.id;
     
     if (!userId) {
-      alert('User information not found. Please log in again.');
+      alert('Không tìm thấy thông tin người dùng. Vui lòng đăng nhập lại.');
       return;
     }
 
-    // Get current location before activating SOS
     let currentLat = userLocation?.lat;
     let currentLng = userLocation?.lng;
 
-    // If location is not available, try to get it now
     if (!currentLat || !currentLng) {
       try {
-        const location = await new Promise<{ lat: number; lng: number }>((resolve, reject) => {
+        const location = await new Promise<{ lat: number; lng: number }>((resolve) => {
           if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
               (position) => {
@@ -237,7 +218,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
                 });
               },
               () => {
-                // Use default if location access denied
                 resolve({
                   lat: 10.762892238148003,
                   lng: 106.68248479264726,
@@ -256,7 +236,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
         currentLng = location.lng;
         setUserLocation(location);
       } catch {
-        // Use default coordinates
         currentLat = 10.762892238148003;
         currentLng = 106.68248479264726;
         setUserLocation({ lat: currentLat, lng: currentLng });
@@ -266,7 +245,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     setSosActivated(true);
 
     try {
-      // Update traveller status - activate SOS with current location
       const response = await fetch(`${API_URL}/travellers/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -276,25 +254,24 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
           latitude: currentLat,
           longitude: currentLng,
           is_shared_location: true,
-          emergency_contacts: [], // Reset emergency contacts when activating SOS
+          emergency_contacts: [],
         }),
       });
 
       const result = await response.json();
       if (result.status !== 200) {
-        alert('Failed to activate SOS. Please try again.');
+        alert('Không thể kích hoạt SOS. Vui lòng thử lại.');
         setSosActivated(false);
       } else {
-        alert('SOS activated! Your location has been sent to supporters.');
+        alert('SOS đã được kích hoạt! Vị trí của bạn đã được gửi đến các supporter.');
       }
     } catch (error) {
-      alert('An error occurred while activating SOS. Please try again.');
+      alert('Đã xảy ra lỗi khi kích hoạt SOS. Vui lòng thử lại.');
       setSosActivated(false);
     }
   };
 
   const handleSelectSupport = async (support: SupportMember) => {
-    // Get user ID from profile or user
     const userId = profile?.user_id || profile?.id || user?.id;
     
     if (!userId) return;
@@ -303,14 +280,12 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     setSendingLocation(true);
 
     try {
-      // Get current traveller data
       const travellerRes = await fetch(`${API_URL}/travellers/${userId}`, {
         credentials: 'include',
       });
       const travellerResult = await travellerRes.json();
       
       if (travellerResult.status === 200 && travellerResult.data) {
-        // Parse emergency_contacts - có thể là jsonb string hoặc array
         let currentContacts: string[] = [];
         if (travellerResult.data.emergency_contacts) {
           if (typeof travellerResult.data.emergency_contacts === 'string') {
@@ -324,12 +299,10 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
           }
         }
 
-        // Add supporter_id to emergency_contacts if not already present
         const updatedContacts = currentContacts.includes(support.user_id)
           ? currentContacts
           : [...currentContacts, support.user_id];
 
-        // Update traveller with new emergency_contacts
         await fetch(`${API_URL}/travellers/${userId}`, {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json' },
@@ -353,7 +326,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
   };
 
   const cancelSOS = async () => {
-    // Get user ID from profile or user
     const userId = profile?.user_id || profile?.id || user?.id;
     
     if (!userId) return;
@@ -362,7 +334,6 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
     setSelectedSupport(null);
 
     try {
-      // Cancel SOS - set is_safe to true, is_shared_location to false, and clear emergency_contacts
       await fetch(`${API_URL}/travellers/${userId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -374,26 +345,70 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
         }),
       });
     } catch (error) {
-      alert('An error occurred while canceling SOS. Please try again.');
+      alert('Đã xảy ra lỗi khi hủy SOS. Vui lòng thử lại.');
     }
   };
 
   if (!isOpen) return null;
 
+  // Theme-based colors
+  const getThemeColors = () => {
+    switch (theme) {
+      case 'dark':
+        return {
+          header: 'from-red-700 to-red-600',
+          sosButton: 'from-red-600 to-red-700',
+          sosButtonHover: 'from-red-700 to-red-800',
+          card: 'bg-card border-border',
+          text: 'text-foreground',
+          muted: 'text-muted-foreground',
+        };
+      case 'modern':
+        return {
+          header: 'from-purple-600 to-pink-600',
+          sosButton: 'from-purple-600 to-pink-600',
+          sosButtonHover: 'from-purple-700 to-pink-700',
+          card: 'bg-card border-border',
+          text: 'text-foreground',
+          muted: 'text-muted-foreground',
+        };
+      case 'history':
+        return {
+          header: 'from-amber-700 to-orange-700',
+          sosButton: 'from-amber-600 to-orange-600',
+          sosButtonHover: 'from-amber-700 to-orange-700',
+          card: 'bg-card border-border',
+          text: 'text-foreground',
+          muted: 'text-muted-foreground',
+        };
+      default: // light
+        return {
+          header: 'from-red-600 to-red-500',
+          sosButton: 'from-red-500 to-red-600',
+          sosButtonHover: 'from-red-600 to-red-700',
+          card: 'bg-card border-border',
+          text: 'text-foreground',
+          muted: 'text-muted-foreground',
+        };
+    }
+  };
+
+  const colors = getThemeColors();
+
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-card rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden animate-in fade-in zoom-in duration-300">
+      <div className={`${colors.card} border rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden`}>
         {/* Header */}
-        <div className="bg-gradient-to-r from-red-600 to-red-500 px-6 py-4">
+        <div className={`bg-gradient-to-r ${colors.header} px-6 py-4`}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
                 <Shield className="w-6 h-6 text-white" />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-white">Emergency</h2>
+                <h2 className="text-xl font-bold text-white">Emergency SOS</h2>
                 <p className="text-white/80 text-sm">
-                  Get help when you need it
+                  Kích hoạt khi cần hỗ trợ khẩn cấp
                 </p>
               </div>
             </div>
@@ -407,12 +422,12 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
         </div>
 
         <div className="p-6 overflow-y-auto max-h-[calc(90vh-120px)]">
-          {/* SOS Button */}
+          {/* SOS Button - chỉ hiện khi chưa kích hoạt */}
           {!sosActivated ? (
-            <div className="text-center mb-8">
+            <div className="text-center mb-6">
               <button onClick={handleSOS} className="relative group">
                 <div className="absolute inset-0 bg-red-500 rounded-full animate-ping opacity-25"></div>
-                <div className="relative w-32 h-32 mx-auto bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group-hover:from-red-600 group-hover:to-red-700">
+                <div className={`relative w-32 h-32 mx-auto bg-gradient-to-br ${colors.sosButton} rounded-full flex items-center justify-center shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 group-hover:${colors.sosButtonHover}`}>
                   <div className="text-center">
                     <AlertTriangle className="w-12 h-12 text-white mx-auto mb-1" />
                     <span className="text-2xl font-black text-white tracking-wider">
@@ -421,192 +436,151 @@ export const EmergencyModal: React.FC<EmergencyModalProps> = ({ isOpen, onClose 
                   </div>
                 </div>
               </button>
-              <p className="text-muted-foreground mt-4 text-sm">
-                Press the SOS button if you need immediate help
+              <p className={`${colors.muted} mt-4 text-sm`}>
+                Nhấn nút SOS nếu bạn cần hỗ trợ khẩn cấp
               </p>
             </div>
           ) : (
             <div className="text-center mb-6">
-              <div className="w-20 h-20 mx-auto bg-red-100 rounded-full flex items-center justify-center mb-4 animate-pulse">
-                <AlertTriangle className="w-10 h-10 text-red-600" />
+              <div className="w-20 h-20 mx-auto bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4 animate-pulse">
+                <AlertTriangle className="w-10 h-10 text-red-600 dark:text-red-400" />
               </div>
-              <h3 className="text-lg font-bold text-red-600 mb-2">
-                SOS Activated!
+              <h3 className={`text-lg font-bold text-red-600 dark:text-red-400 mb-2`}>
+                SOS Đã Kích Hoạt!
               </h3>
-              <p className="text-muted-foreground text-sm mb-4">
-                Your location has been shared. Select a support member below.
+              <p className={`${colors.muted} text-sm mb-4`}>
+                Vị trí của bạn đã được chia sẻ. Chọn supporter bên dưới.
               </p>
               <button
                 onClick={cancelSOS}
-                className="text-sm text-muted-foreground hover:text-foreground underline"
+                className={`text-sm ${colors.muted} hover:${colors.text} underline`}
               >
-                Cancel SOS
+                Hủy SOS
               </button>
             </div>
           )}
 
-          {/* Location Status */}
+          {/* Location Status - chỉ hiện khi đã có location */}
           {userLocation && (
             <div className="bg-muted/50 rounded-lg p-3 mb-6 flex items-center space-x-3">
-              <MapPin className="w-5 h-5 text-destination flex-shrink-0" />
+              <MapPin className="w-5 h-5 text-primary flex-shrink-0" />
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-foreground">
-                  Your Location
+                <p className={`text-sm font-medium ${colors.text}`}>
+                  Vị trí của bạn
                 </p>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className={`text-xs ${colors.muted} truncate font-mono`}>
                   {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}
                 </p>
               </div>
-              <Navigation className="w-4 h-4 text-destination animate-pulse" />
             </div>
           )}
 
-          {/* Support Team */}
-          <div>
-            <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center">
-              <Phone className="w-5 h-5 mr-2 text-traveller" />
-              Support Team
-            </h3>
+          {/* Support Team - chỉ hiện khi SOS đã kích hoạt */}
+          {sosActivated && (
+            <div>
+              <h3 className={`text-lg font-semibold ${colors.text} mb-4 flex items-center`}>
+                <Phone className="w-5 h-5 mr-2 text-primary" />
+                Đội hỗ trợ
+              </h3>
 
-            {loading ? (
-              <div className="flex justify-center py-8">
-                <Loader2 className="w-8 h-8 text-traveller animate-spin" />
-              </div>
-            ) : supportTeam.length === 0 ? (
-              <div className="text-center py-8 bg-muted/30 rounded-lg">
-                <User className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
-                <p className="text-muted-foreground">
-                  No support members available
-                </p>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Try again later or call emergency services
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {supportTeam.map((support) => (
-                  <div
-                    key={support.user_id}
-                    className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${selectedSupport?.user_id === support.user_id
-                        ? 'border-traveller bg-traveller/5'
-                        : 'border-border hover:border-traveller/50 hover:bg-muted/30'
+              {loading ? (
+                <div className="flex justify-center py-8">
+                  <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                </div>
+              ) : supportTeam.length === 0 ? (
+                <div className="text-center py-8 bg-muted/30 rounded-lg">
+                  <User className={`w-12 h-12 ${colors.muted} mx-auto mb-3`} />
+                  <p className={colors.muted}>
+                    Không có supporter nào sẵn sàng
+                  </p>
+                  <p className={`text-sm ${colors.muted} mt-1`}>
+                    Vui lòng thử lại sau hoặc gọi dịch vụ khẩn cấp
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {supportTeam.map((support) => (
+                    <div
+                      key={support.user_id}
+                      className={`p-4 rounded-lg border-2 transition-all cursor-pointer ${
+                        selectedSupport?.user_id === support.user_id
+                          ? 'border-primary bg-primary/5'
+                          : 'border-border hover:border-primary/50 hover:bg-muted/30'
                       }`}
-                    onClick={() => sosActivated && handleSelectSupport(support)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-12 h-12 bg-traveller/20 rounded-full flex items-center justify-center">
-                          {support.user?.avatar_url ? (
-                            <img
-                              src={support.user.avatar_url}
-                              alt={support.user?.full_name || 'Support'}
-                              className="w-full h-full rounded-full object-cover"
-                            />
+                      onClick={() => handleSelectSupport(support)}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center space-x-3">
+                          <div className="w-12 h-12 bg-primary/20 rounded-full flex items-center justify-center">
+                            {support.user?.avatar_url ? (
+                              <img
+                                src={support.user.avatar_url}
+                                alt={support.user?.full_name || 'Support'}
+                                className="w-full h-full rounded-full object-cover"
+                              />
+                            ) : (
+                              <User className="w-6 h-6 text-primary" />
+                            )}
+                          </div>
+                          <div>
+                            <h4 className={`font-semibold ${colors.text} flex items-center`}>
+                              {support.user?.full_name || 'Supporter'}
+                              {support.is_available && (
+                                <span className="ml-2 w-2 h-2 bg-green-500 rounded-full"></span>
+                              )}
+                            </h4>
+                            {support.user?.phone && (
+                              <p className={`text-sm ${colors.muted}`}>
+                                📞 {support.user.phone}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+
+                        {selectedSupport?.user_id === support.user_id ? (
+                          sendingLocation ? (
+                            <Loader2 className="w-6 h-6 text-primary animate-spin" />
                           ) : (
-                            <User className="w-6 h-6 text-traveller" />
+                            <CheckCircle className="w-6 h-6 text-green-500" />
+                          )
+                        ) : (
+                          support.user?.phone && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCall(support.user!.phone);
+                              }}
+                              className="p-2 bg-green-500 hover:bg-green-600 rounded-full transition-colors"
+                              title="Gọi"
+                            >
+                              <PhoneCall className="w-5 h-5 text-white" />
+                            </button>
+                          )
+                        )}
+                      </div>
+
+                      {selectedSupport?.user_id === support.user_id && !sendingLocation && (
+                        <div className="mt-3 pt-3 border-t border-border">
+                          <p className={`text-sm text-green-600 dark:text-green-400 font-medium mb-2`}>
+                            ✓ Đã chia sẻ vị trí với {support.user?.full_name || 'supporter'}
+                          </p>
+                          {support.user?.phone && (
+                            <button
+                              onClick={() => handleCall(support.user!.phone)}
+                              className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors w-full"
+                            >
+                              <PhoneCall className="w-4 h-4" />
+                              <span>Gọi ngay</span>
+                            </button>
                           )}
                         </div>
-                        <div>
-                          <h4 className="font-semibold text-foreground flex items-center">
-                            {support.user?.full_name || 'Support Member'}
-                            <span className="ml-2 w-2 h-2 bg-green-500 rounded-full"></span>
-                          </h4>
-                          <p className="text-sm text-muted-foreground">
-                            {support.user?.phone ? `📞 ${support.user.phone}` : 'Hỗ trợ viên'}
-                          </p>
-                        </div>
-                      </div>
-
-                      {selectedSupport?.user_id === support.user_id ? (
-                        sendingLocation ? (
-                          <Loader2 className="w-6 h-6 text-traveller animate-spin" />
-                        ) : (
-                          <CheckCircle className="w-6 h-6 text-green-500" />
-                        )
-                      ) : (
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCall(support.user?.phone || '');
-                          }}
-                          className="p-2 bg-green-500 hover:bg-green-600 rounded-full transition-colors"
-                          title="Call"
-                        >
-                          <PhoneCall className="w-5 h-5 text-white" />
-                        </button>
                       )}
                     </div>
-
-                    {selectedSupport?.user_id === support.user_id && !sendingLocation && (
-                      <div className="mt-3 pt-3 border-t border-border">
-                        <p className="text-sm text-green-600 font-medium mb-2">
-                          ✓ Đã chia sẻ vị trí với {support.user?.full_name || 'hỗ trợ viên'}
-                        </p>
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleCall(support.user?.phone || '')}
-                            className="flex-1 flex items-center justify-center space-x-2 px-4 py-2 bg-green-500 hover:bg-green-600 text-white rounded-lg transition-colors"
-                          >
-                            <PhoneCall className="w-4 h-4" />
-                            <span>Gọi ngay</span>
-                          </button>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          {/* Emergency Numbers */}
-          <div className="mt-6 pt-6 border-t border-border">
-            <h4 className="text-sm font-semibold text-foreground mb-3">
-              Emergency Numbers
-            </h4>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={() => handleCall("113")}
-                className="flex items-center space-x-2 p-3 bg-red-50 hover:bg-red-100 rounded-lg transition-colors"
-              >
-                <Phone className="w-5 h-5 text-red-600" />
-                <div className="text-left">
-                  <p className="text-sm font-medium text-red-700">Police</p>
-                  <p className="text-xs text-red-600">113</p>
+                  ))}
                 </div>
-              </button>
-              <button
-                onClick={() => handleCall("114")}
-                className="flex items-center space-x-2 p-3 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
-              >
-                <Phone className="w-5 h-5 text-orange-600" />
-                <div className="text-left">
-                  <p className="text-sm font-medium text-orange-700">Fire</p>
-                  <p className="text-xs text-orange-600">114</p>
-                </div>
-              </button>
-              <button
-                onClick={() => handleCall("115")}
-                className="flex items-center space-x-2 p-3 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
-              >
-                <Phone className="w-5 h-5 text-blue-600" />
-                <div className="text-left">
-                  <p className="text-sm font-medium text-blue-700">Ambulance</p>
-                  <p className="text-xs text-blue-600">115</p>
-                </div>
-              </button>
-              <button
-                onClick={() => handleCall("1900599920")}
-                className="flex items-center space-x-2 p-3 bg-green-50 hover:bg-green-100 rounded-lg transition-colors"
-              >
-                <Phone className="w-5 h-5 text-green-600" />
-                <div className="text-left">
-                  <p className="text-sm font-medium text-green-700">Tourism</p>
-                  <p className="text-xs text-green-600">1900.599.920</p>
-                </div>
-              </button>
+              )}
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

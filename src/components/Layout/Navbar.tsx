@@ -31,11 +31,10 @@ import { API_ENDPOINTS } from "../../constants/api";
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
-  const { user, profile, account, signOut, isAdmin } = useAuth(); // Lấy user, profile, account, signOut, isAdmin từ useAuth
+  const { user, profile, account, signOut, isSupporter } = useAuth(); // Lấy user, profile, account, signOut, isSupporter từ useAuth
   const { theme, setTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State cho Mobile Menu
   const [showEmergency, setShowEmergency] = useState(false); // State cho Emergency Modal
-  const [isSupporter, setIsSupporter] = useState(false); // State cho Supporter check
   const [isThemeMenuOpen, setIsThemeMenuOpen] = useState(false); // State cho Theme Menu
   const [mounted, setMounted] = useState(false); // Prevent hydration mismatch
 
@@ -44,45 +43,18 @@ export const Navbar: React.FC = () => {
     setMounted(true);
   }, []);
 
-  // Check if current user is a supporter
-  useEffect(() => {
-    const checkSupporter = async () => {
-      if (!user?.id) {
-        setIsSupporter(false);
-        return;
-      }
-
-      try {
-        const res = await fetch(
-          `${API_ENDPOINTS.USERS.BASE}/${user.id}/supporters`,
-          {
-            credentials: "include",
-          }
-        );
-        const result = await res.json();
-        setIsSupporter(result.status === 200 && result.data !== null);
-      } catch {
-        setIsSupporter(false);
-      }
-    };
-
-    checkSupporter();
-  }, [user?.id]);
-
   const isActive = (path: string) => pathname === path;
 
-  // Hợp nhất tất cả các liên kết điều hướng từ cả hai phiên bản
-  const navLinks = [
-    { path: "/dashboard", icon: Mountain, label: "Dashboard" },
-    { path: "/trips", icon: Wallet, label: "Trips" },
-    { path: "/destinations", icon: BookOpen, label: "Destinations" },
-    { path: "/forum", icon: MessageCircle, label: "Forum" },
-    { path: "/diaries", icon: BookOpen, label: "Diaries" }, // Giữ lại từ phiên bản 2
-    // Admin Manager - chỉ hiển thị khi user là admin
-    ...(isAdmin
-      ? [{ path: "/admin", icon: Shield, label: "Admin Manager" }]
-      : []),
-  ];
+  // Supporter: chỉ hiện 1 trang Supporter Dashboard. Traveller: hiện các trang thường
+  const navLinks = isSupporter
+    ? [{ path: "/supporter", icon: Shield, label: "Supporter Dashboard" }]
+    : [
+        { path: "/dashboard", icon: Mountain, label: "Dashboard" },
+        { path: "/trips", icon: Wallet, label: "Trips" },
+        { path: "/destinations", icon: BookOpen, label: "Destinations" },
+        { path: "/forum", icon: MessageCircle, label: "Forum" },
+        { path: "/diaries", icon: BookOpen, label: "Diaries" },
+      ];
 
   const handleSignOut = () => {
     signOut();

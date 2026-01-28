@@ -11,7 +11,7 @@ interface AuthContextType {
   account: Account | null;
   profile: Profile | null;
   loading: boolean;
-  isAdmin: boolean;
+  isSupporter: boolean;
   signUp: (
     email: string,
     password: string,
@@ -70,7 +70,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [account, setAccount] = useState<Account | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [isAdmin, setIsAdmin] = useState<boolean>(false);
+  const [isSupporter, setIsSupporter] = useState<boolean>(false);
 
   useEffect(() => {
     fetchUser();
@@ -95,30 +95,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setUser(null);
         setAccount(null);
         setProfile(null);
-        setIsAdmin(false);
+        setIsSupporter(false);
         return;
       }
 
       setUser(data.user);
       setAccount(data.account ?? null);
 
-      // Check if user is admin
+      // Check if user is supporter
       try {
         if (!data.user.id || data.user.id === "NaN" || data.user.id === "undefined") {
-          setIsAdmin(false);
+          setIsSupporter(false);
         } else {
-          const adminRes = await fetch(API_ENDPOINTS.ADMINS.BY_ID(String(data.user.id)), {
+          const supporterRes = await fetch(API_ENDPOINTS.SUPPORTERS.BY_ID(String(data.user.id)), {
             credentials: "include",
           });
-          if (adminRes.ok) {
-            const adminResult = await adminRes.json();
-            setIsAdmin(adminResult.status === 200 && adminResult.data !== null);
+          if (supporterRes.ok) {
+            const supporterResult = await supporterRes.json();
+            setIsSupporter(supporterResult.status === 200 && supporterResult.data !== null);
           } else {
-            setIsAdmin(false);
+            setIsSupporter(false);
           }
         }
       } catch {
-        setIsAdmin(false);
+        setIsSupporter(false);
       }
 
       const email = data.account?.email;
@@ -238,7 +238,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(null);
       setAccount(null);
       setProfile(null);
-      setIsAdmin(false);
+      setIsSupporter(false);
     } finally {
       setLoading(false);
     }
@@ -329,7 +329,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setUser(null);
       setAccount(null);
       setProfile(null);
-      setIsAdmin(false);
+      setIsSupporter(false);
     } catch {
       // Logout failed silently
     } finally {
@@ -342,7 +342,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     account,
     profile,
     loading,
-    isAdmin,
+    isSupporter,
     signUp,
     signIn,
     signOut,
