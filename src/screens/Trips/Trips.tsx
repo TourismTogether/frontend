@@ -259,10 +259,17 @@ export const Trips: React.FC = () => {
     try {
       setLoading(true);
 
+      // Validate tripId before making requests
+      if (!tripId || tripId === "NaN" || tripId === "undefined" || tripId.trim() === "") {
+        alert("Invalid trip ID");
+        setLoading(false);
+        return;
+      }
+
       // Try to remove user from trip first
       try {
         const deleteJoinTripResponse = await fetch(
-          `${API_ENDPOINTS.TRIPS.BY_ID(String(tripId))}/users/${user.id}`,
+          `${API_ENDPOINTS.TRIPS.BY_ID(tripId)}/users/${user.id}`,
           {
             method: "DELETE",
             headers: {
@@ -288,8 +295,13 @@ export const Trips: React.FC = () => {
       }
 
       // Delete trip
+      // Validate tripId before making request
+      if (!tripId || tripId === "NaN" || tripId === "undefined" || tripId.trim() === "") {
+        throw new Error("Invalid trip ID");
+      }
+
       const deleteTripResponse = await fetch(
-        API_ENDPOINTS.TRIPS.DELETE(Number(tripId)),
+        API_ENDPOINTS.TRIPS.DELETE(tripId), // Keep as string, don't convert to Number
         {
           method: "DELETE",
           headers: {

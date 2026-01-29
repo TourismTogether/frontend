@@ -11,7 +11,7 @@ import {
   useMap,
   CircleMarker,
 } from "react-leaflet";
-import { ChevronDown, ChevronUp } from "lucide-react";
+import { ChevronDown, ChevronUp, Loader2 } from "lucide-react";
 import L from "leaflet";
 import { IRoute } from "@/lib/type/interface";
 import { COLORS } from "@/constants/colors";
@@ -57,30 +57,92 @@ const isValidRoute = (route: IRoute): boolean => {
   );
 };
 
-// Function to get route path from OSRM (Open Source Routing Machine)
-// Retries up to 3 times to ensure we get actual road paths
+// Cache key generator for route paths
+function getRouteCacheKey(
+  startLat: number,
+  startLng: number,
+  endLat: number,
+  endLng: number
+): string {
+  // Round coordinates to 4 decimal places (~11m precision) for cache key
+  const round = (n: number) => Math.round(n * 10000) / 10000;
+  return `route_${round(startLat)}_${round(startLng)}_${round(endLat)}_${round(endLng)}`;
+}
+
+// Cache route paths in localStorage (expires after 7 days)
+const CACHE_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
+function getCachedRoute(
+  cacheKey: string
+): [number, number][] | null {
+  try {
+    const cached = localStorage.getItem(`route_cache_${cacheKey}`);
+    if (!cached) return null;
+
+    const { path, timestamp } = JSON.parse(cached);
+    if (Date.now() - timestamp > CACHE_EXPIRY_MS) {
+      localStorage.removeItem(`route_cache_${cacheKey}`);
+      return null;
+    }
+
+    return path;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedRoute(
+  cacheKey: string,
+  path: [number, number][]
+): void {
+  try {
+    localStorage.setItem(
+      `route_cache_${cacheKey}`,
+      JSON.stringify({
+        path,
+        timestamp: Date.now(),
+      })
+    );
+  } catch {
+    // Ignore storage errors (quota exceeded, etc.)
+  }
+}
+
+// Function to get route path from OSRM with caching and faster timeout
 async function getRoutePath(
   startLat: number,
   startLng: number,
   endLat: number,
   endLng: number,
-  retries: number = 3
+  retries: number = 1 // Reduced retries for faster failure
 ): Promise<[number, number][] | null> {
+  const cacheKey = getRouteCacheKey(startLat, startLng, endLat, endLng);
+  
+  // Check cache first
+  const cached = getCachedRoute(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   for (let attempt = 0; attempt < retries; attempt++) {
     try {
-      // Use OSRM demo server (note: has rate limits, for production use your own instance)
+      // Use OSRM demo server with timeout
       const url = `https://router.project-osrm.org/route/v1/driving/${startLng},${startLat};${endLng},${endLat}?overview=full&geometries=geojson`;
 
-      const response = await fetch(url);
+      // Add timeout to fail fast (3 seconds max)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3000);
+
+      const response = await fetch(url, {
+        signal: controller.signal,
+      });
+      clearTimeout(timeoutId);
+
       if (!response.ok) {
         if (attempt < retries - 1) {
-          // Wait before retrying (exponential backoff)
-          await new Promise((resolve) =>
-            setTimeout(resolve, (attempt + 1) * 500)
-          );
+          await new Promise((resolve) => setTimeout(resolve, 200));
           continue;
         }
-        console.warn("OSRM routing failed after retries");
         return null;
       }
 
@@ -88,27 +150,23 @@ async function getRoutePath(
       if (data.code === "Ok" && data.routes && data.routes.length > 0) {
         const coordinates = data.routes[0].geometry.coordinates;
         // OSRM returns [lng, lat], we need [lat, lng]
-        return coordinates.map(([lng, lat]: [number, number]) => [lat, lng]);
-      }
-
-      // If no route found, retry
-      if (attempt < retries - 1) {
-        await new Promise((resolve) =>
-          setTimeout(resolve, (attempt + 1) * 500)
-        );
-        continue;
+        const path = coordinates.map(([lng, lat]: [number, number]) => [lat, lng]);
+        
+        // Cache the result
+        setCachedRoute(cacheKey, path);
+        return path;
       }
 
       return null;
     } catch (error) {
+      if (error instanceof Error && error.name === "AbortError") {
+        // Timeout - fail fast
+        return null;
+      }
       if (attempt < retries - 1) {
-        // Wait before retrying
-        await new Promise((resolve) =>
-          setTimeout(resolve, (attempt + 1) * 500)
-        );
+        await new Promise((resolve) => setTimeout(resolve, 200));
         continue;
       }
-      console.warn("Error fetching route path after retries:", error);
       return null;
     }
   }
@@ -169,6 +227,24 @@ const routeColors = [
   "#f97316", // Orange
   "#6366f1", // Indigo
 ];
+
+// Helper function to process items in batches (concurrent requests with limit)
+async function processBatch<T>(
+  items: T[],
+  batchSize: number,
+  processor: (item: T, index: number) => Promise<void>
+) {
+  for (let i = 0; i < items.length; i += batchSize) {
+    const batch = items.slice(i, i + batchSize);
+    await Promise.all(
+      batch.map((item, batchIndex) => processor(item, i + batchIndex))
+    );
+    // Small delay between batches to avoid rate limiting
+    if (i + batchSize < items.length) {
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  }
+}
 
 // Component to fit map bounds to show all routes
 function FitBounds({ routes }: { routes: IRoute[] }) {
@@ -234,7 +310,7 @@ function createRouteMarkerIcon(
 
 // Create start/end marker icons
 function createSpecialMarkerIcon(type: "start" | "end", routeNumber: number, isDark: boolean = false) {
-  const color = type === "start" ? "#10b981" : "#ef4444";
+  const color = type === "start" ? "#10b981" : "#ef4444"; // Green for start, red for end
   const label = type === "start" ? "START" : "END";
   const size = 50;
   const borderColor = isDark ? "#1e293b" : "white";
@@ -290,8 +366,10 @@ export const RouteMap: React.FC<RouteMapProps> = ({
   const [routePaths, setRoutePaths] = useState<Map<string, [number, number][]>>(
     new Map()
   );
-  const [loadingPaths, setLoadingPaths] = useState(false);
+  const [loadingPaths, setLoadingPaths] = useState(true); // Start with true to show loading initially
   const [isLegendOpen, setIsLegendOpen] = useState(true);
+  const [routesLoaded, setRoutesLoaded] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState({ current: 0, total: 0 });
 
   // Prevent hydration mismatch for theme
   useEffect(() => {
@@ -308,44 +386,83 @@ export const RouteMap: React.FC<RouteMapProps> = ({
   // Fetch route paths for all routes
   useEffect(() => {
     const fetchRoutePaths = async () => {
-      if (validRoutes.length === 0) return;
+      if (validRoutes.length === 0) {
+        setLoadingPaths(false);
+        setRoutesLoaded(true);
+        setLoadingProgress({ current: 0, total: 0 });
+        return;
+      }
 
       setLoadingPaths(true);
+      setRoutesLoaded(false);
+      setLoadingProgress({ current: 0, total: validRoutes.length });
+      
       const paths = new Map<string, [number, number][]>();
+      let completedCount = 0;
+      const totalRoutes = validRoutes.length;
+      let hasEnoughRoutes = false;
+      const minRoutesToShow = Math.max(1, Math.floor(totalRoutes * 0.3)); // Show after 30% loaded
 
-      // Fetch paths for each route sequentially to avoid rate limiting
-      for (let i = 0; i < validRoutes.length; i++) {
-        const route = validRoutes[i];
+      // Fetch routes with smart display strategy
+      await processBatch(validRoutes, 8, async (route, index) => {
         const routeKey =
           route.id ||
           `${route.latStart}-${route.lngStart}-${route.latEnd}-${route.lngEnd}`;
 
-        // Always try to get actual road path from OSRM
-        const roadPath = await getRoutePath(
-          route.latStart,
-          route.lngStart,
-          route.latEnd,
-          route.lngEnd
-        );
+        let routePath: [number, number][] | null = null;
+        try {
+          // Try to get actual road path from OSRM (with cache)
+          routePath = await getRoutePath(
+            route.latStart,
+            route.lngStart,
+            route.latEnd,
+            route.lngEnd
+          );
+        } catch (error) {
+          // On error, use straight line
+        }
 
-        if (roadPath && roadPath.length > 0) {
-          paths.set(routeKey, roadPath);
+        if (routePath && routePath.length > 0) {
+          paths.set(routeKey, routePath);
         } else {
-          // If OSRM fails, use a simple straight line (not curved)
-          // This ensures we always have a path, even if not perfect
+          // Use straight line if fetch fails
           paths.set(routeKey, [
             [route.latStart, route.lngStart],
             [route.latEnd, route.lngEnd],
           ]);
         }
 
-        // Add small delay between requests to avoid rate limiting
-        if (i < validRoutes.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 200));
+        // Update progress - ensure it never exceeds total
+        completedCount++;
+        const currentProgress = Math.min(completedCount, totalRoutes);
+        setLoadingProgress({
+          current: currentProgress,
+          total: totalRoutes,
+        });
+        
+        // Update paths incrementally
+        setRoutePaths((prevPaths) => {
+          const newPaths = new Map(prevPaths);
+          const currentPath = paths.get(routeKey);
+          if (currentPath) {
+            newPaths.set(routeKey, currentPath);
+          }
+          return newPaths;
+        });
+
+        // Show map after enough routes are loaded (for better visual connection)
+        if (!hasEnoughRoutes && completedCount >= minRoutesToShow) {
+          hasEnoughRoutes = true;
+          setRoutesLoaded(true);
         }
+      });
+
+      // Ensure map is shown even if not all routes loaded
+      if (!hasEnoughRoutes) {
+        setRoutesLoaded(true);
       }
 
-      setRoutePaths(paths);
+      // Mark loading as complete
       setLoadingPaths(false);
     };
 
@@ -415,8 +532,35 @@ export const RouteMap: React.FC<RouteMapProps> = ({
           // First route: add all points
           path.push(...routePath);
         } else {
-          // Subsequent routes: skip first point (it's the same as previous route's end)
-          path.push(...routePath.slice(1));
+          // Check if previous route's end point matches this route's start point
+          const prevRoute = validRoutes[index - 1];
+          const prevRouteKey =
+            prevRoute.id ||
+            `${prevRoute.latStart}-${prevRoute.lngStart}-${prevRoute.latEnd}-${prevRoute.lngEnd}`;
+          const prevRoutePath = routePaths.get(prevRouteKey);
+          
+          if (prevRoutePath && prevRoutePath.length > 0) {
+            const prevEndPoint = prevRoutePath[prevRoutePath.length - 1];
+            const currentStartPoint = routePath[0];
+            
+            // Check if points are close enough (within ~11 meters)
+            const distance = Math.sqrt(
+              Math.pow(prevEndPoint[0] - currentStartPoint[0], 2) +
+              Math.pow(prevEndPoint[1] - currentStartPoint[1], 2)
+            );
+            
+            if (distance < 0.0001) {
+              // Points are close, skip first point to connect smoothly
+              path.push(...routePath.slice(1));
+            } else {
+              // Points are far apart, add a connecting line
+              path.push(prevEndPoint);
+              path.push(...routePath);
+            }
+          } else {
+            // Previous route has no path, skip first point
+            path.push(...routePath.slice(1));
+          }
         }
       } else {
         // Fallback: use start and end points if no path available yet
@@ -435,6 +579,61 @@ export const RouteMap: React.FC<RouteMapProps> = ({
       className={`w-full rounded-lg overflow-hidden border-2 ${COLORS.BORDER.DEFAULT} shadow-lg relative transition-colors duration-200`}
       style={{ height }}
     >
+      {/* Loading Overlay - Show while loading routes */}
+      {loadingPaths && (
+        <div
+          className={`absolute inset-0 z-50 ${COLORS.BACKGROUND.CARD} backdrop-blur-sm flex flex-col items-center justify-center transition-all duration-300 ${
+            routesLoaded ? "bg-opacity-60" : "bg-opacity-95"
+          }`}
+        >
+          <div className="text-center">
+            <div className={`${COLORS.BACKGROUND.CARD} rounded-xl p-6 shadow-xl border ${COLORS.BORDER.DEFAULT} transition-colors duration-200`}>
+              <Loader2
+                className={`w-12 h-12 ${COLORS.PRIMARY.DEFAULT} animate-spin mx-auto mb-4 transition-colors duration-200`}
+              />
+              <p
+                className={`${COLORS.TEXT.DEFAULT} font-medium text-lg mb-2 text-center transition-colors duration-200`}
+              >
+                {routesLoaded 
+                  ? "Đang tối ưu hóa tuyến đường..." 
+                  : "Đang tải bản đồ và tuyến đường..."}
+              </p>
+              <p
+                className={`${COLORS.TEXT.MUTED} text-sm mb-4 text-center transition-colors duration-200`}
+              >
+                {routesLoaded 
+                  ? "Đang cập nhật với đường đi thực tế để nối các điểm một cách đẹp mắt"
+                  : "Vui lòng đợi trong giây lát"}
+              </p>
+              {validRoutes.length > 0 && loadingProgress.total > 0 && (
+                <div className="w-full max-w-xs">
+                  {/* Progress Bar */}
+                  <div className={`w-full h-2 ${COLORS.BACKGROUND.MUTED} rounded-full overflow-hidden mb-3 transition-colors duration-200`}>
+                    <div
+                      className={`h-full ${COLORS.PRIMARY.DEFAULT} transition-all duration-300 ease-out`}
+                      style={{
+                        width: `${Math.min((loadingProgress.current / loadingProgress.total) * 100, 100)}%`,
+                      }}
+                    />
+                  </div>
+                  {/* Progress Text */}
+                  <p
+                    className={`${COLORS.TEXT.MUTED} text-sm text-center transition-colors duration-200`}
+                  >
+                    {Math.min(loadingProgress.current, loadingProgress.total)} / {loadingProgress.total} tuyến đường
+                    {loadingProgress.current > 0 && loadingProgress.total > 0 && (
+                      <span className="ml-2">
+                        ({Math.round((Math.min(loadingProgress.current, loadingProgress.total) / loadingProgress.total) * 100)}%)
+                      </span>
+                    )}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <MapContainer
         center={mapCenter}
         zoom={zoom}
