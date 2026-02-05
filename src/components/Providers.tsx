@@ -4,6 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "next-themes";
 import CursorTrail from "./CursorTrail/CursorTrail";
 import { useEffect, useState } from "react";
+import { Toaster } from "sonner";
 
 export function Providers({ children }: { children: React.ReactNode }) {
   const [isMobile, setIsMobile] = useState(false);
@@ -51,6 +52,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
       <AuthProvider>
         {!isMobile && <CursorTrail />}
         {children}
+        <Toaster 
+          richColors 
+          closeButton 
+          position="top-right"
+          toastOptions={{
+            style: {
+              background: 'var(--background)',
+              border: '1px solid var(--border)',
+              color: 'var(--foreground)',
+            },
+          }}
+        />
       </AuthProvider>
     </ThemeProvider>
   );
