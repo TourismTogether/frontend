@@ -28,6 +28,7 @@ import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
 import FeatureIntro from "../../components/FeatureIntro/FeatureIntro";
 import { ANIMATIONS } from "../../constants/animations";
+import { toast } from "../../lib/toast";
 
 // Interface definitions
 export interface IDestination {
@@ -248,11 +249,13 @@ export const Trips: React.FC = () => {
 
   const handleDeleteTrip = async (tripId: string) => {
     if (!user?.id) {
-      alert("Missing user information.");
+      toast.error("Missing user information", "Please log in and try again.");
       return;
     }
 
-    if (!confirm(`Are you sure you want to delete this trip?`)) {
+    // Use a confirmation dialog instead of window.confirm
+    const confirmed = window.confirm(`Are you sure you want to delete this trip?`);
+    if (!confirmed) {
       return;
     }
 
@@ -261,7 +264,7 @@ export const Trips: React.FC = () => {
 
       // Validate tripId before making requests
       if (!tripId || tripId === "NaN" || tripId === "undefined" || tripId.trim() === "") {
-        alert("Invalid trip ID");
+        toast.error("Invalid trip ID", "Please try again or contact support.");
         setLoading(false);
         return;
       }
@@ -328,11 +331,12 @@ export const Trips: React.FC = () => {
       }
 
       handleTripActionSuccess();
+      toast.success("Trip deleted successfully", "The trip has been removed from your list.");
     } catch (error) {
       console.error("Error deleting trip:", error);
       const errorMessage =
         error instanceof Error ? error.message : String(error);
-      alert(`Error deleting trip: ${errorMessage}`);
+      toast.error("Failed to delete trip", errorMessage);
     } finally {
       setLoading(false);
     }

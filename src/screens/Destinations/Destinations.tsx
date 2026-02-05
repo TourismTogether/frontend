@@ -12,6 +12,7 @@ import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
 import { ANIMATIONS } from "../../constants/animations";
 import ShimmerCard from "../../components/Animations/ShimmerCard";
+import { useDebounce } from "../../lib/useDebounce";
 
 // Interface definitions
 export interface IDestination {
@@ -54,6 +55,7 @@ export const Destinations: React.FC = () => {
   const [destinations, setDestinations] = useState<IDestination[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filterCategory, setFilterCategory] = useState("all");
 
   useEffect(() => {
@@ -144,9 +146,9 @@ export const Destinations: React.FC = () => {
 
   const filteredDestinations = destinations.filter((dest) => {
     const matchesSearch =
-      dest.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dest.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      dest.region_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      dest.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      dest.country?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
+      dest.region_name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
 
     const matchesCategory =
       filterCategory === "all" || dest.category === filterCategory;
@@ -343,7 +345,7 @@ export const Destinations: React.FC = () => {
               No destinations found
             </h3>
             <p className={`${COLORS.TEXT.MUTED} mb-6`}>
-              {searchTerm || filterCategory !== "all"
+              {debouncedSearchTerm || filterCategory !== "all"
                 ? "Try adjusting your search or filters"
                 : "There are no destinations available at the moment."}
             </p>

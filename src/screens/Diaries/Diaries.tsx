@@ -22,6 +22,8 @@ import Loading, { SkeletonGrid } from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
 import { ANIMATIONS } from "../../constants/animations";
 import ShimmerCard from "../../components/Animations/ShimmerCard";
+import { toast } from "../../lib/toast";
+import { useDebounce } from "../../lib/useDebounce";
 
 interface IDiary {
   id: string | number;
@@ -50,6 +52,7 @@ export default function Diaries() {
   const [allDiaries, setAllDiaries] = useState<IDiary[]>([]);
   const [filter, setFilter] = useState<FilterType>("explore");
   const [searchTitle, setSearchTitle] = useState<string>("");
+  const debouncedSearchTitle = useDebounce(searchTitle, 300);
   const { user } = useAuth();
   const [shareModalOpen, setShareModalOpen] = useState(false);
   const [shareDiary, setShareDiary] = useState<IDiary | null>(null);
@@ -83,9 +86,9 @@ export default function Diaries() {
       });
     }
 
-    if (searchTitle.trim() !== "") {
+    if (debouncedSearchTitle.trim() !== "") {
       filterList = filterList.filter((diary) => {
-        return diary.title.toLowerCase().includes(searchTitle.toLowerCase());
+        return diary.title.toLowerCase().includes(debouncedSearchTitle.toLowerCase());
       });
     }
 
@@ -127,9 +130,10 @@ export default function Diaries() {
 
       setAllDiaries((prev) => prev.filter((d) => String(d.id) !== String(id)));
       setDiaries((prev) => prev.filter((d) => String(d.id) !== String(id)));
+      toast.success("Diary deleted", "The diary entry has been removed successfully.");
     } catch (error) {
       console.error("Delete diary error", error);
-      alert("Failed to delete diary");
+      toast.error("Failed to delete diary", "Please try again later.");
     }
   }
 
@@ -164,12 +168,12 @@ export default function Diaries() {
     try {
       const result = await forumService.create(post);
       if (result) {
-        alert("Đăng bài thành công!");
+        toast.success("Diary shared", "Your diary has been posted to the forum successfully!");
         router.push("/forum");
       }
     } catch (error) {
       console.error("Error sharing diary:", error);
-      alert("Failed to share diary");
+      toast.error("Failed to share diary", "Please try again later.");
     }
   }
 

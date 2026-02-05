@@ -29,6 +29,8 @@ import Hero from "../../components/Hero/Hero";
 import FeatureIntro from "../../components/FeatureIntro/FeatureIntro";
 import { ANIMATIONS } from "../../constants/animations";
 import ShimmerCard from "../../components/Animations/ShimmerCard";
+import { toast } from "../../lib/toast";
+import { useDebounce } from "../../lib/useDebounce";
 
 export interface ICategory {
   id: string;
@@ -96,6 +98,7 @@ export const Forum: React.FC = () => {
     Record<string, IPostReply[]>
   >({});
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
   const [expandedCommentPostId, setExpandedCommentPostId] = useState<
     string | null
   >(null);
@@ -369,9 +372,9 @@ export const Forum: React.FC = () => {
     );
   }
 
-  // Filter by search query
-  if (searchQuery.trim()) {
-    const query = searchQuery.toLowerCase();
+  // Filter by search query (use debounced value)
+  if (debouncedSearchQuery.trim()) {
+    const query = debouncedSearchQuery.toLowerCase();
     filteredPosts = filteredPosts.filter(
       (post) =>
         post.title.toLowerCase().includes(query) ||
@@ -412,7 +415,7 @@ export const Forum: React.FC = () => {
     e.stopPropagation();
 
     if (!user) {
-      alert("Vui lòng đăng nhập để like!");
+      toast.warning("Please log in", "You need to be logged in to like posts.");
       return;
     }
 
@@ -462,13 +465,13 @@ export const Forum: React.FC = () => {
             post.id === postId ? { ...post, total_likes: originalCount } : post
         )
       );
-      alert("Không thể like bài viết vào lúc này.");
+      toast.error("Failed to like post", "Please try again later.");
     }
   };
 
   const handleSubmitComment = async (postId: string) => {
     if (!user) {
-      alert("Vui lòng đăng nhập để bình luận!");
+      toast.warning("Please log in", "You need to be logged in to comment.");
       return;
     }
 
@@ -535,9 +538,10 @@ export const Forum: React.FC = () => {
       // Clear comment text
       setCommentTexts((prev) => ({ ...prev, [postId]: "" }));
       setExpandedCommentPostId(null);
+      toast.success("Comment posted", "Your comment has been added successfully.");
     } catch (error) {
       console.error("Error submitting comment:", error);
-      alert("Không thể gửi bình luận vào lúc này.");
+      toast.error("Failed to post comment", "Please try again later.");
     } finally {
       setIsSubmittingComment((prev) => ({ ...prev, [postId]: false }));
     }
@@ -618,10 +622,10 @@ export const Forum: React.FC = () => {
               </button>
             )}
           </div>
-          {searchQuery && (
+          {debouncedSearchQuery && (
             <div className={`mt-2 text-sm ${COLORS.TEXT.MUTED}`}>
               Found {filteredPosts.length} post
-              {filteredPosts.length !== 1 ? "s" : ""} matching "{searchQuery}"
+              {filteredPosts.length !== 1 ? "s" : ""} matching "{debouncedSearchQuery}"
             </div>
           )}
         </div>
@@ -1023,7 +1027,7 @@ export const Forum: React.FC = () => {
                               e.preventDefault();
                               e.stopPropagation();
                               if (!user) {
-                                alert("Vui lòng đăng nhập để bình luận!");
+                                toast.warning("Please log in", "You need to be logged in to comment.");
                                 return;
                               }
                               setExpandedCommentPostId(post.id);

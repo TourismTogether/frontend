@@ -279,6 +279,7 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include", // Include cookies for authentication
         body: JSON.stringify(tripPayload),
       });
 
@@ -305,6 +306,7 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
           headers: {
             "Content-Type": "application/json",
           },
+          credentials: "include", // Include cookies for authentication
         }
       );
 
@@ -312,6 +314,7 @@ export const FormNewTrip: React.FC<FormNewTripProps> = ({
         // Rollback nếu thêm user thất bại
         await fetch(`${API_URL}/trips/${createdTrip.id}`, {
           method: "DELETE",
+          credentials: "include", // Include cookies for authentication
         });
         const errorData = await joinTripResponse.json();
         throw new Error(
