@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { X, Star, Send, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/lib/toast";
 
 interface Review {
   traveller_id: string;
@@ -23,12 +24,12 @@ interface Props {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
-const ratingLabels = {
-  1: "Rất tệ",
-  2: "Tệ",
-  3: "Bình thường",
-  4: "Tốt",
-  5: "Tuyệt vời",
+const ratingLabels: Record<number, string> = {
+  1: "Poor",
+  2: "Fair",
+  3: "Good",
+  4: "Very good",
+  5: "Excellent",
 };
 
 export default function CreateReviewModal({
@@ -54,12 +55,12 @@ export default function CreateReviewModal({
 
   const submitReview = async () => {
     if (!user?.id) {
-      alert("Bạn cần đăng nhập để đánh giá");
+      toast.warning("Sign in required", "Please sign in to leave a review.");
       return;
     }
 
     if (!rating) {
-      alert("Vui lòng chọn số sao đánh giá");
+      toast.warning("Rating required", "Please select a star rating.");
       return;
     }
 
@@ -67,7 +68,7 @@ export default function CreateReviewModal({
       mode === "edit" &&
       (initialData?.no == null || initialData.no === undefined)
     ) {
-      alert("Không thể sửa đánh giá: thiếu thông tin thứ tự (no)");
+      toast.error("Cannot edit review", "Missing review reference. Please try again.");
       return;
     }
 
@@ -98,7 +99,7 @@ export default function CreateReviewModal({
       const result = await res.json();
 
       if (!res.ok || result.error) {
-        throw new Error(result.message || "Thao tác thất bại");
+        throw new Error(result.message || "Something went wrong");
       }
 
       if (mode === "create") {
@@ -106,10 +107,11 @@ export default function CreateReviewModal({
         setComment("");
       }
 
+      toast.success(mode === "create" ? "Review submitted" : "Review updated", "Thank you for your feedback!");
       onSuccess();
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("submitReview error:", err);
-      alert(err.message || "Có lỗi xảy ra. Vui lòng thử lại.");
+      toast.error("Failed to save review", err instanceof Error ? err.message : "Please try again.");
     } finally {
       setLoading(false);
     }
@@ -128,13 +130,15 @@ export default function CreateReviewModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200 dark:border-gray-700">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-            {mode === "create" ? "Đánh giá địa điểm" : "Sửa đánh giá"}
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white" id="review-modal-title">
+            {mode === "create" ? "Rate this place" : "Edit your review"}
           </h2>
           <button
+            type="button"
             onClick={onClose}
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full transition-colors"
             disabled={loading}
+            aria-label="Close"
           >
             <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
           </button>
@@ -144,8 +148,8 @@ export default function CreateReviewModal({
         <div className="p-6 space-y-6">
           {/* Rating Section */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              Đánh giá của bạn
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3" id="rating-label">
+              Your rating
             </label>
             <div className="flex flex-col items-center space-y-3">
               <div
@@ -159,6 +163,8 @@ export default function CreateReviewModal({
                     onClick={() => setRating(i)}
                     onMouseEnter={() => setHoveredRating(i)}
                     disabled={loading}
+                    aria-label={`${i} star${i > 1 ? "s" : ""}`}
+                    aria-pressed={rating === i}
                     className="transition-all duration-200 transform hover:scale-125 focus:outline-none disabled:opacity-50"
                   >
                     <Star
@@ -179,22 +185,24 @@ export default function CreateReviewModal({
 
           {/* Comment Section */}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3">
-              Chia sẻ cảm nhận của bạn{" "}
-              <span className="text-gray-400">(Tùy chọn)</span>
+            <label className="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-3" htmlFor="review-comment">
+              Share your experience{" "}
+              <span className="text-gray-400">(Optional)</span>
             </label>
             <textarea
+              id="review-comment"
+              aria-describedby="review-comment-hint"
               className="w-full border-2 border-gray-200 dark:border-gray-700 rounded-xl p-4 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none transition-all dark:bg-gray-700 dark:text-white"
               rows={5}
-              placeholder="Viết đánh giá chi tiết về địa điểm này..."
+              placeholder="Write a detailed review about this place..."
               value={comment}
               onChange={(e) => setComment(e.target.value)}
               disabled={loading}
               maxLength={500}
             />
             <div className="flex justify-between items-center mt-2">
-              <p className="text-xs text-gray-500 dark:text-gray-400">
-                Giúp người khác hiểu thêm về địa điểm này
+              <p id="review-comment-hint" className="text-xs text-gray-500 dark:text-gray-400">
+                Help others learn more about this place
               </p>
               <p className="text-xs text-gray-500 dark:text-gray-400">
                 {comment.length}/500
@@ -206,27 +214,29 @@ export default function CreateReviewModal({
         {/* Footer */}
         <div className="flex gap-3 p-6 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900/50 rounded-b-2xl">
           <button
+            type="button"
             onClick={onClose}
             disabled={loading}
             className="flex-1 px-4 py-3 border-2 border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-xl font-semibold hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            Hủy
+            Cancel
           </button>
           <button
+            type="button"
             onClick={submitReview}
             disabled={loading || !rating}
-            className="flex-1 px-4 py-3 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            className="flex-1 px-4 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-xl font-semibold transition-all duration-200 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             {loading ? (
               <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                <span>Đang {mode === "create" ? "gửi" : "cập nhật"}...</span>
+                <Loader2 className="w-5 h-5 animate-spin" aria-hidden />
+                <span>{mode === "create" ? "Submitting..." : "Updating..."}</span>
               </>
             ) : (
               <>
-                <Send className="w-5 h-5" />
+                <Send className="w-5 h-5" aria-hidden />
                 <span>
-                  {mode === "create" ? "Gửi đánh giá" : "Cập nhật đánh giá"}
+                  {mode === "create" ? "Submit review" : "Update review"}
                 </span>
               </>
             )}

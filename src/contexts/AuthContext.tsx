@@ -20,6 +20,7 @@ interface AuthContextType {
   ) => Promise<void>;
   signIn: (email: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  refreshUser: () => Promise<void>;
 }
 
 import { API_ENDPOINTS } from "../constants/api";
@@ -251,7 +252,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     fullName?: string
   ) => {
     setLoading(true);
-
     try {
       const res = await fetch(API_ENDPOINTS.AUTH.SIGNUP, {
         method: "POST",
@@ -263,28 +263,32 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           email,
           password,
           username,
-          full_name: fullName || username, // Use username as fallback if full_name not provided
+          full_name: fullName || username,
         }),
       });
 
       const result = await res.json();
 
       if (!res.ok) {
-        throw new Error(result.message || "Sign up failed");
+        if (res.status === 429) {
+          throw new Error(
+            result.message || "Too many attempts. Please wait a few minutes and try again."
+          );
+        }
+        const msg = result.message || "Sign up failed. Please check your details and try again.";
+        throw new Error(msg);
       }
 
       await fetchUser();
-
-      setLoading(false);
     } catch (error) {
-      setLoading(false);
       throw error;
+    } finally {
+      setLoading(false);
     }
   };
 
   const signIn = async (email: string, password: string) => {
     setLoading(true);
-
     try {
       const res = await fetch(API_ENDPOINTS.AUTH.LOGIN, {
         method: "POST",
@@ -298,16 +302,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       const result = await res.json();
 
       if (!res.ok) {
-        throw new Error(result.message || "Sign in failed");
+        if (res.status === 429) {
+          throw new Error(
+            result.message || "Too many attempts. Please wait a few minutes and try again."
+          );
+        }
+        throw new Error(
+          result.message || "Email or password is incorrect. Please try again."
+        );
       }
 
       await fetchUser();
-
-    } catch (error: any) {
-      setLoading(false);
+    } catch (error) {
       throw error instanceof Error
         ? error
-        : new Error("Email or password is incorrect");
+        : new Error("Something went wrong. Please try again.");
     } finally {
       setLoading(false);
     }

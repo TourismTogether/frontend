@@ -198,9 +198,10 @@ export const Destinations: React.FC = () => {
         <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 mb-8`}>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${COLORS.TEXT.MUTED} w-5 h-5`} />
+              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${COLORS.TEXT.MUTED} w-5 h-5`} aria-hidden />
               <input
-                type="text"
+                type="search"
+                aria-label="Search destinations by name, country, or region"
                 placeholder="Search destinations by name, country, or region..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -208,8 +209,9 @@ export const Destinations: React.FC = () => {
               />
             </div>
             <div className="flex items-center space-x-2">
-              <Filter className={`${COLORS.TEXT.MUTED} w-5 h-5`} />
+              <Filter className={`${COLORS.TEXT.MUTED} w-5 h-5`} aria-hidden />
               <select
+                aria-label="Filter by category"
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
                 className={`px-4 py-3 border ${COLORS.BORDER.DEFAULT} rounded-lg focus:outline-none focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
@@ -334,21 +336,34 @@ export const Destinations: React.FC = () => {
             <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden">
               <Image
                 src={getDestinationImageUrl("no destinations", 200, 200)}
-                alt="No destinations"
+                alt=""
+                role="presentation"
                 fill
                 className="object-cover opacity-50"
                 unoptimized
               />
             </div>
-            <MapPin className={`w-20 h-20 ${COLORS.TEXT.MUTED} mx-auto mb-4`} />
+            <MapPin className={`w-20 h-20 ${COLORS.TEXT.MUTED} mx-auto mb-4`} aria-hidden />
             <h3 className={`text-xl font-medium ${COLORS.TEXT.DEFAULT} mb-2`}>
               No destinations found
             </h3>
             <p className={`${COLORS.TEXT.MUTED} mb-6`}>
               {debouncedSearchTerm || filterCategory !== "all"
-                ? "Try adjusting your search or filters"
+                ? "Try adjusting your search or filters to see more results."
                 : "There are no destinations available at the moment."}
             </p>
+            {(debouncedSearchTerm || filterCategory !== "all") && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchTerm("");
+                  setFilterCategory("all");
+                }}
+                className={`inline-flex items-center gap-2 ${COLORS.BORDER.DEFAULT} border px-4 py-2 rounded-lg font-medium ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
+              >
+                Clear filters
+              </button>
+            )}
           </div>
         )}
       </div>

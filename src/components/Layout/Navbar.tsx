@@ -242,12 +242,13 @@ export const Navbar: React.FC = () => {
                 {/* Avatar / Hồ sơ */}
                 <Link
                   href="/profile"
-                  title={`Xem hồ sơ của ${
+                  title={`View profile of ${
                     user.full_name ||
                     profile?.username ||
                     account?.username ||
                     "User"
                   }`}
+                  aria-label={`View your profile, ${user.full_name || account?.username || "User"}`}
                   className="w-8 h-8 bg-traveller/20 rounded-full flex items-center justify-center cursor-pointer transition-all duration-200 hover:scale-105 hover:bg-traveller/30"
                 >
                   {user.avatar_url ? (
@@ -274,7 +275,8 @@ export const Navbar: React.FC = () => {
                 <button
                   onClick={handleSignOut}
                   className="hidden md:block p-1 rounded-full text-muted-foreground hover:text-destructive hover:bg-muted transition-all duration-200"
-                  title="Đăng xuất"
+                  title="Sign out"
+                  aria-label="Sign out"
                 >
                   <LogOut className="w-5 h-5 transition-colors duration-200" />
                 </button>
@@ -285,7 +287,9 @@ export const Navbar: React.FC = () => {
             <button
               className="md:hidden text-foreground p-2 rounded-md hover:bg-muted transition-all duration-200 z-50"
               onClick={handleToggleMenu}
-              title="Mở/Đóng menu"
+              title={isMenuOpen ? "Close menu" : "Open menu"}
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMenuOpen}
             >
               {isMenuOpen ? (
                 <X className="w-6 h-6 transition-colors duration-200" />
@@ -314,10 +318,11 @@ export const Navbar: React.FC = () => {
             <button
               onClick={handleSignOut}
               className="flex items-center gap-2 px-3 py-2 rounded-md transition-all duration-200 w-full text-lg justify-start text-muted-foreground hover:bg-muted hover:text-destructive"
+              aria-label="Sign out"
             >
               <LogOut className="w-4 h-4 transition-colors duration-200" />
               <span className="text-sm font-medium transition-colors duration-200">
-                Đăng xuất
+                Sign out
               </span>
             </button>
           )}

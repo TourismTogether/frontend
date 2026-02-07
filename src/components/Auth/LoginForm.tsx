@@ -49,9 +49,12 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
 
         {error && (
           <div
+            id="login-error"
+            role="alert"
+            aria-live="polite"
             className={`mb-6 p-4 ${COLORS.DESTRUCTIVE.BACKGROUND_HOVER} border ${COLORS.DESTRUCTIVE.BORDER}/30 ${COLORS.DESTRUCTIVE.TEXT} rounded-lg text-sm flex items-center gap-2 animate-fade-in backdrop-blur-sm`}
           >
-            <AlertCircle className="w-4 h-4 shrink-0" />
+            <AlertCircle className="w-4 h-4 shrink-0" aria-hidden />
             <span>{error}</span>
           </div>
         )}
@@ -59,6 +62,7 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
         <div className="space-y-5">
           <div className="space-y-2">
             <label
+              htmlFor="login-email"
               className={`block ${COLORS.AUTH.TEXT_LABEL} text-sm font-semibold`}
             >
               Email
@@ -66,20 +70,25 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
             <div className="relative">
               <Mail
                 className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${COLORS.AUTH.ICON_MUTED}`}
+                aria-hidden
               />
               <Input
+                id="login-email"
                 type="email"
+                autoComplete="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={`pl-10 h-12 text-base ${COLORS.AUTH.INPUT_BG} ${COLORS.AUTH.BORDER_INPUT} ${COLORS.AUTH.INPUT_TEXT} ${COLORS.AUTH.INPUT_PLACEHOLDER} ${COLORS.AUTH.BORDER_FOCUS} ${COLORS.AUTH.INPUT_FOCUS_RING}`}
-                placeholder="Enter your email"
+                placeholder="e.g. you@example.com"
                 required
+                aria-describedby={error ? "login-error" : undefined}
               />
             </div>
           </div>
 
           <div className="space-y-2">
             <label
+              htmlFor="login-password"
               className={`block ${COLORS.AUTH.TEXT_LABEL} text-sm font-semibold`}
             >
               Password
@@ -87,14 +96,18 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
             <div className="relative">
               <Lock
                 className={`absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 ${COLORS.AUTH.ICON_MUTED}`}
+                aria-hidden
               />
               <Input
+                id="login-password"
                 type="password"
+                autoComplete="current-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className={`pl-10 h-12 text-base ${COLORS.AUTH.INPUT_BG} ${COLORS.AUTH.BORDER_INPUT} ${COLORS.AUTH.INPUT_TEXT} ${COLORS.AUTH.INPUT_PLACEHOLDER} ${COLORS.AUTH.BORDER_FOCUS} ${COLORS.AUTH.INPUT_FOCUS_RING}`}
                 placeholder="Enter your password"
                 required
+                aria-describedby={error ? "login-error" : undefined}
               />
             </div>
           </div>
@@ -103,6 +116,7 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
         <Button
           type="submit"
           disabled={loading}
+          aria-busy={loading}
           className={`w-full mt-8 h-12 text-base font-semibold ${GRADIENTS.AUTH_BUTTON} ${GRADIENTS.AUTH_BUTTON_HOVER} text-white shadow-lg hover:shadow-xl dark:hover:shadow-emerald-400/25 transition-all duration-300`}
         >
           {loading ? (
@@ -122,6 +136,7 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
               type="button"
               onClick={onSwitch}
               className={`${COLORS.AUTH.LINK} ${COLORS.AUTH.LINK_HOVER} font-semibold transition-colors duration-200 underline-offset-4 hover:underline`}
+              aria-label="Switch to sign up form"
             >
               Sign up
             </button>

@@ -24,6 +24,7 @@ import { ANIMATIONS } from "../../constants/animations";
 import ShimmerCard from "../../components/Animations/ShimmerCard";
 import { toast } from "../../lib/toast";
 import { useDebounce } from "../../lib/useDebounce";
+import { ConfirmationDialog } from "../../components/ConfirmationDialog/ConfirmationDialog";
 
 interface IDiary {
   id: string | number;
@@ -58,6 +59,8 @@ export default function Diaries() {
   const [shareDiary, setShareDiary] = useState<IDiary | null>(null);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [deleteTarget, setDeleteTarget] = useState<IDiary | null>(null);
+  const [deleting, setDeleting] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
@@ -114,10 +117,10 @@ export default function Diaries() {
     }
   }
 
-  async function handleDelete(id: string | number) {
-    const ok = window.confirm("Are you sure you want to delete this diary?");
-    if (!ok) return;
-
+  async function handleConfirmDelete() {
+    if (!deleteTarget) return;
+    const id = deleteTarget.id;
+    setDeleting(true);
     try {
       const res = await fetch(API_ENDPOINTS.DIARIES.DELETE(Number(id)), {
         method: "DELETE",
@@ -125,15 +128,19 @@ export default function Diaries() {
       });
 
       if (!res.ok) {
-        throw new Error("Delete failed");
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.message || "Delete failed");
       }
 
       setAllDiaries((prev) => prev.filter((d) => String(d.id) !== String(id)));
       setDiaries((prev) => prev.filter((d) => String(d.id) !== String(id)));
+      setDeleteTarget(null);
       toast.success("Diary deleted", "The diary entry has been removed successfully.");
     } catch (error) {
       console.error("Delete diary error", error);
-      toast.error("Failed to delete diary", "Please try again later.");
+      toast.error("Failed to delete diary", error instanceof Error ? error.message : "Please try again later.");
+    } finally {
+      setDeleting(false);
     }
   }
 
@@ -308,6 +315,9 @@ export default function Diaries() {
             <div className="flex items-center justify-between flex-wrap gap-4">
               <div className="flex gap-2">
                 <button
+                  type="button"
+                  aria-pressed={filter === "explore"}
+                  aria-label="Show public diaries from others"
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     filter === "explore"
                       ? `${GRADIENTS.PRIMARY} text-white shadow-md`
@@ -315,10 +325,13 @@ export default function Diaries() {
                   }`}
                   onClick={() => setFilter("explore")}
                 >
-                  <Eye className="w-4 h-4 inline mr-1" />
+                  <Eye className="w-4 h-4 inline mr-1" aria-hidden />
                   Explore
                 </button>
                 <button
+                  type="button"
+                  aria-pressed={filter === "my-entries"}
+                  aria-label="Show my diary entries"
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     filter === "my-entries"
                       ? `${GRADIENTS.PRIMARY} text-white shadow-md`
@@ -326,10 +339,13 @@ export default function Diaries() {
                   }`}
                   onClick={() => setFilter("my-entries")}
                 >
-                  <BookOpen className="w-4 h-4 inline mr-1" />
+                  <BookOpen className="w-4 h-4 inline mr-1" aria-hidden />
                   My entries
                 </button>
                 <button
+                  type="button"
+                  aria-pressed={filter === "drafts"}
+                  aria-label="Show draft entries"
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
                     filter === "drafts"
                       ? `${GRADIENTS.PRIMARY} text-white shadow-md`
@@ -337,7 +353,7 @@ export default function Diaries() {
                   }`}
                   onClick={() => setFilter("drafts")}
                 >
-                  <EyeOff className="w-4 h-4 inline mr-1" />
+                  <EyeOff className="w-4 h-4 inline mr-1" aria-hidden />
                   Drafts
                 </button>
               </div>
@@ -347,7 +363,8 @@ export default function Diaries() {
                     className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${COLORS.TEXT.MUTED} w-4 h-4`}
                   />
                   <input
-                    type="text"
+                    type="search"
+                    aria-label="Search diaries by title"
                     placeholder="Search by title..."
                     value={searchTitle}
                     onChange={(e) => setSearchTitle(e.target.value)}
@@ -447,13 +464,15 @@ export default function Diaries() {
                                   <Edit className="w-4 h-4" />
                                 </Link>
                                 <button
+                                  type="button"
                                   onClick={(e) => {
                                     e.preventDefault();
-                                    handleDelete(diary.id);
+                                    setDeleteTarget(diary);
                                   }}
+                                  aria-label={`Delete diary "${diary.title}"`}
                                   className={`text-sm px-3 py-1 ${COLORS.BORDER.DEFAULT} border rounded-md text-red-600 hover:bg-red-50 transition-colors`}
                                 >
-                                  <Trash2 className="w-4 h-4" />
+                                  <Trash2 className="w-4 h-4" aria-hidden />
                                 </button>
                               </>
                             )}
@@ -512,6 +531,17 @@ export default function Diaries() {
               </div>
             )}
 
+            <ConfirmationDialog
+              isOpen={!!deleteTarget}
+              onClose={() => setDeleteTarget(null)}
+              onConfirm={handleConfirmDelete}
+              title="Delete diary?"
+              message={deleteTarget ? `"${deleteTarget.title}" will be permanently removed. This cannot be undone.` : ""}
+              confirmText="Delete"
+              cancelText="Cancel"
+              variant="danger"
+              isLoading={deleting}
+            />
             {shareModalOpen && shareDiary && (
               <div className="fixed inset-0 z-50 flex items-center justify-center">
                 <div

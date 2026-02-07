@@ -1012,7 +1012,7 @@ export const Forum: React.FC = () => {
                                   !user ||
                                   isSubmittingComment[post.id]
                                 }
-                                className="flex items-center gap-1.5 px-4 py-1.5 bg-linear-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                                className="flex items-center gap-1.5 px-4 py-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white rounded-lg text-xs font-semibold transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                               >
                                 <Send className="w-3 h-3" />
                                 {isSubmittingComment[post.id]
