@@ -85,57 +85,7 @@ export const Destinations: React.FC = () => {
       const result: ApiResponse = await response.json();
       const fetchedDestinations = result.data || [];
 
-      // Fetch assessment stats for each destination
-      const destinationsWithStats = await Promise.all(
-        fetchedDestinations.map(async (dest) => {
-          const destinationId = dest.id_destination || dest.id;
-          if (!destinationId) return dest;
-
-          try {
-            const assessmentResponse = await fetch(
-              `${API_ENDPOINTS.REVIEWS.BASE}/destination/${destinationId}`,
-              { credentials: "include" }
-            );
-
-            if (assessmentResponse.ok) {
-              const assessmentResult: AssessmentResponse = await assessmentResponse.json();
-              const assessments = assessmentResult.data || [];
-
-              if (assessments.length > 0) {
-                const totalRating = assessments.reduce(
-                  (sum: number, a) => sum + (a.rating_star || 0),
-                  0
-                );
-                const averageRating = totalRating / assessments.length;
-                return {
-                  ...dest,
-                  average_rating: Math.round(averageRating * 10) / 10,
-                  total_reviews: assessments.length,
-                };
-              } else {
-                return {
-                  ...dest,
-                  average_rating: 0,
-                  total_reviews: 0,
-                };
-              }
-            }
-          } catch (err) {
-            console.error(
-              `Error fetching assessment stats for destination ${destinationId}:`,
-              err
-            );
-          }
-
-          return {
-            ...dest,
-            average_rating: dest.average_rating || dest.rating || 0,
-            total_reviews: dest.total_reviews || 0,
-          };
-        })
-      );
-
-      setDestinations(destinationsWithStats);
+      setDestinations(fetchedDestinations);
     } catch (error) {
       console.error("Error fetching destinations:", error);
       setDestinations([]);
@@ -257,73 +207,73 @@ export const Destinations: React.FC = () => {
                   className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
                   shimmer={false}
                 >
-                {/* Image */}
-                <div className="h-48 relative overflow-hidden">
-                  <Image
-                    src={imageUrl}
-                    alt={dest.name}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                    unoptimized
-                    onError={(e) => {
-                      const target = e.currentTarget;
-                      target.style.display = "none";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  {/* Image */}
+                  <div className="h-48 relative overflow-hidden">
+                    <Image
+                      src={imageUrl}
+                      alt={dest.name}
+                      fill
+                      className="object-cover group-hover:scale-110 transition-transform duration-500"
+                      unoptimized
+                      onError={(e) => {
+                        const target = e.currentTarget;
+                        target.style.display = "none";
+                      }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
 
-                  {/* Category Badge */}
-                  {dest.category && (
-                    <div className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm ${ANIMATIONS.BOUNCE.SOFT}`}>
-                      {dest.category}
-                    </div>
-                  )}
+                    {/* Category Badge */}
+                    {dest.category && (
+                      <div className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm ${ANIMATIONS.BOUNCE.SOFT}`}>
+                        {dest.category}
+                      </div>
+                    )}
 
-                  {/* Rating Badge */}
-                  {(dest.average_rating || dest.rating) > 0 && (
-                    <div className={`absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1 ${ANIMATIONS.PULSE.GENTLE}`}>
-                      <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                      <span className="text-white text-xs font-bold">
-                        {Number(dest.average_rating || dest.rating).toFixed(1)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="p-4">
-                  <h3 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-2 line-clamp-1 group-hover:${COLORS.TEXT.PRIMARY} transition-colors`}>
-                    {dest.name}
-                  </h3>
-
-                  <div className={`flex items-center text-sm ${COLORS.TEXT.MUTED} mb-3`}>
-                    <MapPin className="w-4 h-4 mr-1 shrink-0" />
-                    <span className="truncate">
-                      {dest.region_name ? `${dest.region_name}, ` : ""}
-                      {dest.country || "Unknown"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current shrink-0" />
-                      <span className={`ml-1 text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>
-                        {Number(
-                          dest.average_rating || dest.rating || 0
-                        ).toFixed(1)}
-                      </span>
-                      <span className={`ml-1 text-xs ${COLORS.TEXT.MUTED}`}>
-                        ({dest.total_reviews || 0} reviews)
-                      </span>
-                    </div>
-                    {dest.best_season && (
-                      <div className={`flex items-center text-xs ${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.MUTED} px-2 py-1 rounded`}>
-                        <Calendar className="w-3 h-3 mr-1" />
-                        {dest.best_season}
+                    {/* Rating Badge */}
+                    {(dest.average_rating || dest.rating) > 0 && (
+                      <div className={`absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1 ${ANIMATIONS.PULSE.GENTLE}`}>
+                        <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                        <span className="text-white text-xs font-bold">
+                          {Number(dest.average_rating || dest.rating).toFixed(1)}
+                        </span>
                       </div>
                     )}
                   </div>
-                </div>
+
+                  {/* Content */}
+                  <div className="p-4">
+                    <h3 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-2 line-clamp-1 group-hover:${COLORS.TEXT.PRIMARY} transition-colors`}>
+                      {dest.name}
+                    </h3>
+
+                    <div className={`flex items-center text-sm ${COLORS.TEXT.MUTED} mb-3`}>
+                      <MapPin className="w-4 h-4 mr-1 shrink-0" />
+                      <span className="truncate">
+                        {dest.region_name ? `${dest.region_name}, ` : ""}
+                        {dest.country || "Unknown"}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <Star className="w-4 h-4 text-yellow-500 fill-current shrink-0" />
+                        <span className={`ml-1 text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>
+                          {Number(
+                            dest.average_rating || dest.rating || 0
+                          ).toFixed(1)}
+                        </span>
+                        <span className={`ml-1 text-xs ${COLORS.TEXT.MUTED}`}>
+                          ({dest.total_reviews || 0} reviews)
+                        </span>
+                      </div>
+                      {dest.best_season && (
+                        <div className={`flex items-center text-xs ${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.MUTED} px-2 py-1 rounded`}>
+                          <Calendar className="w-3 h-3 mr-1" />
+                          {dest.best_season}
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </ShimmerCard>
               </Link>
             );

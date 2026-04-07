@@ -418,22 +418,20 @@ export const Trips: React.FC = () => {
             >
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 rounded-md transition-all duration-200 ${
-                  viewMode === "grid"
-                    ? `${COLORS.PRIMARY.DEFAULT} text-white shadow-md`
-                    : `${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.MUTED}`
-                }`}
+                className={`p-2 rounded-md transition-all duration-200 ${viewMode === "grid"
+                  ? `${COLORS.PRIMARY.DEFAULT} text-white shadow-md`
+                  : `${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.MUTED}`
+                  }`}
                 title="Grid View"
               >
                 <LayoutGrid className="w-4 h-4" />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 rounded-md transition-all duration-200 ${
-                  viewMode === "list"
-                    ? `${COLORS.PRIMARY.DEFAULT} text-white shadow-md`
-                    : `${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.MUTED}`
-                }`}
+                className={`p-2 rounded-md transition-all duration-200 ${viewMode === "list"
+                  ? `${COLORS.PRIMARY.DEFAULT} text-white shadow-md`
+                  : `${COLORS.TEXT.MUTED} hover:${COLORS.BACKGROUND.MUTED}`
+                  }`}
                 title="List View"
               >
                 <List className="w-4 h-4" />
@@ -622,13 +620,12 @@ export const Trips: React.FC = () => {
                                 className={`w-24 ${COLORS.BACKGROUND.MUTED} rounded-full h-1.5 overflow-hidden`}
                               >
                                 <div
-                                  className={`h-1.5 rounded-full transition-all duration-500 ${
-                                    percentageUsed > 100
-                                      ? "bg-destructive"
-                                      : percentageUsed > 80
+                                  className={`h-1.5 rounded-full transition-all duration-500 ${percentageUsed > 100
+                                    ? "bg-destructive"
+                                    : percentageUsed > 80
                                       ? "bg-yellow-500"
                                       : COLORS.PRIMARY.DEFAULT
-                                  }`}
+                                    }`}
                                   style={{
                                     width: `${Math.min(percentageUsed, 100)}%`,
                                   }}
