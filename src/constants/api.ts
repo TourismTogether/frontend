@@ -171,7 +171,7 @@ export const getTravelImageUrl = (
 ): string => {
   // Create a seed from keyword for consistent fallback
   const seed = keyword.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
-  
+
   // Try Unsplash first, but use Picsum as reliable fallback
   const query = encodeURIComponent(keyword);
   // Using Picsum as primary since Unsplash Source API is unreliable

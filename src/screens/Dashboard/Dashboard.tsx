@@ -417,21 +417,12 @@ export const Dashboard: React.FC = () => {
       // Fetch posts count
       let postsCount = 0;
       try {
-        const postsResponse = await fetch(API_ENDPOINTS.FORUM.POSTS.BASE, {
+        const postCountResponse = await fetch(API_ENDPOINTS.USERS.BY_ID(user.id) + "/posts/count", {
           credentials: "include",
         });
-        if (postsResponse.ok) {
-          const postsResult = await postsResponse.json();
-          const posts: PostResponse[] = Array.isArray(postsResult.data)
-            ? postsResult.data
-            : Array.isArray(postsResult)
-            ? postsResult
-            : [];
-          postsCount = posts.filter(
-            (p: PostResponse) =>
-              String(p.user_id) === String(user.id) ||
-              String(p.traveller_id) === String(user.id)
-          ).length;
+        if (postCountResponse.ok) {
+          const postCountResult = await postCountResponse.json();
+          postsCount = postCountResult.data.count;
         }
       } catch (err) {
         console.error("Error fetching posts:", err);
@@ -440,19 +431,14 @@ export const Dashboard: React.FC = () => {
       // Fetch diaries count
       let diariesCount = 0;
       try {
-        const diariesResponse = await fetch(API_ENDPOINTS.DIARIES.BASE, {
+        const diaryCountResponse = await fetch(API_ENDPOINTS.USERS.BY_ID(user.id) + "/diaries/count", {
           credentials: "include",
         });
-        if (diariesResponse.ok) {
-          const diariesResult = await diariesResponse.json();
-          const diaries: DiaryResponse[] = Array.isArray(diariesResult.data)
-            ? diariesResult.data
-            : Array.isArray(diariesResult)
-            ? diariesResult
-            : [];
-          diariesCount = diaries.filter(
-            (d: DiaryResponse) => String(d.user_id) === String(user.id)
-          ).length;
+        if (diaryCountResponse.ok) {
+
+          const diaryCountResult = await diaryCountResponse.json();
+
+          diariesCount = diaryCountResult.data.count;
         }
       } catch (err) {
         console.error("Error fetching diaries:", err);
