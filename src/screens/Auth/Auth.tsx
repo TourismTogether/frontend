@@ -26,7 +26,23 @@ export const Auth: React.FC = () => {
   // Prevent hydration mismatch for theme
   useEffect(() => {
     setMounted(true);
+    const savedMode = window.localStorage.getItem("auth_mode");
+    if (savedMode === "signup") {
+      setIsLogin(false);
+    } else if (savedMode === "signin") {
+      setIsLogin(true);
+    }
   }, []);
+
+  const switchToSignIn = () => {
+    setIsLogin(true);
+    window.localStorage.setItem("auth_mode", "signin");
+  };
+
+  const switchToSignUp = () => {
+    setIsLogin(false);
+    window.localStorage.setItem("auth_mode", "signup");
+  };
 
   const features = [
     {
@@ -227,9 +243,9 @@ export const Auth: React.FC = () => {
         {/* Right side - Auth Form */}
         <div className="flex justify-center lg:justify-end">
           {isLogin ? (
-            <LoginForm onSwitch={() => setIsLogin(false)} />
+            <LoginForm onSwitch={switchToSignUp} />
           ) : (
-            <SignUpForm onSwitch={() => setIsLogin(true)} />
+            <SignUpForm onSwitch={switchToSignIn} />
           )}
         </div>
 

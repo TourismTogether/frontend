@@ -6,6 +6,7 @@ import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import { Mail, Lock, Loader2, AlertCircle } from "lucide-react";
 import { COLORS, GRADIENTS } from "../../constants/colors";
+import { toast } from "@/lib/toast";
 
 export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
   const [email, setEmail] = useState("");
@@ -25,6 +26,7 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
       const errorMessage =
         err instanceof Error ? err.message : "Failed to sign in";
       setError(errorMessage);
+      toast.error("Sign in failed", errorMessage);
     } finally {
       setLoading(false);
     }

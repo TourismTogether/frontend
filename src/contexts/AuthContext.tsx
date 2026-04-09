@@ -25,6 +25,31 @@ interface AuthContextType {
 
 import { API_ENDPOINTS } from "../constants/api";
 
+type ApiErrorDetail = {
+  field?: string;
+  message?: string;
+};
+
+const getAuthErrorMessage = (result: any, fallback: string): string => {
+  const baseMessage =
+    typeof result?.message === "string" && result.message.trim()
+      ? result.message.trim()
+      : fallback;
+
+  if (Array.isArray(result?.details) && result.details.length > 0) {
+    const detailsText = (result.details as ApiErrorDetail[])
+      .map((d) => (d?.field && d?.message ? `${d.field}: ${d.message}` : d?.message))
+      .filter((text): text is string => Boolean(text))
+      .join("; ");
+
+    if (detailsText) {
+      return detailsText;
+    }
+  }
+
+  return baseMessage;
+};
+
 // Default coordinates (Ho Chi Minh City)
 const DEFAULT_LATITUDE = 10.762892238148003;
 const DEFAULT_LONGITUDE = 106.68248479264726;
@@ -275,7 +300,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
             result.message || "Too many attempts. Please wait a few minutes and try again."
           );
         }
-        const msg = result.message || "Sign up failed. Please check your details and try again.";
+        const msg = getAuthErrorMessage(
+          result,
+          "Sign up failed. Please check your details and try again."
+        );
         throw new Error(msg);
       }
 
@@ -308,7 +336,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
           );
         }
         throw new Error(
-          result.message || "Email or password is incorrect. Please try again."
+          getAuthErrorMessage(
+            result,
+            "Email/username or password is incorrect. Please try again."
+          )
         );
       }
 
