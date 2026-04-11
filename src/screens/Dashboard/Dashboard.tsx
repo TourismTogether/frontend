@@ -630,7 +630,7 @@ export const Dashboard: React.FC = () => {
               <h2
                 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}
               >
-                Suggested for you (AI)
+                Suggested for you
               </h2>
             </div>
             {aiRecLoading ? (

@@ -14,6 +14,7 @@ import ShimmerCard from "../../components/Animations/ShimmerCard";
 import { useDebounce } from "../../lib/useDebounce";
 import {
   searchDestinationsSemantic,
+  recommendDestinationsForUser,
   type SemanticDestinationHit,
 } from "../../services/aiSemanticService";
 
@@ -40,6 +41,8 @@ export interface IDestination {
   _userReviewed?: boolean;
   /** You have a trip linked to this destination */
   _userTripDestination?: boolean;
+  /** Shown when this row comes from AI recommendations (no active search) */
+  _fromRecommend?: boolean;
 }
 
 interface ApiResponse {
@@ -61,6 +64,64 @@ function destinationInteractionScore(d: IDestination): number {
   return (d._userReviewed ? 2 : 0) + (d._userTripDestination ? 1 : 0);
 }
 
+/** Fold Vietnamese diacritics for substring match (e.g. "Đà Lạt" vs "Da Lat"). */
+function foldVi(s: string): string {
+  try {
+    return s
+      .normalize("NFD")
+      .replace(/\p{M}/gu, "")
+      .toLowerCase()
+      .trim();
+  } catch {
+    return s.toLowerCase().trim();
+  }
+}
+
+/** Blend vector similarity with lexical overlap so place names in description rank higher. */
+function semanticRankScore(
+  dest: IDestination & { _similarity?: number },
+  query: string
+): number {
+  const base = dest._similarity ?? 0;
+  const q = foldVi(query);
+  if (!q) return base;
+  const blob = foldVi(
+    `${dest.name} ${dest.description || ""} ${dest.country || ""} ${dest.region_name || ""}`
+  );
+  if (!blob) return base;
+  let bonus = 0;
+  if (blob.includes(q)) bonus += 0.22;
+  const tokens = q.split(/\s+/).filter((t) => t.length >= 2);
+  if (tokens.length > 0) {
+    const hit = tokens.filter((t) => blob.includes(t)).length;
+    bonus += (hit / tokens.length) * 0.1;
+  }
+  return base + bonus;
+}
+
+function hitToDestination(
+  h: SemanticDestinationHit
+): IDestination & { _similarity?: number } {
+  return {
+    id: h.id,
+    region_id: h.region_id || "",
+    name: h.name || "",
+    country: h.country || "",
+    description: h.description || "",
+    latitude: 0,
+    longitude: 0,
+    category: h.category || "",
+    best_season: "",
+    rating: 0,
+    images: null,
+    created_at: "",
+    updated_at: "",
+    average_rating: 0,
+    total_reviews: 0,
+    _similarity: h.similarity,
+  };
+}
+
 export const Destinations: React.FC = () => {
   const { user } = useAuth();
   const [destinations, setDestinations] = useState<IDestination[]>([]);
@@ -73,6 +134,10 @@ export const Destinations: React.FC = () => {
   const [semanticHits, setSemanticHits] = useState<SemanticDestinationHit[]>(
     []
   );
+  const [recommendHits, setRecommendHits] = useState<SemanticDestinationHit[]>(
+    []
+  );
+  const [recommendLoading, setRecommendLoading] = useState(false);
 
   useEffect(() => {
     fetchDestinations();
@@ -94,7 +159,7 @@ export const Destinations: React.FC = () => {
       try {
         const { results } = await searchDestinationsSemantic(
           debouncedSearchTerm.trim(),
-          24
+          48
         );
         if (!cancelled) setSemanticHits(results);
       } catch (e) {
@@ -113,6 +178,34 @@ export const Destinations: React.FC = () => {
       cancelled = true;
     };
   }, [debouncedSearchTerm]);
+
+  useEffect(() => {
+    if (debouncedSearchTerm.trim()) {
+      return;
+    }
+    if (!user?.id) {
+      setRecommendHits([]);
+      setRecommendLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setRecommendLoading(true);
+    (async () => {
+      try {
+        const { results } = await recommendDestinationsForUser(user.id, 16);
+        if (!cancelled) setRecommendHits(results || []);
+      } catch {
+        if (!cancelled) setRecommendHits([]);
+      } finally {
+        if (!cancelled) setRecommendLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, debouncedSearchTerm]);
 
   const fetchDestinations = async () => {
     try {
@@ -257,16 +350,6 @@ export const Destinations: React.FC = () => {
     });
   });
 
-  const preferredDestinationIds = useMemo(() => {
-    const s = new Set<string>();
-    for (const d of destinations) {
-      const id = String(d.id_destination || d.id || "");
-      if (!id) continue;
-      if (d._userReviewed || d._userTripDestination) s.add(id);
-    }
-    return s;
-  }, [destinations]);
-
   const destinationById = useMemo(() => {
     const m = new Map<string, IDestination>();
     for (const d of destinations) {
@@ -281,52 +364,67 @@ export const Destinations: React.FC = () => {
     return (h.category || "") === filterCategory;
   });
 
-  const hitToDestination = (
-    h: SemanticDestinationHit
-  ): IDestination & { _similarity?: number } => ({
-    id: h.id,
-    region_id: h.region_id || "",
-    name: h.name || "",
-    country: h.country || "",
-    description: h.description || "",
-    latitude: 0,
-    longitude: 0,
-    category: h.category || "",
-    best_season: "",
-    rating: 0,
-    images: null,
-    created_at: "",
-    updated_at: "",
-    average_rating: 0,
-    total_reviews: 0,
-    _similarity: h.similarity,
-  });
-
-  const mergeSemanticWithLoaded = (
-    hit: IDestination & { _similarity?: number }
-  ): IDestination & { _similarity?: number } => {
-    const id = String(hit.id_destination || hit.id || "");
-    const full = id ? destinationById.get(id) : undefined;
-    if (!full) return hit;
-    return {
-      ...full,
-      _similarity: hit._similarity,
+  const displayList: (IDestination & {
+    _similarity?: number;
+    _fromRecommend?: boolean;
+  })[] = useMemo(() => {
+    const mergeLoaded = (
+      hit: IDestination & { _similarity?: number; _fromRecommend?: boolean }
+    ): IDestination & { _similarity?: number; _fromRecommend?: boolean } => {
+      const id = String(hit.id_destination || hit.id || "");
+      const full = id ? destinationById.get(id) : undefined;
+      if (!full) return hit;
+      return {
+        ...full,
+        _similarity: hit._similarity,
+        _fromRecommend: hit._fromRecommend,
+      };
     };
-  };
 
-  const displayList: (IDestination & { _similarity?: number })[] =
-    debouncedSearchTerm.trim()
-      ? [...semanticFiltered.map(hitToDestination)]
-          .map(mergeSemanticWithLoaded)
-          .sort((a, b) => {
-            const idA = String(a.id_destination || a.id || "");
-            const idB = String(b.id_destination || b.id || "");
-            const pa = preferredDestinationIds.has(idA) ? 1 : 0;
-            const pb = preferredDestinationIds.has(idB) ? 1 : 0;
-            if (pb !== pa) return pb - pa;
-            return (b._similarity || 0) - (a._similarity || 0);
-          })
-      : sortedFilteredDestinations.map((d) => ({ ...d }));
+    const q = debouncedSearchTerm.trim();
+
+    if (q) {
+      return [...semanticFiltered.map(hitToDestination)]
+        .map(mergeLoaded)
+        .sort((a, b) => {
+          const sb = semanticRankScore(b, q);
+          const sa = semanticRankScore(a, q);
+          if (Math.abs(sb - sa) > 1e-6) return sb - sa;
+          return (b._similarity || 0) - (a._similarity || 0);
+        });
+    }
+
+    const base = sortedFilteredDestinations.map((d) => ({ ...d }));
+
+    if (user?.id && recommendHits.length > 0) {
+      const rf = recommendHits.filter(
+        (h) =>
+          filterCategory === "all" || (h.category || "") === filterCategory
+      );
+      const recRows = rf.map((h) => {
+        const partial = hitToDestination(h);
+        const { _similarity: _sim, ...rest } = partial;
+        return mergeLoaded({ ...rest, _fromRecommend: true });
+      });
+      const seen = new Set(
+        recRows.map((d) => String(d.id_destination || d.id))
+      );
+      const rest = base.filter(
+        (d) => !seen.has(String(d.id_destination || d.id))
+      );
+      return [...recRows, ...rest];
+    }
+
+    return base;
+  }, [
+    debouncedSearchTerm,
+    semanticFiltered,
+    sortedFilteredDestinations,
+    destinationById,
+    filterCategory,
+    user?.id,
+    recommendHits,
+  ]);
 
   const categories = [
     ...new Set(destinations.map((d) => d.category).filter(Boolean)),
@@ -375,7 +473,7 @@ export const Destinations: React.FC = () => {
               <input
                 type="search"
                 aria-label="Semantic search destinations"
-                placeholder="Describe places you want (semantic search)…"
+                placeholder="Describe places you want…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full pl-10 pr-4 py-3 border ${COLORS.BORDER.DEFAULT} rounded-lg focus:outline-none focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
@@ -414,6 +512,28 @@ export const Destinations: React.FC = () => {
             Searching with AI…
           </p>
         )}
+
+        {!debouncedSearchTerm.trim() &&
+          user?.id &&
+          (recommendLoading || recommendHits.length > 0) && (
+            <div className="mb-6">
+              <h2
+                className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT} mb-1`}
+              >
+                Recommended for you
+              </h2>
+              {recommendLoading ? (
+                <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
+                  Loading personalized picks…
+                </p>
+              ) : (
+                <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
+                  Based on your reviews and trips. Clear search always shows
+                  these first.
+                </p>
+              )}
+            </div>
+          )}
 
         {/* Destinations Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -477,12 +597,11 @@ export const Destinations: React.FC = () => {
                     </div>
                   )}
 
-                  {"_similarity" in dest &&
-                    typeof dest._similarity === "number" && (
-                      <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
-                        AI {(dest._similarity * 100).toFixed(0)}%
-                      </div>
-                    )}
+                  {!debouncedSearchTerm.trim() && dest._fromRecommend && (
+                    <div className="absolute bottom-3 left-3 bg-violet-600/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+                      For you
+                    </div>
+                  )}
 
                   {/* Rating Badge */}
                   {(dest.average_rating || dest.rating) > 0 && (
