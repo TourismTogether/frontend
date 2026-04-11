@@ -15,6 +15,7 @@ import {
   Plane,
   Camera,
   TrendingUp,
+  Sparkles,
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import dynamic from "next/dynamic";
@@ -29,6 +30,12 @@ import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
 import { ANIMATIONS } from "../../constants/animations";
 import PulseGlow from "../../components/Animations/PulseGlow";
+import {
+  recommendDestinationsForUser,
+  recommendTripsForUser,
+  type SemanticDestinationHit,
+  type SemanticTripHit,
+} from "../../services/aiSemanticService";
 
 // Dynamically import RouteMap to avoid SSR issues
 const RouteMap = dynamic(
@@ -236,12 +243,47 @@ export const Dashboard: React.FC = () => {
   const [newestTripRoutes, setNewestTripRoutes] = useState<IRoute[]>([]);
   const [newestTrip, setNewestTrip] = useState<ITrip | null>(null);
   const [loading, setLoading] = useState(true);
+  const [aiRecDestinations, setAiRecDestinations] = useState<
+    SemanticDestinationHit[]
+  >([]);
+  const [aiRecTrips, setAiRecTrips] = useState<SemanticTripHit[]>([]);
+  const [aiRecLoading, setAiRecLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
       fetchDashboardData();
     }
   }, [user]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setAiRecDestinations([]);
+      setAiRecTrips([]);
+      return;
+    }
+    let cancelled = false;
+    setAiRecLoading(true);
+    (async () => {
+      try {
+        const [d, t] = await Promise.all([
+          recommendDestinationsForUser(user.id, 5).catch(() => ({
+            results: [] as SemanticDestinationHit[],
+          })),
+          recommendTripsForUser(user.id, 5).catch(() => ({
+            results: [] as SemanticTripHit[],
+          })),
+        ]);
+        if (cancelled) return;
+        setAiRecDestinations(d.results || []);
+        setAiRecTrips(t.results || []);
+      } finally {
+        if (!cancelled) setAiRecLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
 
   const fetchDashboardData = async () => {
     try {
@@ -578,6 +620,84 @@ export const Dashboard: React.FC = () => {
             </div>
           </div>
         </div>
+
+        {(aiRecLoading ||
+          aiRecDestinations.length > 0 ||
+          aiRecTrips.length > 0) && (
+          <div className="mb-10">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-6 h-6 text-amber-500" />
+              <h2
+                className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}
+              >
+                Suggested for you (AI)
+              </h2>
+            </div>
+            {aiRecLoading ? (
+              <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
+                Loading recommendations…
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {aiRecDestinations.length > 0 && (
+                  <div
+                    className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl p-4`}
+                  >
+                    <h3
+                      className={`font-semibold ${COLORS.TEXT.DEFAULT} mb-3 flex items-center gap-2`}
+                    >
+                      <MapPin className="w-4 h-4" />
+                      Destinations
+                    </h3>
+                    <ul className="space-y-2">
+                      {aiRecDestinations.map((d) => (
+                        <li key={d.id}>
+                          <Link
+                            href={`/destinations/${d.id}`}
+                            className={`text-sm hover:underline ${COLORS.TEXT.PRIMARY}`}
+                          >
+                            {d.name || d.id}
+                            {d.country ? ` · ${d.country}` : ""}
+                            <span className={`ml-1 ${COLORS.TEXT.MUTED}`}>
+                              ({Math.round((d.similarity || 0) * 100)}%)
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {aiRecTrips.length > 0 && (
+                  <div
+                    className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl p-4`}
+                  >
+                    <h3
+                      className={`font-semibold ${COLORS.TEXT.DEFAULT} mb-3 flex items-center gap-2`}
+                    >
+                      <Plane className="w-4 h-4" />
+                      Trips
+                    </h3>
+                    <ul className="space-y-2">
+                      {aiRecTrips.map((trip) => (
+                        <li key={trip.id}>
+                          <Link
+                            href={`/trips/${trip.id}`}
+                            className={`text-sm hover:underline ${COLORS.TEXT.PRIMARY}`}
+                          >
+                            {trip.title || trip.id}
+                            <span className={`ml-1 ${COLORS.TEXT.MUTED}`}>
+                              ({Math.round((trip.similarity || 0) * 100)}%)
+                            </span>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">

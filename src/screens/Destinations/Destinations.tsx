@@ -1,18 +1,21 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Search, Filter, Star, MapPin, Globe, Calendar } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { useRouter } from "next/navigation";
 import { API_ENDPOINTS, getDestinationImageUrl } from "../../constants/api";
-import { COLORS, GRADIENTS } from "../../constants/colors";
+import { COLORS } from "../../constants/colors";
 import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
 import { ANIMATIONS } from "../../constants/animations";
 import ShimmerCard from "../../components/Animations/ShimmerCard";
 import { useDebounce } from "../../lib/useDebounce";
+import {
+  searchDestinationsSemantic,
+  type SemanticDestinationHit,
+} from "../../services/aiSemanticService";
 
 // Interface definitions
 export interface IDestination {
@@ -33,6 +36,10 @@ export interface IDestination {
   total_reviews?: number;
   region_name?: string;
   id_destination?: string;
+  /** You left a review on this destination */
+  _userReviewed?: boolean;
+  /** You have a trip linked to this destination */
+  _userTripDestination?: boolean;
 }
 
 interface ApiResponse {
@@ -45,22 +52,67 @@ interface AssessmentResponse {
   data: Array<{
     rating_star: number;
     comment?: string;
+    traveller_id?: string;
   }>;
   status?: number;
 }
 
+function destinationInteractionScore(d: IDestination): number {
+  return (d._userReviewed ? 2 : 0) + (d._userTripDestination ? 1 : 0);
+}
+
 export const Destinations: React.FC = () => {
   const { user } = useAuth();
-  const router = useRouter();
   const [destinations, setDestinations] = useState<IDestination[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filterCategory, setFilterCategory] = useState("all");
+  const [semanticLoading, setSemanticLoading] = useState(false);
+  const [semanticError, setSemanticError] = useState<string | null>(null);
+  const [semanticHits, setSemanticHits] = useState<SemanticDestinationHit[]>(
+    []
+  );
 
   useEffect(() => {
     fetchDestinations();
-  }, []);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!debouncedSearchTerm.trim()) {
+      setSemanticHits([]);
+      setSemanticError(null);
+      setSemanticLoading(false);
+      return;
+    }
+
+    let cancelled = false;
+    setSemanticLoading(true);
+    setSemanticError(null);
+
+    (async () => {
+      try {
+        const { results } = await searchDestinationsSemantic(
+          debouncedSearchTerm.trim(),
+          24
+        );
+        if (!cancelled) setSemanticHits(results);
+      } catch (e) {
+        if (!cancelled) {
+          setSemanticHits([]);
+          setSemanticError(
+            e instanceof Error ? e.message : "Không gọi được dịch vụ AI."
+          );
+        }
+      } finally {
+        if (!cancelled) setSemanticLoading(false);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearchTerm]);
 
   const fetchDestinations = async () => {
     try {
@@ -85,11 +137,41 @@ export const Destinations: React.FC = () => {
       const result: ApiResponse = await response.json();
       const fetchedDestinations = result.data || [];
 
+      const tripDestinationIds = new Set<string>();
+      if (user?.id) {
+        try {
+          const tripsRes = await fetch(
+            `${API_ENDPOINTS.USERS.BY_ID(String(user.id))}/trips`,
+            { credentials: "include" }
+          );
+          if (tripsRes.ok) {
+            const tripsJson = await tripsRes.json();
+            const tripsArr: Array<{ destination_id?: string }> =
+              Array.isArray(tripsJson)
+                ? tripsJson
+                : Array.isArray(tripsJson?.data)
+                  ? tripsJson.data
+                  : tripsJson?.data
+                    ? [tripsJson.data]
+                    : [];
+            tripsArr.forEach((t) => {
+              if (t?.destination_id)
+                tripDestinationIds.add(String(t.destination_id));
+            });
+          }
+        } catch {
+          /* ignore */
+        }
+      }
+
       // Fetch assessment stats for each destination
       const destinationsWithStats = await Promise.all(
         fetchedDestinations.map(async (dest) => {
           const destinationId = dest.id_destination || dest.id;
           if (!destinationId) return dest;
+
+          const uid = user?.id ? String(user.id) : null;
+          const fromTrip = tripDestinationIds.has(String(destinationId));
 
           try {
             const assessmentResponse = await fetch(
@@ -101,6 +183,13 @@ export const Destinations: React.FC = () => {
               const assessmentResult: AssessmentResponse = await assessmentResponse.json();
               const assessments = assessmentResult.data || [];
 
+              const userReviewed = Boolean(
+                uid &&
+                  assessments.some(
+                    (a) => String(a.traveller_id || "") === uid
+                  )
+              );
+
               if (assessments.length > 0) {
                 const totalRating = assessments.reduce(
                   (sum: number, a) => sum + (a.rating_star || 0),
@@ -111,14 +200,17 @@ export const Destinations: React.FC = () => {
                   ...dest,
                   average_rating: Math.round(averageRating * 10) / 10,
                   total_reviews: assessments.length,
-                };
-              } else {
-                return {
-                  ...dest,
-                  average_rating: 0,
-                  total_reviews: 0,
+                  _userReviewed: userReviewed,
+                  _userTripDestination: fromTrip,
                 };
               }
+              return {
+                ...dest,
+                average_rating: 0,
+                total_reviews: 0,
+                _userReviewed: userReviewed,
+                _userTripDestination: fromTrip,
+              };
             }
           } catch (err) {
             console.error(
@@ -131,6 +223,8 @@ export const Destinations: React.FC = () => {
             ...dest,
             average_rating: dest.average_rating || dest.rating || 0,
             total_reviews: dest.total_reviews || 0,
+            _userReviewed: false,
+            _userTripDestination: fromTrip,
           };
         })
       );
@@ -154,6 +248,85 @@ export const Destinations: React.FC = () => {
       filterCategory === "all" || dest.category === filterCategory;
     return matchesSearch && matchesCategory;
   });
+
+  const sortedFilteredDestinations = [...filteredDestinations].sort((a, b) => {
+    const diff = destinationInteractionScore(b) - destinationInteractionScore(a);
+    if (diff !== 0) return diff;
+    return (a.name || "").localeCompare(b.name || "", undefined, {
+      sensitivity: "base",
+    });
+  });
+
+  const preferredDestinationIds = useMemo(() => {
+    const s = new Set<string>();
+    for (const d of destinations) {
+      const id = String(d.id_destination || d.id || "");
+      if (!id) continue;
+      if (d._userReviewed || d._userTripDestination) s.add(id);
+    }
+    return s;
+  }, [destinations]);
+
+  const destinationById = useMemo(() => {
+    const m = new Map<string, IDestination>();
+    for (const d of destinations) {
+      const id = String(d.id_destination || d.id || "");
+      if (id) m.set(id, d);
+    }
+    return m;
+  }, [destinations]);
+
+  const semanticFiltered = semanticHits.filter((h) => {
+    if (filterCategory === "all") return true;
+    return (h.category || "") === filterCategory;
+  });
+
+  const hitToDestination = (
+    h: SemanticDestinationHit
+  ): IDestination & { _similarity?: number } => ({
+    id: h.id,
+    region_id: h.region_id || "",
+    name: h.name || "",
+    country: h.country || "",
+    description: h.description || "",
+    latitude: 0,
+    longitude: 0,
+    category: h.category || "",
+    best_season: "",
+    rating: 0,
+    images: null,
+    created_at: "",
+    updated_at: "",
+    average_rating: 0,
+    total_reviews: 0,
+    _similarity: h.similarity,
+  });
+
+  const mergeSemanticWithLoaded = (
+    hit: IDestination & { _similarity?: number }
+  ): IDestination & { _similarity?: number } => {
+    const id = String(hit.id_destination || hit.id || "");
+    const full = id ? destinationById.get(id) : undefined;
+    if (!full) return hit;
+    return {
+      ...full,
+      _similarity: hit._similarity,
+    };
+  };
+
+  const displayList: (IDestination & { _similarity?: number })[] =
+    debouncedSearchTerm.trim()
+      ? [...semanticFiltered.map(hitToDestination)]
+          .map(mergeSemanticWithLoaded)
+          .sort((a, b) => {
+            const idA = String(a.id_destination || a.id || "");
+            const idB = String(b.id_destination || b.id || "");
+            const pa = preferredDestinationIds.has(idA) ? 1 : 0;
+            const pb = preferredDestinationIds.has(idB) ? 1 : 0;
+            if (pb !== pa) return pb - pa;
+            return (b._similarity || 0) - (a._similarity || 0);
+          })
+      : sortedFilteredDestinations.map((d) => ({ ...d }));
 
   const categories = [
     ...new Set(destinations.map((d) => d.category).filter(Boolean)),
@@ -201,8 +374,8 @@ export const Destinations: React.FC = () => {
               <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${COLORS.TEXT.MUTED} w-5 h-5`} aria-hidden />
               <input
                 type="search"
-                aria-label="Search destinations by name, country, or region"
-                placeholder="Search destinations by name, country, or region..."
+                aria-label="Semantic search destinations"
+                placeholder="Describe places you want (semantic search)…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className={`w-full pl-10 pr-4 py-3 border ${COLORS.BORDER.DEFAULT} rounded-lg focus:outline-none focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
@@ -227,9 +400,24 @@ export const Destinations: React.FC = () => {
           </div>
         </div>
 
+        {semanticError && debouncedSearchTerm.trim() && (
+          <div
+            className={`mb-6 p-4 rounded-lg border border-amber-500/40 bg-amber-500/10 ${COLORS.TEXT.DEFAULT} text-sm`}
+            role="alert"
+          >
+            {semanticError}
+          </div>
+        )}
+
+        {debouncedSearchTerm.trim() && semanticLoading && (
+          <p className={`mb-4 text-sm ${COLORS.TEXT.MUTED}`}>
+            Searching with AI…
+          </p>
+        )}
+
         {/* Destinations Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredDestinations.map((dest, index) => {
+          {displayList.map((dest, index) => {
             const images = dest.images || [];
             const firstImageObj =
               Array.isArray(images) && images.length > 0 ? images[0] : null;
@@ -278,6 +466,23 @@ export const Destinations: React.FC = () => {
                       {dest.category}
                     </div>
                   )}
+
+                  {(dest._userReviewed || dest._userTripDestination) && (
+                    <div className="absolute bottom-3 right-3 bg-emerald-600/90 text-white text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded shadow">
+                      {dest._userReviewed && dest._userTripDestination
+                        ? "Reviewed · Trip"
+                        : dest._userReviewed
+                          ? "Your review"
+                          : "Your trip"}
+                    </div>
+                  )}
+
+                  {"_similarity" in dest &&
+                    typeof dest._similarity === "number" && (
+                      <div className="absolute bottom-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded text-xs text-white">
+                        AI {(dest._similarity * 100).toFixed(0)}%
+                      </div>
+                    )}
 
                   {/* Rating Badge */}
                   {(dest.average_rating || dest.rating) > 0 && (
@@ -331,7 +536,7 @@ export const Destinations: React.FC = () => {
         </div>
 
         {/* Empty State */}
-        {filteredDestinations.length === 0 && (
+        {displayList.length === 0 && (
           <div className="text-center py-16">
             <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden">
               <Image
@@ -348,11 +553,13 @@ export const Destinations: React.FC = () => {
               No destinations found
             </h3>
             <p className={`${COLORS.TEXT.MUTED} mb-6`}>
-              {debouncedSearchTerm || filterCategory !== "all"
+              {debouncedSearchTerm.trim() && semanticLoading
+                ? "Loading AI results…"
+                : debouncedSearchTerm || filterCategory !== "all"
                 ? "Try adjusting your search or filters to see more results."
                 : "There are no destinations available at the moment."}
             </p>
-            {(debouncedSearchTerm || filterCategory !== "all") && (
+            {(debouncedSearchTerm || filterCategory !== "all") && !semanticLoading && (
               <button
                 type="button"
                 onClick={() => {
