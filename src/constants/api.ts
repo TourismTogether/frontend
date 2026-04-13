@@ -3,7 +3,24 @@
  * Centralized API endpoints configuration
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
+const API_BASE_URL = (
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+).replace(/\s+/g, "");
+
+/** Python FastAPI semantic search + recommendations (ai-service) */
+export const AI_SERVICE_BASE_URL = (
+  process.env.NEXT_PUBLIC_AI_SERVICE_URL || "http://127.0.0.1:8080"
+).replace(/\s+/g, "").replace(/\/$/, "");
+
+export const AI_SERVICE = {
+  HEALTH: `${AI_SERVICE_BASE_URL}/health`,
+  SEARCH_DESTINATIONS: `${AI_SERVICE_BASE_URL}/search/destinations`,
+  SEARCH_TRIPS: `${AI_SERVICE_BASE_URL}/search/trips`,
+  SEARCH_ROUTES: `${AI_SERVICE_BASE_URL}/search/routes`,
+  RECOMMEND_DESTINATIONS: `${AI_SERVICE_BASE_URL}/recommend/destinations`,
+  RECOMMEND_TRIPS: `${AI_SERVICE_BASE_URL}/recommend/trips`,
+  RECOMMEND_ROUTES: `${AI_SERVICE_BASE_URL}/recommend/routes`,
+} as const;
 
 export const API_ENDPOINTS = {
   // Auth

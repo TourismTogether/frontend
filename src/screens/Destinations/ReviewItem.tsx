@@ -5,6 +5,7 @@ import { useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { COLORS, GRADIENTS } from "@/constants/colors";
 import CreateReviewModal from "./CreateReviewModal";
+import { API_ENDPOINTS } from "@/constants/api";
 
 interface Review {
   traveller_id: string;
@@ -25,8 +26,6 @@ interface Props {
   destinationId: string;
   onUpdated: () => void;
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export default function ReviewItem({
   review,
@@ -66,11 +65,12 @@ export default function ReviewItem({
 
     setDeleting(true);
     try {
-      const res = await fetch(`${API_URL}/api/assess-destination`, {
+      const res = await fetch(API_ENDPOINTS.REVIEWS.DELETE, {
         method: "DELETE",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify({
           traveller_id: review.traveller_id,
           destination_id: destinationId,

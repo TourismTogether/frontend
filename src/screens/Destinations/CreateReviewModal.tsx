@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { X, Star, Send, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "@/lib/toast";
+import { API_ENDPOINTS } from "@/constants/api";
 
 interface Review {
   traveller_id: string;
@@ -21,8 +22,6 @@ interface Props {
   mode?: "create" | "edit";
   initialData?: Review;
 }
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 const ratingLabels: Record<number, string> = {
   1: "Poor",
@@ -88,11 +87,12 @@ export default function CreateReviewModal({
     try {
       const method = mode === "create" ? "POST" : "PATCH";
 
-      const res = await fetch(`${API_URL}/api/assess-destination`, {
+      const res = await fetch(API_ENDPOINTS.REVIEWS.CREATE, {
         method,
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: "include",
         body: JSON.stringify(body),
       });
 

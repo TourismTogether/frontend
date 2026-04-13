@@ -67,7 +67,7 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
               htmlFor="login-email"
               className={`block ${COLORS.AUTH.TEXT_LABEL} text-sm font-semibold`}
             >
-              Email
+              Email or username
             </label>
             <div className="relative">
               <Mail
@@ -76,12 +76,12 @@ export const LoginForm: React.FC<{ onSwitch: () => void }> = ({ onSwitch }) => {
               />
               <Input
                 id="login-email"
-                type="email"
-                autoComplete="email"
+                type="text"
+                autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className={`pl-10 h-12 text-base ${COLORS.AUTH.INPUT_BG} ${COLORS.AUTH.BORDER_INPUT} ${COLORS.AUTH.INPUT_TEXT} ${COLORS.AUTH.INPUT_PLACEHOLDER} ${COLORS.AUTH.BORDER_FOCUS} ${COLORS.AUTH.INPUT_FOCUS_RING}`}
-                placeholder="e.g. you@example.com"
+                placeholder="you@example.com or username"
                 required
                 aria-describedby={error ? "login-error" : undefined}
               />
