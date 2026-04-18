@@ -3,9 +3,45 @@
  * Centralized API endpoints configuration
  */
 
-const API_BASE_URL = (
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
-).replace(/\s+/g, "");
+/**
+ * In development, if the app is opened via a LAN host (e.g. 192.168.56.1) but
+ * NEXT_PUBLIC_API_URL still points at localhost, cookies won't be sent cross-host
+ * and login appears to "fail". Align API host to the page host when using default local API.
+ */
+function getApiBaseUrl(): string {
+  const fromEnv = (
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8081"
+  )
+    .replace(/\s+/g, "")
+    .replace(/\/$/, "");
+
+  if (typeof window === "undefined") {
+    return fromEnv;
+  }
+
+  if (process.env.NODE_ENV !== "development") {
+    return fromEnv;
+  }
+
+  try {
+    const pageHost = window.location.hostname;
+    if (pageHost === "localhost" || pageHost === "127.0.0.1") {
+      return fromEnv;
+    }
+
+    const u = new URL(fromEnv);
+    if (u.hostname !== "localhost" && u.hostname !== "127.0.0.1") {
+      return fromEnv;
+    }
+
+    u.hostname = pageHost;
+    return u.origin;
+  } catch {
+    return fromEnv;
+  }
+}
+
+const API_BASE_URL = getApiBaseUrl();
 
 /** Python FastAPI semantic search + recommendations (ai-service) */
 export const AI_SERVICE_BASE_URL = (

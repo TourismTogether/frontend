@@ -168,14 +168,14 @@ const StatCard: React.FC<StatCardProps> = ({
           <Icon className="w-6 h-6 text-white" />
         </PulseGlow>
         {imageUrl && (
-          <div className="w-16 h-16 rounded-lg overflow-hidden opacity-20">
+          <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-lg opacity-20">
             <Image
               src={imageUrl}
               alt={label}
-              width={64}
-              height={64}
+              fill
               className="object-cover"
               unoptimized
+              sizes="64px"
             />
           </div>
         )}
@@ -266,10 +266,10 @@ export const Dashboard: React.FC = () => {
     (async () => {
       try {
         const [d, t] = await Promise.all([
-          recommendDestinationsForUser(user.id, 5).catch(() => ({
+          recommendDestinationsForUser(user.id, 6).catch(() => ({
             results: [] as SemanticDestinationHit[],
           })),
-          recommendTripsForUser(user.id, 5).catch(() => ({
+          recommendTripsForUser(user.id, 6).catch(() => ({
             results: [] as SemanticTripHit[],
           })),
         ]);
@@ -625,73 +625,87 @@ export const Dashboard: React.FC = () => {
           aiRecDestinations.length > 0 ||
           aiRecTrips.length > 0) && (
           <div className="mb-10">
-            <div className="flex items-center gap-2 mb-4">
+            <div className="flex items-center gap-2 mb-6">
               <Sparkles className="w-6 h-6 text-amber-500" />
-              <h2
-                className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}
-              >
+              <h2 className={`text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
                 Suggested for you
               </h2>
             </div>
+
             {aiRecLoading ? (
-              <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
-                Loading recommendations…
-              </p>
+              <div className="flex items-center justify-center py-12">
+                <div className="animate-pulse flex flex-col items-center gap-3">
+                  <div className="w-8 h-8 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                  <p className={`text-sm font-medium ${COLORS.TEXT.MUTED}`}>
+                    Đang tìm kiếm gợi ý tuyệt vời nhất...
+                  </p>
+                </div>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-8">
+                {/* DESTINATIONS SECTION */}
                 {aiRecDestinations.length > 0 && (
-                  <div
-                    className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl p-4`}
-                  >
-                    <h3
-                      className={`font-semibold ${COLORS.TEXT.DEFAULT} mb-3 flex items-center gap-2`}
-                    >
-                      <MapPin className="w-4 h-4" />
-                      Destinations
+                  <div>
+                    <h3 className={`font-semibold ${COLORS.TEXT.DEFAULT} mb-4 flex items-center gap-2 text-lg`}>
+                      <MapPin className="w-5 h-5 text-rose-500" />
+                      Điểm đến dành cho bạn
                     </h3>
-                    <ul className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {aiRecDestinations.map((d) => (
-                        <li key={d.id}>
-                          <Link
-                            href={`/destinations/${d.id}`}
-                            className={`text-sm hover:underline ${COLORS.TEXT.PRIMARY}`}
-                          >
-                            {d.name || d.id}
-                            {d.country ? ` · ${d.country}` : ""}
-                            <span className={`ml-1 ${COLORS.TEXT.MUTED}`}>
-                              ({Math.round((d.similarity || 0) * 100)}%)
-                            </span>
-                          </Link>
-                        </li>
+                        <Link
+                          key={d.id}
+                          href={`/destinations/${d.id}`}
+                          className={`group flex items-center gap-4 p-4 rounded-xl border ${COLORS.BORDER.DEFAULT} ${COLORS.BACKGROUND.CARD} transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-rose-300`}
+                        >
+                          <div className="w-12 h-12 rounded-full bg-rose-50 flex items-center justify-center flex-shrink-0 group-hover:bg-rose-100 transition-colors">
+                            <MapPin className="w-6 h-6 text-rose-500" />
+                          </div>
+                          <div className="flex-1 overflow-hidden">
+                            <h4 className={`font-medium ${COLORS.TEXT.DEFAULT} truncate group-hover:text-rose-600 transition-colors`}>
+                              {d.name || d.id}
+                            </h4>
+                            {d.country && (
+                              <p className={`text-xs ${COLORS.TEXT.MUTED} truncate mt-0.5`}>
+                                {d.country}
+                              </p>
+                            )}
+                          </div>
+                          <ChevronRight className={`w-5 h-5 ${COLORS.TEXT.MUTED} group-hover:text-rose-500 group-hover:translate-x-1 transition-all flex-shrink-0`} />
+                        </Link>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
+
+                {/* TRIPS SECTION */}
                 {aiRecTrips.length > 0 && (
-                  <div
-                    className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl p-4`}
-                  >
-                    <h3
-                      className={`font-semibold ${COLORS.TEXT.DEFAULT} mb-3 flex items-center gap-2`}
-                    >
-                      <Plane className="w-4 h-4" />
-                      Trips
+                  <div>
+                    <h3 className={`font-semibold ${COLORS.TEXT.DEFAULT} mb-4 flex items-center gap-2 text-lg`}>
+                      <Plane className="w-5 h-5 text-blue-500" />
+                      Chuyến đi phù hợp
                     </h3>
-                    <ul className="space-y-2">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {aiRecTrips.map((trip) => (
-                        <li key={trip.id}>
-                          <Link
-                            href={`/trips/${trip.id}`}
-                            className={`text-sm hover:underline ${COLORS.TEXT.PRIMARY}`}
-                          >
-                            {trip.title || trip.id}
-                            <span className={`ml-1 ${COLORS.TEXT.MUTED}`}>
-                              ({Math.round((trip.similarity || 0) * 100)}%)
-                            </span>
-                          </Link>
-                        </li>
+                        <Link
+                          key={trip.id}
+                          href={`/trips/${trip.id}`}
+                          className={`group flex items-center gap-4 p-4 rounded-xl border ${COLORS.BORDER.DEFAULT} ${COLORS.BACKGROUND.CARD} transition-all duration-300 hover:shadow-md hover:-translate-y-1 hover:border-blue-300`}
+                        >
+                          <div className="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center flex-shrink-0 group-hover:bg-blue-100 transition-colors">
+                            <Plane className="w-6 h-6 text-blue-500" />
+                          </div>
+                          <div className="flex-1 overflow-hidden">
+                            <h4 className={`font-medium ${COLORS.TEXT.DEFAULT} truncate group-hover:text-blue-600 transition-colors`}>
+                              {trip.title || trip.id}
+                            </h4>
+                            <p className={`text-xs ${COLORS.TEXT.MUTED} truncate mt-0.5`}>
+                              Xem chi tiết lịch trình
+                            </p>
+                          </div>
+                          <ChevronRight className={`w-5 h-5 ${COLORS.TEXT.MUTED} group-hover:text-blue-500 group-hover:translate-x-1 transition-all flex-shrink-0`} />
+                        </Link>
                       ))}
-                    </ul>
+                    </div>
                   </div>
                 )}
               </div>
