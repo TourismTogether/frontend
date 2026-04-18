@@ -108,6 +108,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     try {
       const res = await fetch(API_ENDPOINTS.AUTH.ME, {
         credentials: "include",
+        cache: "no-store",
       });
 
       if (!res.ok) {
