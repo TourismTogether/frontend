@@ -1,22 +1,62 @@
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { Search, Filter, Star, MapPin, Globe, Calendar } from "lucide-react";
+import { Search, Filter, Star, MapPin, Globe, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { API_ENDPOINTS, getDestinationImageUrl } from "../../constants/api";
 import { COLORS } from "../../constants/colors";
-import Loading from "../../components/Loading/Loading";
 import Hero from "../../components/Hero/Hero";
 import { ANIMATIONS } from "../../constants/animations";
 import ShimmerCard from "../../components/Animations/ShimmerCard";
 import { useDebounce } from "../../lib/useDebounce";
+import { supabase } from "@/lib/supabase";
 import {
   searchDestinationsSemantic,
   recommendDestinationsForUser,
   type SemanticDestinationHit,
 } from "../../services/aiSemanticService";
+
+/**
+ * Supabase PostgREST table for destinations. Local migration uses `destination`;
+ * many deployments only sync the backend DB (`destinations`) or have no table on Supabase at all.
+ * Set NEXT_PUBLIC_SUPABASE_DESTINATIONS_TABLE if your project exposes a different name.
+ * Set NEXT_PUBLIC_DESTINATIONS_USE_API=true to skip Supabase and use the backend API only.
+ */
+const SUPABASE_DESTINATIONS_TABLE =
+  process.env.NEXT_PUBLIC_SUPABASE_DESTINATIONS_TABLE?.trim() || "destination";
+const DESTINATIONS_USE_API_ONLY =
+  process.env.NEXT_PUBLIC_DESTINATIONS_USE_API === "true";
+
+/** Client-side page slice (used when Supabase is unavailable and data comes from GET /destinations). */
+function filterSortSliceDestinations(
+  all: IDestination[],
+  opts: {
+    filterCategory: string;
+    recommendExcludeIds: string[];
+    currentPage: number;
+    pageSize: number;
+  }
+): { pageRows: IDestination[]; total: number } {
+  let list = all;
+  if (opts.filterCategory !== "all") {
+    list = list.filter((d) => d.category === opts.filterCategory);
+  }
+  if (opts.recommendExcludeIds.length > 0) {
+    const ex = new Set(opts.recommendExcludeIds.map(String));
+    list = list.filter(
+      (d) => !ex.has(String(d.id ?? "")) && !ex.has(String(d.id_destination ?? ""))
+    );
+  }
+  list = [...list].sort((a, b) =>
+    (a.name || "").localeCompare(b.name || "", undefined, { sensitivity: "base" })
+  );
+  const total = list.length;
+  const from = (opts.currentPage - 1) * opts.pageSize;
+  const pageRows = list.slice(from, from + opts.pageSize);
+  return { pageRows, total };
+}
 
 // Interface definitions
 export interface IDestination {
@@ -45,7 +85,7 @@ export interface IDestination {
   _fromRecommend?: boolean;
 }
 
-interface ApiResponse {
+interface ApiListResponse {
   data: IDestination[];
   status?: number;
   message?: string;
@@ -58,6 +98,61 @@ interface AssessmentResponse {
     traveller_id?: string;
   }>;
   status?: number;
+}
+
+/** Columns available on public.destination (see frontend/supabase/migrations/schema.sql). */
+const DESTINATION_SELECT =
+  "uuid, id_destination, id_region, name, country, region_name, latitude, longitude, category, best_season, average_rating, total_reviews, images, created_at, updated_at";
+
+type DestinationRow = {
+  uuid: string;
+  id_destination: string;
+  id_region: string | null;
+  name: string;
+  country: string | null;
+  region_name: string | null;
+  latitude: string | number | null;
+  longitude: string | number | null;
+  category: string | null;
+  best_season: string | null;
+  average_rating: string | number | null;
+  total_reviews: number | null;
+  images: IDestination["images"];
+  created_at: string;
+  updated_at: string;
+};
+
+function rowToDestination(row: DestinationRow): IDestination {
+  return {
+    id: row.uuid,
+    id_destination: row.id_destination,
+    region_id: row.id_region ?? "",
+    name: row.name,
+    country: row.country ?? "",
+    description: "",
+    latitude: Number(row.latitude ?? 0),
+    longitude: Number(row.longitude ?? 0),
+    category: row.category ?? "",
+    best_season: row.best_season ?? "",
+    rating: Number(row.average_rating ?? 0),
+    images: row.images ?? null,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    average_rating: Number(row.average_rating ?? 0),
+    total_reviews: Number(row.total_reviews ?? 0),
+    region_name: row.region_name ?? undefined,
+  };
+}
+
+function buildDestinationLookup(rows: IDestination[]): Map<string, IDestination> {
+  const m = new Map<string, IDestination>();
+  for (const d of rows) {
+    const a = String(d.id_destination || "");
+    const b = String(d.id || "");
+    if (a) m.set(a, d);
+    if (b) m.set(b, d);
+  }
+  return m;
 }
 
 function destinationInteractionScore(d: IDestination): number {
@@ -122,26 +217,169 @@ function hitToDestination(
   };
 }
 
+const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+
+/** Build PostgREST `in.(...)` / `not.in.(...)` list for uuid columns. */
+function uuidInList(uuids: string[]): string {
+  return `(${uuids.join(",")})`;
+}
+
+function visiblePageIndices(totalPages: number, current: number): number[] {
+  if (totalPages <= 7) {
+    return Array.from({ length: totalPages }, (_, i) => i + 1);
+  }
+  const pages = new Set<number>([1, totalPages, current, current - 1, current + 1]);
+  const sorted = [...pages].filter((p) => p >= 1 && p <= totalPages).sort((a, b) => a - b);
+  const out: number[] = [];
+  for (let i = 0; i < sorted.length; i++) {
+    if (i > 0 && sorted[i] - sorted[i - 1] > 1) out.push(-1);
+    out.push(sorted[i]);
+  }
+  return out;
+}
+
+function DestinationGridSkeleton({ count }: { count: number }) {
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => (
+        <ShimmerCard
+          key={`sk-${i}`}
+          className="h-full overflow-hidden"
+          shimmer
+        >
+          <div className="h-48 bg-slate-200/40 dark:bg-slate-700/40 animate-pulse" />
+          <div className="p-4 space-y-3">
+            <div className="h-5 bg-slate-200/50 dark:bg-slate-700/50 rounded animate-pulse w-3/4" />
+            <div className="h-4 bg-slate-200/40 dark:bg-slate-700/40 rounded animate-pulse w-1/2" />
+            <div className="h-4 bg-slate-200/40 dark:bg-slate-700/40 rounded animate-pulse w-full" />
+          </div>
+        </ShimmerCard>
+      ))}
+    </>
+  );
+}
+
 export const Destinations: React.FC = () => {
   const { user } = useAuth();
   const [destinations, setDestinations] = useState<IDestination[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [totalCount, setTotalCount] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(20);
+  const [pageLoading, setPageLoading] = useState(true);
+  const [categories, setCategories] = useState<string[]>([]);
+
   const [searchTerm, setSearchTerm] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, 300);
   const [filterCategory, setFilterCategory] = useState("all");
   const [semanticLoading, setSemanticLoading] = useState(false);
   const [semanticError, setSemanticError] = useState<string | null>(null);
-  const [semanticHits, setSemanticHits] = useState<SemanticDestinationHit[]>(
-    []
-  );
-  const [recommendHits, setRecommendHits] = useState<SemanticDestinationHit[]>(
-    []
-  );
+  const [semanticHits, setSemanticHits] = useState<SemanticDestinationHit[]>([]);
+  const [semanticDetailRows, setSemanticDetailRows] = useState<IDestination[]>([]);
+  const [recommendHits, setRecommendHits] = useState<SemanticDestinationHit[]>([]);
+  const [recommendRowsFull, setRecommendRowsFull] = useState<IDestination[]>([]);
   const [recommendLoading, setRecommendLoading] = useState(false);
 
+  const apiDestinationsCacheRef = useRef<IDestination[] | null>(null);
+  const apiFetchPromiseRef = useRef<Promise<IDestination[]> | null>(null);
+
+  const fetchAllDestinationsFromApi = useCallback(async (): Promise<IDestination[]> => {
+    if (apiDestinationsCacheRef.current) {
+      return apiDestinationsCacheRef.current;
+    }
+    if (apiFetchPromiseRef.current) {
+      return apiFetchPromiseRef.current;
+    }
+    const p = (async () => {
+      try {
+        const response = await fetch(API_ENDPOINTS.DESTINATIONS.BASE, {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+        });
+        if (!response.ok) {
+          const errBody = await response.json().catch(() => ({}));
+          throw new Error(
+            (errBody as { message?: string }).message ||
+              response.statusText ||
+              "Failed to fetch destinations"
+          );
+        }
+        const result: ApiListResponse = await response.json();
+        const list = result.data || [];
+        apiDestinationsCacheRef.current = list;
+        return list;
+      } finally {
+        apiFetchPromiseRef.current = null;
+      }
+    })();
+    apiFetchPromiseRef.current = p;
+    return p;
+  }, []);
+
+  const recommendExcludeIds = useMemo(
+    () =>
+      user?.id
+        ? [...new Set(recommendHits.map((h) => h.id).filter(Boolean))]
+        : [],
+    [user?.id, recommendHits]
+  );
+
+  const totalPages = useMemo(() => {
+    if (totalCount === null) return 1;
+    return Math.max(1, Math.ceil(totalCount / pageSize));
+  }, [totalCount, pageSize]);
+
   useEffect(() => {
-    fetchDestinations();
-  }, [user?.id]);
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const applyCategories = (rows: { category?: string | null }[]) => {
+        const cats = [
+          ...new Set(
+            rows.map((r) => r.category).filter(Boolean)
+          ),
+        ] as string[];
+        setCategories(cats.sort((a, b) => a.localeCompare(b)));
+      };
+
+      if (DESTINATIONS_USE_API_ONLY) {
+        try {
+          const all = await fetchAllDestinationsFromApi();
+          if (!cancelled) applyCategories(all);
+        } catch {
+          if (!cancelled) setCategories([]);
+        }
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from(SUPABASE_DESTINATIONS_TABLE)
+        .select("category");
+      if (!cancelled && !error && data?.length) {
+        applyCategories(data as { category: string | null }[]);
+        return;
+      }
+
+      try {
+        const all = await fetchAllDestinationsFromApi();
+        if (!cancelled) applyCategories(all);
+      } catch {
+        if (!cancelled) setCategories([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [fetchAllDestinationsFromApi]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filterCategory, pageSize]);
 
   useEffect(() => {
     if (!debouncedSearchTerm.trim()) {
@@ -180,6 +418,42 @@ export const Destinations: React.FC = () => {
   }, [debouncedSearchTerm]);
 
   useEffect(() => {
+    if (!debouncedSearchTerm.trim() || !semanticHits.length) {
+      setSemanticDetailRows([]);
+      return;
+    }
+    const ids = [...new Set(semanticHits.map((h) => h.id).filter(Boolean))];
+    let cancelled = false;
+    (async () => {
+      if (!DESTINATIONS_USE_API_ONLY) {
+        const { data, error } = await supabase
+          .from(SUPABASE_DESTINATIONS_TABLE)
+          .select(DESTINATION_SELECT)
+          .in("uuid", ids);
+        if (!cancelled && !error && data?.length) {
+          setSemanticDetailRows((data || []).map((r) => rowToDestination(r as DestinationRow)));
+          return;
+        }
+      }
+      try {
+        const all = await fetchAllDestinationsFromApi();
+        if (cancelled) return;
+        const idSet = new Set(ids.map(String));
+        const matched = all.filter(
+          (d) =>
+            idSet.has(String(d.id ?? "")) || idSet.has(String(d.id_destination ?? ""))
+        );
+        setSemanticDetailRows(matched);
+      } catch {
+        if (!cancelled) setSemanticDetailRows([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [debouncedSearchTerm, semanticHits, fetchAllDestinationsFromApi]);
+
+  useEffect(() => {
     if (debouncedSearchTerm.trim()) {
       return;
     }
@@ -193,7 +467,7 @@ export const Destinations: React.FC = () => {
     setRecommendLoading(true);
     (async () => {
       try {
-        const { results } = await recommendDestinationsForUser(user.id, 16);
+        const { results } = await recommendDestinationsForUser(user.id, 8);
         if (!cancelled) setRecommendHits(results || []);
       } catch {
         if (!cancelled) setRecommendHits([]);
@@ -207,29 +481,44 @@ export const Destinations: React.FC = () => {
     };
   }, [user?.id, debouncedSearchTerm]);
 
-  const fetchDestinations = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch(API_ENDPOINTS.DESTINATIONS.BASE, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        credentials: "include",
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        console.error(
-          "API fetch error:",
-          errorData.message || response.statusText
-        );
-        throw new Error(errorData.message || "Failed to fetch destinations");
+  useEffect(() => {
+    if (!user?.id || !recommendHits.length) {
+      setRecommendRowsFull([]);
+      return;
+    }
+    const ids = [...new Set(recommendHits.map((h) => h.id).filter(Boolean))];
+    let cancelled = false;
+    (async () => {
+      if (!DESTINATIONS_USE_API_ONLY) {
+        const { data, error } = await supabase
+          .from(SUPABASE_DESTINATIONS_TABLE)
+          .select(DESTINATION_SELECT)
+          .in("uuid", ids);
+        if (!cancelled && !error && data?.length) {
+          setRecommendRowsFull((data || []).map((r) => rowToDestination(r as DestinationRow)));
+          return;
+        }
       }
+      try {
+        const all = await fetchAllDestinationsFromApi();
+        if (cancelled) return;
+        const idSet = new Set(ids.map(String));
+        const matched = all.filter(
+          (d) =>
+            idSet.has(String(d.id ?? "")) || idSet.has(String(d.id_destination ?? ""))
+        );
+        setRecommendRowsFull(matched);
+      } catch {
+        if (!cancelled) setRecommendRowsFull([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, recommendHits, fetchAllDestinationsFromApi]);
 
-      const result: ApiResponse = await response.json();
-      const fetchedDestinations = result.data || [];
-
+  const enrichDestinationsWithReviews = useCallback(
+    async (rows: IDestination[]): Promise<IDestination[]> => {
       const tripDestinationIds = new Set<string>();
       if (user?.id) {
         try {
@@ -239,17 +528,15 @@ export const Destinations: React.FC = () => {
           );
           if (tripsRes.ok) {
             const tripsJson = await tripsRes.json();
-            const tripsArr: Array<{ destination_id?: string }> =
-              Array.isArray(tripsJson)
-                ? tripsJson
-                : Array.isArray(tripsJson?.data)
-                  ? tripsJson.data
-                  : tripsJson?.data
-                    ? [tripsJson.data]
-                    : [];
+            const tripsArr: Array<{ destination_id?: string }> = Array.isArray(tripsJson)
+              ? tripsJson
+              : Array.isArray(tripsJson?.data)
+                ? tripsJson.data
+                : tripsJson?.data
+                  ? [tripsJson.data]
+                  : [];
             tripsArr.forEach((t) => {
-              if (t?.destination_id)
-                tripDestinationIds.add(String(t.destination_id));
+              if (t?.destination_id) tripDestinationIds.add(String(t.destination_id));
             });
           }
         } catch {
@@ -257,13 +544,11 @@ export const Destinations: React.FC = () => {
         }
       }
 
-      // Fetch assessment stats for each destination
-      const destinationsWithStats = await Promise.all(
-        fetchedDestinations.map(async (dest) => {
+      const uid = user?.id ? String(user.id) : null;
+      return Promise.all(
+        rows.map(async (dest) => {
           const destinationId = dest.id_destination || dest.id;
           if (!destinationId) return dest;
-
-          const uid = user?.id ? String(user.id) : null;
           const fromTrip = tripDestinationIds.has(String(destinationId));
 
           try {
@@ -277,10 +562,7 @@ export const Destinations: React.FC = () => {
               const assessments = assessmentResult.data || [];
 
               const userReviewed = Boolean(
-                uid &&
-                  assessments.some(
-                    (a) => String(a.traveller_id || "") === uid
-                  )
+                uid && assessments.some((a) => String(a.traveller_id || "") === uid)
               );
 
               if (assessments.length > 0) {
@@ -321,42 +603,107 @@ export const Destinations: React.FC = () => {
           };
         })
       );
+    },
+    [user?.id]
+  );
 
-      setDestinations(destinationsWithStats);
-    } catch (error) {
-      console.error("Error fetching destinations:", error);
+  const fetchDestinationsPage = useCallback(async () => {
+    if (debouncedSearchTerm.trim()) {
       setDestinations([]);
-    } finally {
-      setLoading(false);
+      setPageLoading(false);
+      return;
     }
-  };
 
-  const filteredDestinations = destinations.filter((dest) => {
-    const matchesSearch =
-      dest.name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      dest.country?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
-      dest.region_name?.toLowerCase().includes(debouncedSearchTerm.toLowerCase());
+    setPageLoading(true);
+    try {
+      let baseRows: IDestination[] = [];
+      let countOut = 0;
 
-    const matchesCategory =
-      filterCategory === "all" || dest.category === filterCategory;
-    return matchesSearch && matchesCategory;
-  });
+      if (DESTINATIONS_USE_API_ONLY) {
+        const all = await fetchAllDestinationsFromApi();
+        const { pageRows, total } = filterSortSliceDestinations(all, {
+          filterCategory,
+          recommendExcludeIds,
+          currentPage,
+          pageSize,
+        });
+        baseRows = pageRows;
+        countOut = total;
+      } else {
+        const from = (currentPage - 1) * pageSize;
+        const to = from + pageSize - 1;
 
-  const sortedFilteredDestinations = [...filteredDestinations].sort((a, b) => {
-    const diff = destinationInteractionScore(b) - destinationInteractionScore(a);
-    if (diff !== 0) return diff;
-    return (a.name || "").localeCompare(b.name || "", undefined, {
-      sensitivity: "base",
-    });
-  });
+        let q = supabase
+          .from(SUPABASE_DESTINATIONS_TABLE)
+          .select(DESTINATION_SELECT, { count: "exact" })
+          .order("name", { ascending: true });
+
+        if (filterCategory !== "all") {
+          q = q.eq("category", filterCategory);
+        }
+        if (recommendExcludeIds.length > 0) {
+          q = q.not("uuid", "in", uuidInList(recommendExcludeIds));
+        }
+
+        const { data, error, count } = await q.range(from, to);
+
+        if (!error && data) {
+          baseRows = (data || []).map((r) => rowToDestination(r as DestinationRow));
+          countOut = count ?? baseRows.length;
+        } else {
+          if (error) {
+            const msg = error.message || "";
+            console.warn("API destination page error:", msg);
+          }
+          const all = await fetchAllDestinationsFromApi();
+          const { pageRows, total } = filterSortSliceDestinations(all, {
+            filterCategory,
+            recommendExcludeIds,
+            currentPage,
+            pageSize,
+          });
+          baseRows = pageRows;
+          countOut = total;
+        }
+      }
+
+      const enriched = await enrichDestinationsWithReviews(baseRows);
+      setDestinations(enriched);
+      setTotalCount(countOut);
+    } catch (e) {
+      console.error("Error fetching destinations page:", e);
+      setDestinations([]);
+      setTotalCount(0);
+    } finally {
+      setPageLoading(false);
+    }
+  }, [
+    currentPage,
+    pageSize,
+    filterCategory,
+    debouncedSearchTerm,
+    recommendExcludeIds,
+    enrichDestinationsWithReviews,
+    fetchAllDestinationsFromApi,
+  ]);
+
+  useEffect(() => {
+    void fetchDestinationsPage();
+  }, [fetchDestinationsPage]);
 
   const destinationById = useMemo(() => {
-    const m = new Map<string, IDestination>();
-    for (const d of destinations) {
-      const id = String(d.id_destination || d.id || "");
-      if (id) m.set(id, d);
-    }
-    return m;
+    const merged = [...destinations, ...semanticDetailRows, ...recommendRowsFull];
+    return buildDestinationLookup(merged);
+  }, [destinations, semanticDetailRows, recommendRowsFull]);
+
+  const sortedPageDestinations = useMemo(() => {
+    return [...destinations].sort((a, b) => {
+      const diff = destinationInteractionScore(b) - destinationInteractionScore(a);
+      if (diff !== 0) return diff;
+      return (a.name || "").localeCompare(b.name || "", undefined, {
+        sensitivity: "base",
+      });
+    });
   }, [destinations]);
 
   const semanticFiltered = semanticHits.filter((h) => {
@@ -394,24 +741,19 @@ export const Destinations: React.FC = () => {
         });
     }
 
-    const base = sortedFilteredDestinations.map((d) => ({ ...d }));
+    const base = sortedPageDestinations.map((d) => ({ ...d }));
 
     if (user?.id && recommendHits.length > 0) {
       const rf = recommendHits.filter(
-        (h) =>
-          filterCategory === "all" || (h.category || "") === filterCategory
+        (h) => filterCategory === "all" || (h.category || "") === filterCategory
       );
       const recRows = rf.map((h) => {
         const partial = hitToDestination(h);
         const { _similarity: _sim, ...rest } = partial;
         return mergeLoaded({ ...rest, _fromRecommend: true });
       });
-      const seen = new Set(
-        recRows.map((d) => String(d.id_destination || d.id))
-      );
-      const rest = base.filter(
-        (d) => !seen.has(String(d.id_destination || d.id))
-      );
+      const seen = new Set(recRows.map((d) => String(d.id_destination || d.id)));
+      const rest = base.filter((d) => !seen.has(String(d.id_destination || d.id)));
       return [...recRows, ...rest];
     }
 
@@ -419,28 +761,31 @@ export const Destinations: React.FC = () => {
   }, [
     debouncedSearchTerm,
     semanticFiltered,
-    sortedFilteredDestinations,
+    sortedPageDestinations,
     destinationById,
     filterCategory,
     user?.id,
     recommendHits,
   ]);
 
-  const categories = [
-    ...new Set(destinations.map((d) => d.category).filter(Boolean)),
-  ];
+  const browseMode = !debouncedSearchTerm.trim();
+  const pageIndices = useMemo(
+    () => visiblePageIndices(totalPages, currentPage),
+    [totalPages, currentPage]
+  );
 
-  if (loading) {
-    return <Loading type="destinations" />;
-  }
+  const skeletonCount = Math.min(pageSize, 12);
 
   return (
     <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
-      {/* Hero Section */}
       <Hero
         title="Explore Destinations 🌍"
         description={`Discover amazing places around the world`}
-        subtitle={`${destinations.length} destinations available`}
+        subtitle={
+          totalCount !== null
+            ? `${totalCount} destinations available`
+            : "Loading destination count…"
+        }
         proverb="Seeing is believing"
         imageKeyword="travel destinations"
         height="large"
@@ -448,28 +793,34 @@ export const Destinations: React.FC = () => {
           {
             icon: <Globe className="w-6 h-6" />,
             title: "Global Exploration",
-            description: "Browse destinations from around the world. Find your perfect travel spot with detailed information.",
+            description:
+              "Browse destinations from around the world. Find your perfect travel spot with detailed information.",
           },
           {
             icon: <Star className="w-6 h-6" />,
             title: "Ratings & Reviews",
-            description: "See what other travelers think. Read authentic reviews and ratings to make informed decisions.",
+            description:
+              "See what other travelers think. Read authentic reviews and ratings to make informed decisions.",
           },
           {
             icon: <Calendar className="w-6 h-6" />,
             title: "Best Seasons",
-            description: "Know the best time to visit. Get seasonal information to plan your trip at the perfect time.",
+            description:
+              "Know the best time to visit. Get seasonal information to plan your trip at the perfect time.",
           },
         ]}
       />
 
       <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
-
-        {/* Search & Filter */}
-        <div className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 mb-8`}>
+        <div
+          className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 mb-8`}
+        >
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
-              <Search className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${COLORS.TEXT.MUTED} w-5 h-5`} aria-hidden />
+              <Search
+                className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${COLORS.TEXT.MUTED} w-5 h-5`}
+                aria-hidden
+              />
               <input
                 type="search"
                 aria-label="Semantic search destinations"
@@ -508,18 +859,14 @@ export const Destinations: React.FC = () => {
         )}
 
         {debouncedSearchTerm.trim() && semanticLoading && (
-          <p className={`mb-4 text-sm ${COLORS.TEXT.MUTED}`}>
-            Searching with AI…
-          </p>
+          <p className={`mb-4 text-sm ${COLORS.TEXT.MUTED}`}>Searching with AI…</p>
         )}
 
         {!debouncedSearchTerm.trim() &&
           user?.id &&
           (recommendLoading || recommendHits.length > 0) && (
             <div className="mb-6">
-              <h2
-                className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT} mb-1`}
-              >
+              <h2 className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT} mb-1`}>
                 Recommended for you
               </h2>
               {recommendLoading ? (
@@ -528,134 +875,141 @@ export const Destinations: React.FC = () => {
                 </p>
               ) : (
                 <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
-                  Based on your reviews and trips. Clear search always shows
-                  these first.
+                  Based on your reviews and trips. Clear search always shows these first.
                 </p>
               )}
             </div>
           )}
 
-        {/* Destinations Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {displayList.map((dest, index) => {
-            const images = dest.images || [];
-            const firstImageObj =
-              Array.isArray(images) && images.length > 0 ? images[0] : null;
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 relative">
+          {browseMode && pageLoading ? (
+            <DestinationGridSkeleton count={skeletonCount} />
+          ) : (
+            displayList.map((dest, index) => {
+              const images = dest.images || [];
+              const firstImageObj =
+                Array.isArray(images) && images.length > 0 ? images[0] : null;
 
-            const firstImage =
-              (typeof firstImageObj === "string"
-                ? firstImageObj
-                : (firstImageObj as { url: string; caption?: string })?.url) ||
-              null;
+              const firstImage =
+                (typeof firstImageObj === "string"
+                  ? firstImageObj
+                  : (firstImageObj as { url: string; caption?: string })?.url) || null;
 
-            const destinationId = dest.id_destination || dest.id;
+              const destinationId = dest.id_destination || dest.id;
 
-            if (!destinationId) return null;
+              if (!destinationId) return null;
 
-            const imageUrl = firstImage || getDestinationImageUrl(dest.name, 400, 300);
+              const imageUrl =
+                firstImage || getDestinationImageUrl(dest.name, 400, 300);
 
-            return (
-              <Link
-                key={destinationId}
-                href={`/destinations/${destinationId}`}
-                className={ANIMATIONS.FADE.IN_UP}
-                style={{ animationDelay: `${index * 0.1}s` }}
-              >
-                <ShimmerCard
-                  className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
-                  shimmer={false}
+              return (
+                <Link
+                  key={String(destinationId)}
+                  href={`/destinations/${destinationId}`}
+                  className={ANIMATIONS.FADE.IN_UP}
+                  style={{ animationDelay: `${index * 0.1}s` }}
                 >
-                {/* Image */}
-                <div className="h-48 relative overflow-hidden">
-                  <Image
-                    src={imageUrl}
-                    alt={dest.name}
-                    fill
-                    className="object-cover group-hover:scale-110 transition-transform duration-500"
-                    unoptimized
-                    onError={(e) => {
-                      const target = e.currentTarget;
-                      target.style.display = "none";
-                    }}
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                  <ShimmerCard
+                    className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
+                    shimmer={false}
+                  >
+                    <div className="h-48 relative overflow-hidden">
+                      <Image
+                        src={imageUrl}
+                        alt={dest.name}
+                        fill
+                        className="object-cover group-hover:scale-110 transition-transform duration-500"
+                        unoptimized
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          target.style.display = "none";
+                        }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
-                  {/* Category Badge */}
-                  {dest.category && (
-                    <div className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm ${ANIMATIONS.BOUNCE.SOFT}`}>
-                      {dest.category}
+                      {dest.category && (
+                        <div
+                          className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm ${ANIMATIONS.BOUNCE.SOFT}`}
+                        >
+                          {dest.category}
+                        </div>
+                      )}
+
+                      {(dest._userReviewed || dest._userTripDestination) && (
+                        <div className="absolute bottom-3 right-3 bg-emerald-600/90 text-white text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded shadow">
+                          {dest._userReviewed && dest._userTripDestination
+                            ? "Reviewed · Trip"
+                            : dest._userReviewed
+                              ? "Your review"
+                              : "Your trip"}
+                        </div>
+                      )}
+
+                      {!debouncedSearchTerm.trim() && dest._fromRecommend && (
+                        <div className="absolute bottom-3 left-3 bg-violet-600/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+                          For you
+                        </div>
+                      )}
+
+                      {(dest.average_rating || dest.rating) > 0 && (
+                        <div
+                          className={`absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1 ${ANIMATIONS.PULSE.GENTLE}`}
+                        >
+                          <Star className="w-3 h-3 text-yellow-400 fill-current" />
+                          <span className="text-white text-xs font-bold">
+                            {Number(dest.average_rating || dest.rating).toFixed(1)}
+                          </span>
+                        </div>
+                      )}
                     </div>
-                  )}
 
-                  {(dest._userReviewed || dest._userTripDestination) && (
-                    <div className="absolute bottom-3 right-3 bg-emerald-600/90 text-white text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded shadow">
-                      {dest._userReviewed && dest._userTripDestination
-                        ? "Reviewed · Trip"
-                        : dest._userReviewed
-                          ? "Your review"
-                          : "Your trip"}
-                    </div>
-                  )}
+                    <div className="p-4">
+                      <h3
+                        className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-2 line-clamp-1 group-hover:${COLORS.TEXT.PRIMARY} transition-colors`}
+                      >
+                        {dest.name}
+                      </h3>
 
-                  {!debouncedSearchTerm.trim() && dest._fromRecommend && (
-                    <div className="absolute bottom-3 left-3 bg-violet-600/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-semibold uppercase tracking-wide text-white shadow">
-                      For you
-                    </div>
-                  )}
-
-                  {/* Rating Badge */}
-                  {(dest.average_rating || dest.rating) > 0 && (
-                    <div className={`absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1 ${ANIMATIONS.PULSE.GENTLE}`}>
-                      <Star className="w-3 h-3 text-yellow-400 fill-current" />
-                      <span className="text-white text-xs font-bold">
-                        {Number(dest.average_rating || dest.rating).toFixed(1)}
-                      </span>
-                    </div>
-                  )}
-                </div>
-
-                {/* Content */}
-                <div className="p-4">
-                  <h3 className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-2 line-clamp-1 group-hover:${COLORS.TEXT.PRIMARY} transition-colors`}>
-                    {dest.name}
-                  </h3>
-
-                  <div className={`flex items-center text-sm ${COLORS.TEXT.MUTED} mb-3`}>
-                    <MapPin className="w-4 h-4 mr-1 shrink-0" />
-                    <span className="truncate">
-                      {dest.region_name ? `${dest.region_name}, ` : ""}
-                      {dest.country || "Unknown"}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center">
-                      <Star className="w-4 h-4 text-yellow-500 fill-current shrink-0" />
-                      <span className={`ml-1 text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>
-                        {Number(
-                          dest.average_rating || dest.rating || 0
-                        ).toFixed(1)}
-                      </span>
-                      <span className={`ml-1 text-xs ${COLORS.TEXT.MUTED}`}>
-                        ({dest.total_reviews || 0} reviews)
-                      </span>
-                    </div>
-                    {dest.best_season && (
-                      <div className={`flex items-center text-xs ${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.MUTED} px-2 py-1 rounded`}>
-                        <Calendar className="w-3 h-3 mr-1" />
-                        {dest.best_season}
+                      <div
+                        className={`flex items-center text-sm ${COLORS.TEXT.MUTED} mb-3`}
+                      >
+                        <MapPin className="w-4 h-4 mr-1 shrink-0" />
+                        <span className="truncate">
+                          {dest.region_name ? `${dest.region_name}, ` : ""}
+                          {dest.country || "Unknown"}
+                        </span>
                       </div>
-                    )}
-                  </div>
-                </div>
-                </ShimmerCard>
-              </Link>
-            );
-          })}
+
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center">
+                          <Star className="w-4 h-4 text-yellow-500 fill-current shrink-0" />
+                          <span
+                            className={`ml-1 text-sm font-medium ${COLORS.TEXT.DEFAULT}`}
+                          >
+                            {Number(dest.average_rating || dest.rating || 0).toFixed(1)}
+                          </span>
+                          <span className={`ml-1 text-xs ${COLORS.TEXT.MUTED}`}>
+                            ({dest.total_reviews || 0} reviews)
+                          </span>
+                        </div>
+                        {dest.best_season && (
+                          <div
+                            className={`flex items-center text-xs ${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.MUTED} px-2 py-1 rounded`}
+                          >
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {dest.best_season}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </ShimmerCard>
+                </Link>
+              );
+            })
+          )}
         </div>
 
-        {/* Empty State */}
-        {displayList.length === 0 && (
+        {browseMode && !pageLoading && displayList.length === 0 && (
           <div className="text-center py-16">
             <div className="relative w-32 h-32 mx-auto mb-6 rounded-full overflow-hidden">
               <Image
@@ -667,18 +1021,43 @@ export const Destinations: React.FC = () => {
                 unoptimized
               />
             </div>
-            <MapPin className={`w-20 h-20 ${COLORS.TEXT.MUTED} mx-auto mb-4`} aria-hidden />
+            <MapPin
+              className={`w-20 h-20 ${COLORS.TEXT.MUTED} mx-auto mb-4`}
+              aria-hidden
+            />
             <h3 className={`text-xl font-medium ${COLORS.TEXT.DEFAULT} mb-2`}>
               No destinations found
             </h3>
             <p className={`${COLORS.TEXT.MUTED} mb-6`}>
-              {debouncedSearchTerm.trim() && semanticLoading
-                ? "Loading AI results…"
-                : debouncedSearchTerm || filterCategory !== "all"
-                ? "Try adjusting your search or filters to see more results."
+              {filterCategory !== "all"
+                ? "Try adjusting your filters to see more results."
                 : "There are no destinations available at the moment."}
             </p>
-            {(debouncedSearchTerm || filterCategory !== "all") && !semanticLoading && (
+            {filterCategory !== "all" && (
+              <button
+                type="button"
+                onClick={() => setFilterCategory("all")}
+                className={`inline-flex items-center gap-2 ${COLORS.BORDER.DEFAULT} border px-4 py-2 rounded-lg font-medium ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
+              >
+                Clear filters
+              </button>
+            )}
+          </div>
+        )}
+
+        {debouncedSearchTerm.trim() && displayList.length === 0 && !semanticLoading && (
+          <div className="text-center py-16">
+            <MapPin
+              className={`w-20 h-20 ${COLORS.TEXT.MUTED} mx-auto mb-4`}
+              aria-hidden
+            />
+            <h3 className={`text-xl font-medium ${COLORS.TEXT.DEFAULT} mb-2`}>
+              No destinations found
+            </h3>
+            <p className={`${COLORS.TEXT.MUTED} mb-6`}>
+              Try adjusting your search or filters to see more results.
+            </p>
+            {(debouncedSearchTerm || filterCategory !== "all") && (
               <button
                 type="button"
                 onClick={() => {
@@ -691,6 +1070,87 @@ export const Destinations: React.FC = () => {
               </button>
             )}
           </div>
+        )}
+
+        {browseMode && totalCount !== null && totalCount > 0 && (
+          <nav
+            className={`mt-10 flex flex-col sm:flex-row items-center justify-center gap-4 sm:gap-6 border-t ${COLORS.BORDER.DEFAULT} pt-8`}
+            aria-label="Destination pagination"
+          >
+            <div className="flex items-center gap-2">
+              <label htmlFor="page-size" className={`text-sm ${COLORS.TEXT.MUTED}`}>
+                Per page
+              </label>
+              <select
+                id="page-size"
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className={`text-sm rounded-lg border ${COLORS.BORDER.DEFAULT} ${COLORS.BACKGROUND.CARD} px-3 py-2 ${COLORS.TEXT.DEFAULT}`}
+              >
+                {PAGE_SIZE_OPTIONS.map((n) => (
+                  <option key={n} value={n}>
+                    {n}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="flex items-center gap-2 flex-wrap justify-center">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1 || pageLoading}
+                className={`inline-flex items-center gap-1 rounded-lg border ${COLORS.BORDER.DEFAULT} px-3 py-2 text-sm font-medium ${COLORS.TEXT.DEFAULT} disabled:opacity-40 disabled:cursor-not-allowed hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
+              >
+                <ChevronLeft className="w-4 h-4" aria-hidden />
+                Previous
+              </button>
+
+              <div className="flex items-center gap-1">
+                {pageIndices.map((p, i) =>
+                  p === -1 ? (
+                    <span
+                      key={`e-${i}`}
+                      className={`px-2 text-sm ${COLORS.TEXT.MUTED}`}
+                      aria-hidden
+                    >
+                      …
+                    </span>
+                  ) : (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={() => setCurrentPage(p)}
+                      disabled={pageLoading}
+                      className={`min-w-[2.25rem] rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-40 ${
+                        p === currentPage
+                          ? `${COLORS.PRIMARY.DEFAULT} text-white shadow`
+                          : `border ${COLORS.BORDER.DEFAULT} ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED}`
+                      }`}
+                      aria-current={p === currentPage ? "page" : undefined}
+                    >
+                      {p}
+                    </button>
+                  )
+                )}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage >= totalPages || pageLoading}
+                className={`inline-flex items-center gap-1 rounded-lg border ${COLORS.BORDER.DEFAULT} px-3 py-2 text-sm font-medium ${COLORS.TEXT.DEFAULT} disabled:opacity-40 disabled:cursor-not-allowed hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
+              >
+                Next
+                <ChevronRight className="w-4 h-4" aria-hidden />
+              </button>
+            </div>
+
+            <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
+              Page <span className={`font-semibold ${COLORS.TEXT.DEFAULT}`}>{currentPage}</span> of{" "}
+              <span className={`font-semibold ${COLORS.TEXT.DEFAULT}`}>{totalPages}</span>
+            </p>
+          </nav>
         )}
       </div>
     </div>
