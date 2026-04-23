@@ -29,6 +29,14 @@ const SUPABASE_DESTINATIONS_TABLE =
 const DESTINATIONS_USE_API_ONLY =
   process.env.NEXT_PUBLIC_DESTINATIONS_USE_API === "true";
 
+function isSupabaseTableMissingError(message: string): boolean {
+  return (
+    message.includes("Could not find the table") ||
+    message.includes("schema cache") ||
+    message.includes("PGRST205")
+  );
+}
+
 /** Client-side page slice (used when Supabase is unavailable and data comes from GET /destinations). */
 function filterSortSliceDestinations(
   all: IDestination[],
@@ -653,7 +661,16 @@ export const Destinations: React.FC = () => {
         } else {
           if (error) {
             const msg = error.message || "";
-            console.warn("API destination page error:", msg);
+            if (isSupabaseTableMissingError(msg)) {
+              if (process.env.NODE_ENV === "development") {
+                console.info(
+                  `[Destinations] Supabase has no table "${SUPABASE_DESTINATIONS_TABLE}"; using GET /destinations. ` +
+                    "Set NEXT_PUBLIC_DESTINATIONS_USE_API=true to skip this attempt."
+                );
+              }
+            } else {
+              console.warn("[Destinations] Supabase query failed:", msg);
+            }
           }
           const all = await fetchAllDestinationsFromApi();
           const { pageRows, total } = filterSortSliceDestinations(all, {
