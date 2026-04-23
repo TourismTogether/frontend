@@ -9,8 +9,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -68,34 +68,34 @@
 }
 
 :root {
-  /* Light – Clean & Modern Adventure Theme */
+  /* Light – Colorful Design System */
   --radius: 0.5rem;
 
-  --background: #ffffff; /* white clean */
-  --foreground: #0f172a; /* slate-900 */
+  --background: #f5f7ff;
+  --foreground: #111827;
 
   --card: #ffffff;
-  --card-foreground: #0f172a;
+  --card-foreground: #111827;
 
   --popover: #ffffff;
-  --popover-foreground: #0f172a;
+  --popover-foreground: #111827;
 
-  --primary: #16a34a; /* green-600 - nature green (main theme) */
+  --primary: #3b82f6;
   --primary-foreground: #ffffff;
 
-  --secondary: #f0fdf4; /* green-50 */
-  --secondary-foreground: #166534; /* green-800 */
+  --secondary: #ede9fe;
+  --secondary-foreground: #5b21b6;
 
-  --muted: #f7fafc;
-  --muted-foreground: #64748b; /* slate-500 */
+  --muted: #eef2ff;
+  --muted-foreground: #4b5563;
 
-  --accent: #22c55e; /* green-500 - vibrant green */
+  --accent: #8b5cf6;
   --accent-foreground: #ffffff;
 
-  --destructive: #ef4444; /* red-500 */
-  --border: #e2e8f0; /* slate-200 */
-  --input: #e2e8f0;
-  --ring: #16a34a; /* green-600 */
+  --destructive: #dc2626;
+  --border: #c7d2fe;
+  --input: #c7d2fe;
+  --ring: #3b82f6;
 
   /* Chart colors - vibrant & clear (green theme) */
   --chart-1: #22c55e; /* green-500 */
@@ -158,9 +158,9 @@
 }
 
 .dark {
-  /* Dark – Professional Dark Theme */
-  --background: #0f172a; /* slate-900 */
-  --foreground: #f8fafc; /* slate-50 */
+  /* Dark – Colorful high contrast */
+  --background: #0f172a;
+  --foreground: #f8fafc;
 
   --card: #1e293b; /* slate-800 */
   --card-foreground: #f8fafc;
@@ -168,22 +168,22 @@
   --popover: #1e293b;
   --popover-foreground: #f8fafc;
 
-  --primary: #22c55e; /* green-500 */
+  --primary: #60a5fa;
   --primary-foreground: #ffffff;
 
-  --secondary: #14532d; /* green-900 */
-  --secondary-foreground: #dcfce7; /* green-100 */
+  --secondary: #312e81;
+  --secondary-foreground: #ddd6fe;
 
   --muted: #1e293b;
   --muted-foreground: #94a3b8; /* slate-400 */
 
-  --accent: #16a34a; /* green-600 */
+  --accent: #a78bfa;
   --accent-foreground: #ffffff;
 
   --destructive: #ef4444; /* red-500 */
   --border: #334155; /* slate-700 */
   --input: #334155;
-  --ring: #22c55e; /* green-500 */
+  --ring: #60a5fa;
 
   /* Chart colors - dark optimized (green theme) */
   --chart-1: #4ade80; /* green-400 */
@@ -223,9 +223,9 @@
 }
 
 .modern {
-  /* Modern – Cyberpunk Cyan/Teal with Purple Theme */
-  --background: #0a0e27; /* dark blue-slate */
-  --foreground: #e0f2fe; /* cyan-50 */
+  /* Modern – Neon colorful */
+  --background: #0b1024;
+  --foreground: #eef2ff;
 
   --card: #1e293b; /* slate-800 */
   --card-foreground: #e0f2fe; /* cyan-50 */
@@ -233,22 +233,22 @@
   --popover: #1e293b;
   --popover-foreground: #e0f2fe;
 
-  --primary: #06b6d4; /* cyan-500 */
+  --primary: #3b82f6;
   --primary-foreground: #ffffff;
 
-  --secondary: #0c4a6e; /* cyan-900 */
-  --secondary-foreground: #67e8f9; /* cyan-200 */
+  --secondary: #3b0764;
+  --secondary-foreground: #f5d0fe;
 
   --muted: #1e293b; /* slate-800 */
   --muted-foreground: #94a3b8; /* slate-400 */
 
-  --accent: #8b5cf6; /* purple-500 */
+  --accent: #ec4899;
   --accent-foreground: #ffffff;
 
   --destructive: #ef4444; /* red-500 */
   --border: #334155; /* slate-700 */
   --input: #334155;
-  --ring: #06b6d4; /* cyan-500 */
+  --ring: #3b82f6;
 
   /* Chart colors - modern (cyan/teal/purple theme) */
   --chart-1: #06b6d4; /* cyan-500 */
@@ -298,7 +298,7 @@
   --popover: #fef9e7;
   --popover-foreground: #78350f;
 
-  --primary: #d97706; /* amber-600 */
+  --primary: #8b5cf6;
   --primary-foreground: #ffffff;
 
   --secondary: #fde68a; /* amber-200 */
@@ -307,13 +307,13 @@
   --muted: #fef3c7; /* amber-100 */
   --muted-foreground: #a16207; /* amber-700 */
 
-  --accent: #b45309; /* amber-700 */
+  --accent: #3b82f6;
   --accent-foreground: #ffffff;
 
   --destructive: #dc2626; /* red-600 */
   --border: #fcd34d; /* amber-300 */
   --input: #fcd34d;
-  --ring: #d97706; /* amber-600 */
+  --ring: #8b5cf6;
 
   /* Chart colors - history (sepia/brown theme) */
   --chart-1: #d97706; /* amber-600 */
@@ -358,6 +358,36 @@
   }
   body {
     @apply bg-background text-foreground;
+    background-image:
+      radial-gradient(circle at 15% 20%, color-mix(in oklab, var(--primary) 20%, transparent) 0%, transparent 35%),
+      radial-gradient(circle at 85% 10%, color-mix(in oklab, var(--accent) 22%, transparent) 0%, transparent 38%),
+      radial-gradient(circle at 60% 85%, color-mix(in oklab, var(--secondary) 35%, transparent) 0%, transparent 42%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+
+  a,
+  button,
+  input,
+  textarea,
+  select {
+    transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  .bg-gray-50 {
+    background-color: transparent !important;
+  }
+
+  .bg-card {
+    box-shadow: 0 14px 35px -20px color-mix(in oklab, var(--primary) 36%, #000 22%);
+    backdrop-filter: blur(6px);
   }
 }
 

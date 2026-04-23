@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import { Weather } from '@/screens/Weather/Weather';
-import { Navbar } from '@/components/Layout/Navbar';
-import { useAuth } from '@/contexts/AuthContext';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { Weather } from "@/screens/Weather/Weather";
+import { Navbar } from "@/components/Layout/Navbar";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function WeatherPage() {
   const { user, loading } = useAuth();
@@ -12,14 +12,14 @@ export default function WeatherPage() {
 
   useEffect(() => {
     if (!loading && !user) {
-      router.push('/auth');
+      router.push("/auth");
     }
   }, [user, loading, router]);
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+      <div className="flex h-screen items-center justify-center bg-background">
+        <div className="h-12 w-12 animate-spin rounded-full border-2 border-muted border-t-primary"></div>
       </div>
     );
   }
@@ -29,10 +29,9 @@ export default function WeatherPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-background">
       <Navbar />
       <Weather />
     </div>
   );
 }
-
