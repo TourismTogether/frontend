@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Search, Filter, Star, MapPin, Globe, Calendar, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import { API_ENDPOINTS, getDestinationImageUrl } from "../../constants/api";
-import { COLORS } from "../../constants/colors";
+import { COLORS, GRADIENTS } from "../../constants/colors";
 import Hero from "../../components/Hero/Hero";
 import { ANIMATIONS } from "../../constants/animations";
 import ShimmerCard from "../../components/Animations/ShimmerCard";
@@ -796,14 +796,14 @@ export const Destinations: React.FC = () => {
   return (
     <div className={`min-h-screen ${COLORS.BACKGROUND.DEFAULT}`}>
       <Hero
-        title="Explore Destinations 🌍"
-        description={`Discover amazing places around the world`}
+        title="Find Your Next Dream Destination"
+        description={`AI-assisted discovery for unforgettable journeys`}
         subtitle={
           totalCount !== null
-            ? `${totalCount} destinations available`
+            ? `${totalCount} curated destinations`
             : "Loading destination count…"
         }
-        proverb="Seeing is believing"
+        proverb="Travel far, feel alive"
         imageKeyword="travel destinations"
         height="large"
         features={[
@@ -828,10 +828,18 @@ export const Destinations: React.FC = () => {
         ]}
       />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 relative z-20">
+      <div className="max-w-7xl mx-auto px-4 py-10 relative z-20">
         <div
-          className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-xl shadow-lg p-6 mb-8`}
+          className={`${COLORS.BACKGROUND.CARD} ${COLORS.BORDER.DEFAULT} border rounded-3xl shadow-xl p-6 md:p-7 mb-8 ${GRADIENTS.CARD}`}
         >
+          <div className="mb-4">
+            <h2 className={`text-xl md:text-2xl font-bold ${COLORS.TEXT.DEFAULT}`}>
+              Explore by vibe, season, and place
+            </h2>
+            <p className={`text-sm mt-1 ${COLORS.TEXT.MUTED}`}>
+              Search naturally, filter quickly, and jump into details instantly.
+            </p>
+          </div>
           <div className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
               <Search
@@ -844,7 +852,7 @@ export const Destinations: React.FC = () => {
                 placeholder="Describe places you want…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className={`w-full pl-10 pr-4 py-3 border ${COLORS.BORDER.DEFAULT} rounded-lg focus:outline-none focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
+                className={`w-full pl-10 pr-4 py-3.5 border ${COLORS.BORDER.DEFAULT} rounded-xl focus:outline-none focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
               />
             </div>
             <div className="flex items-center space-x-2">
@@ -853,7 +861,7 @@ export const Destinations: React.FC = () => {
                 aria-label="Filter by category"
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                className={`px-4 py-3 border ${COLORS.BORDER.DEFAULT} rounded-lg focus:outline-none focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
+                className={`px-4 py-3.5 border ${COLORS.BORDER.DEFAULT} rounded-xl focus:outline-none focus:ring-2 focus:${COLORS.BORDER.PRIMARY} ${COLORS.BACKGROUND.DEFAULT} ${COLORS.TEXT.DEFAULT}`}
               >
                 <option value="all">All Categories</option>
                 {categories.map((cat) => (
@@ -868,7 +876,7 @@ export const Destinations: React.FC = () => {
 
         {semanticError && debouncedSearchTerm.trim() && (
           <div
-            className={`mb-6 p-4 rounded-lg border border-amber-500/40 bg-amber-500/10 ${COLORS.TEXT.DEFAULT} text-sm`}
+            className={`mb-6 p-4 rounded-xl border ${COLORS.BORDER.DEFAULT} ${COLORS.BACKGROUND.CARD} ${COLORS.TEXT.DEFAULT} text-sm`}
             role="alert"
           >
             {semanticError}
@@ -876,25 +884,55 @@ export const Destinations: React.FC = () => {
         )}
 
         {debouncedSearchTerm.trim() && semanticLoading && (
-          <p className={`mb-4 text-sm ${COLORS.TEXT.MUTED}`}>Searching with AI…</p>
+          <div
+            className={`mb-5 rounded-2xl border ${COLORS.BORDER.DEFAULT} ${COLORS.BACKGROUND.CARD} px-4 py-3 shadow-sm`}
+            role="status"
+            aria-live="polite"
+          >
+            <div className="flex items-center gap-3">
+              <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${GRADIENTS.PRIMARY_DARK} text-white shadow`}>
+                <Search className="h-4 w-4 animate-pulse" aria-hidden />
+              </div>
+              <div className="min-w-0">
+                <p className={`text-sm font-medium ${COLORS.TEXT.DEFAULT}`}>
+                  Searching with AI...
+                </p>
+                <p className={`text-xs ${COLORS.TEXT.MUTED}`}>
+                  Matching your intent with semantic destination suggestions.
+                </p>
+              </div>
+            </div>
+          </div>
         )}
 
         {!debouncedSearchTerm.trim() &&
           user?.id &&
           (recommendLoading || recommendHits.length > 0) && (
-            <div className="mb-6">
-              <h2 className={`text-lg font-semibold ${COLORS.TEXT.DEFAULT} mb-1`}>
-                Recommended for you
-              </h2>
-              {recommendLoading ? (
-                <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
-                  Loading personalized picks…
-                </p>
-              ) : (
-                <p className={`text-sm ${COLORS.TEXT.MUTED}`}>
-                  Based on your reviews and trips. Clear search always shows these first.
-                </p>
-              )}
+            <div
+              className={`mb-6 rounded-2xl border ${COLORS.BORDER.DEFAULT} ${COLORS.BACKGROUND.CARD} p-4 md:p-5 shadow-sm`}
+              role="status"
+              aria-live="polite"
+            >
+              <div className="flex items-start gap-3 md:gap-4">
+                <div className={`mt-0.5 flex h-9 w-9 md:h-10 md:w-10 shrink-0 items-center justify-center rounded-xl ${GRADIENTS.PRIMARY} text-white shadow`}>
+                  <Star className="h-4 w-4 fill-current" aria-hidden />
+                </div>
+                <div className="min-w-0">
+                  <h2 className={`text-base md:text-lg font-semibold tracking-tight ${COLORS.TEXT.DEFAULT}`}>
+                    Recommended for you
+                  </h2>
+                  {recommendLoading ? (
+                    <p className={`mt-1 text-sm leading-relaxed ${COLORS.TEXT.MUTED}`}>
+                      Building personalized picks based on your recent travel activity...
+                    </p>
+                  ) : (
+                    <p className={`mt-1 text-sm leading-relaxed ${COLORS.TEXT.MUTED}`}>
+                      Personalized from your reviews and trips. Clear search keeps these
+                      recommendations on top.
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
 
@@ -927,7 +965,7 @@ export const Destinations: React.FC = () => {
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >
                   <ShimmerCard
-                    className="h-full hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer group"
+                    className={`h-full rounded-2xl overflow-hidden hover:shadow-2xl transition-all duration-300 hover:-translate-y-1.5 cursor-pointer group border ${COLORS.BORDER.LIGHT}`}
                     shimmer={false}
                   >
                     <div className="h-48 relative overflow-hidden">
@@ -942,18 +980,18 @@ export const Destinations: React.FC = () => {
                           target.style.display = "none";
                         }}
                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                      <div className="absolute inset-0 bg-linear-to-t from-black/70 via-black/10 to-transparent" />
 
                       {dest.category && (
                         <div
-                          className={`absolute top-3 right-3 ${COLORS.PRIMARY.DEFAULT} px-3 py-1 rounded-full text-xs font-medium text-white shadow-lg backdrop-blur-sm ${ANIMATIONS.BOUNCE.SOFT}`}
+                          className={`absolute top-3 right-3 bg-linear-to-r from-blue-600 to-cyan-500 px-3 py-1 rounded-full text-xs font-semibold text-white shadow-lg backdrop-blur-sm ${ANIMATIONS.BOUNCE.SOFT}`}
                         >
                           {dest.category}
                         </div>
                       )}
 
                       {(dest._userReviewed || dest._userTripDestination) && (
-                        <div className="absolute bottom-3 right-3 bg-emerald-600/90 text-white text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded shadow">
+                        <div className="absolute bottom-3 right-3 bg-emerald-600/90 text-white text-[10px] font-semibold uppercase tracking-wide px-2 py-1 rounded-md shadow">
                           {dest._userReviewed && dest._userTripDestination
                             ? "Reviewed · Trip"
                             : dest._userReviewed
@@ -963,15 +1001,13 @@ export const Destinations: React.FC = () => {
                       )}
 
                       {!debouncedSearchTerm.trim() && dest._fromRecommend && (
-                        <div className="absolute bottom-3 left-3 bg-violet-600/90 backdrop-blur-sm px-2 py-1 rounded text-[10px] font-semibold uppercase tracking-wide text-white shadow">
+                        <div className="absolute bottom-3 left-3 bg-amber-500/95 backdrop-blur-sm px-2 py-1 rounded-md text-[10px] font-semibold uppercase tracking-wide text-slate-900 shadow">
                           For you
                         </div>
                       )}
 
                       {(dest.average_rating || dest.rating) > 0 && (
-                        <div
-                          className={`absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1 ${ANIMATIONS.PULSE.GENTLE}`}
-                        >
+                        <div className={`absolute top-3 left-3 bg-black/70 backdrop-blur-sm px-2 py-1 rounded-full flex items-center space-x-1 ${ANIMATIONS.PULSE.GENTLE}`}>
                           <Star className="w-3 h-3 text-yellow-400 fill-current" />
                           <span className="text-white text-xs font-bold">
                             {Number(dest.average_rating || dest.rating).toFixed(1)}
@@ -980,7 +1016,7 @@ export const Destinations: React.FC = () => {
                       )}
                     </div>
 
-                    <div className="p-4">
+                    <div className={`p-4 ${COLORS.BACKGROUND.CARD}`}>
                       <h3
                         className={`text-lg font-bold ${COLORS.TEXT.DEFAULT} mb-2 line-clamp-1 group-hover:${COLORS.TEXT.PRIMARY} transition-colors`}
                       >
@@ -1010,9 +1046,7 @@ export const Destinations: React.FC = () => {
                           </span>
                         </div>
                         {dest.best_season && (
-                          <div
-                            className={`flex items-center text-xs ${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.MUTED} px-2 py-1 rounded`}
-                          >
+                          <div className={`flex items-center text-xs ${COLORS.TEXT.MUTED} ${COLORS.BACKGROUND.MUTED} px-2 py-1 rounded-md`}>
                             <Calendar className="w-3 h-3 mr-1" />
                             {dest.best_season}
                           </div>
@@ -1102,7 +1136,7 @@ export const Destinations: React.FC = () => {
                 id="page-size"
                 value={pageSize}
                 onChange={(e) => setPageSize(Number(e.target.value))}
-                className={`text-sm rounded-lg border ${COLORS.BORDER.DEFAULT} ${COLORS.BACKGROUND.CARD} px-3 py-2 ${COLORS.TEXT.DEFAULT}`}
+                className={`text-sm rounded-xl border ${COLORS.BORDER.DEFAULT} ${COLORS.BACKGROUND.CARD} px-3 py-2 ${COLORS.TEXT.DEFAULT}`}
               >
                 {PAGE_SIZE_OPTIONS.map((n) => (
                   <option key={n} value={n}>
@@ -1117,7 +1151,7 @@ export const Destinations: React.FC = () => {
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
                 disabled={currentPage <= 1 || pageLoading}
-                className={`inline-flex items-center gap-1 rounded-lg border ${COLORS.BORDER.DEFAULT} px-3 py-2 text-sm font-medium ${COLORS.TEXT.DEFAULT} disabled:opacity-40 disabled:cursor-not-allowed hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
+                className={`inline-flex items-center gap-1 rounded-xl border ${COLORS.BORDER.DEFAULT} px-3 py-2 text-sm font-medium ${COLORS.TEXT.DEFAULT} disabled:opacity-40 disabled:cursor-not-allowed hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
               >
                 <ChevronLeft className="w-4 h-4" aria-hidden />
                 Previous
@@ -1139,9 +1173,9 @@ export const Destinations: React.FC = () => {
                       type="button"
                       onClick={() => setCurrentPage(p)}
                       disabled={pageLoading}
-                      className={`min-w-[2.25rem] rounded-lg px-3 py-2 text-sm font-medium transition-colors disabled:opacity-40 ${
+                      className={`min-w-9 rounded-xl px-3 py-2 text-sm font-medium transition-colors disabled:opacity-40 ${
                         p === currentPage
-                          ? `${COLORS.PRIMARY.DEFAULT} text-white shadow`
+                          ? `bg-linear-to-r from-blue-600 to-violet-600 text-white shadow`
                           : `border ${COLORS.BORDER.DEFAULT} ${COLORS.TEXT.DEFAULT} hover:${COLORS.BACKGROUND.MUTED}`
                       }`}
                       aria-current={p === currentPage ? "page" : undefined}
@@ -1156,7 +1190,7 @@ export const Destinations: React.FC = () => {
                 type="button"
                 onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
                 disabled={currentPage >= totalPages || pageLoading}
-                className={`inline-flex items-center gap-1 rounded-lg border ${COLORS.BORDER.DEFAULT} px-3 py-2 text-sm font-medium ${COLORS.TEXT.DEFAULT} disabled:opacity-40 disabled:cursor-not-allowed hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
+                className={`inline-flex items-center gap-1 rounded-xl border ${COLORS.BORDER.DEFAULT} px-3 py-2 text-sm font-medium ${COLORS.TEXT.DEFAULT} disabled:opacity-40 disabled:cursor-not-allowed hover:${COLORS.BACKGROUND.MUTED} transition-colors`}
               >
                 Next
                 <ChevronRight className="w-4 h-4" aria-hidden />

@@ -18,12 +18,11 @@ import {
 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import CreateReviewModal from "./CreateReviewModal";
-import { COLORS, GRADIENTS } from "../../constants/colors";
+import { COLORS } from "../../constants/colors";
 import { API_ENDPOINTS } from "../../constants/api";
 import Loading from "../../components/Loading/Loading";
 import { ANIMATIONS } from "../../constants/animations";
 import PulseGlow from "../../components/Animations/PulseGlow";
-import Hero from "../../components/Hero/Hero";
 
 // Giao diện IDestinationDetail (Giữ nguyên)
 interface IDestinationDetail {
@@ -286,19 +285,6 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
     }
   };
 
-  const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-      Beach: "#3b82f6",
-      Mountain: "#10b981",
-      City: "#8b5cf6",
-      Nature: "#22c55e",
-      Cultural: "#f59e0b",
-    };
-    return colors[category] || "#6366f1";
-  };
-
-  const categoryColor = getCategoryColor(destination.category || "");
-
   return (
     <div
       className={`min-h-screen bg-background transition-colors duration-300`}
@@ -321,7 +307,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
           <div className="lg:col-span-2 space-y-8">
             {/* Image Gallery */}
             <div
-              className={`${COLORS.BACKGROUND.CARD} rounded-3xl overflow-hidden shadow-2xl ${COLORS.BORDER.DEFAULT} relative group transition-all duration-300 ${ANIMATIONS.FADE.IN_UP}`}
+              className={`${COLORS.BACKGROUND.CARD} rounded-3xl overflow-hidden shadow-2xl ${COLORS.BORDER.DEFAULT} relative group transition-all duration-300 ${ANIMATIONS.FADE.IN_UP} border border-blue-100/60 dark:border-slate-700/70`}
             >
               <div
                 className={`h-[450px] md:h-[600px] relative ${COLORS.BACKGROUND.MUTED} transition-colors duration-300`}
@@ -398,7 +384,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
 
             {/* Description */}
             <div
-              className={`${COLORS.BACKGROUND.CARD} p-8 sm:p-10 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300 ${ANIMATIONS.FADE.IN_UP}`}
+              className={`${COLORS.BACKGROUND.CARD} p-8 sm:p-10 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300 ${ANIMATIONS.FADE.IN_UP} bg-linear-to-br from-white via-blue-50/40 to-violet-50/50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800`}
               style={{ animationDelay: "0.2s" }}
             >
               <div className="flex items-center gap-4 mb-8">
@@ -426,7 +412,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
           <div className="lg:col-span-1 space-y-6 lg:sticky lg:top-8">
             {/* Title & Rating */}
             <div
-              className={`${COLORS.BACKGROUND.CARD} p-8 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300 ${ANIMATIONS.FADE.IN_UP}`}
+              className={`${COLORS.BACKGROUND.CARD} p-8 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300 ${ANIMATIONS.FADE.IN_UP} bg-linear-to-br from-blue-600 via-indigo-600 to-violet-600 text-white border-0`}
               style={{ animationDelay: "0.3s" }}
             >
               <div className="flex flex-wrap gap-2 mb-6">
@@ -434,9 +420,9 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                   <span
                     className="text-xs px-4 py-2 rounded-xl font-black uppercase tracking-wider border-2 transition-colors duration-200"
                     style={{
-                      backgroundColor: `${categoryColor}10`,
-                      borderColor: categoryColor,
-                      color: categoryColor,
+                      backgroundColor: "rgba(255,255,255,0.16)",
+                      borderColor: "rgba(255,255,255,0.45)",
+                      color: "white",
                     }}
                   >
                     {destination.category}
@@ -444,7 +430,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
                 )}
                 {destination.best_season && (
                   <span
-                    className={`text-xs px-4 py-2 bg-amber-50 dark:bg-amber-900/20 text-amber-700 dark:text-amber-400 rounded-xl font-bold border-2 border-amber-100 dark:border-amber-800 flex items-center gap-1.5 transition-colors duration-200`}
+                    className={`text-xs px-4 py-2 bg-white/20 text-white rounded-xl font-bold border-2 border-white/40 flex items-center gap-1.5 transition-colors duration-200`}
                   >
                     <Sun className="w-4 h-4 transition-colors duration-200" />
                     {destination.best_season}
@@ -453,16 +439,16 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
               </div>
 
               <h1
-                className={`text-3xl sm:text-4xl font-black ${COLORS.TEXT.DEFAULT} mb-4 leading-[1.1] tracking-tight transition-colors duration-200`}
+                className={`text-3xl sm:text-4xl font-black text-white mb-4 leading-[1.1] tracking-tight transition-colors duration-200`}
               >
                 {destination.name}
               </h1>
 
               <div
-                className={`flex items-center gap-2 ${COLORS.TEXT.MUTED} mb-8 font-semibold ${COLORS.BACKGROUND.MUTED} px-4 py-3 rounded-xl transition-colors duration-200`}
+                className={`flex items-center gap-2 text-white/90 mb-8 font-semibold bg-white/15 px-4 py-3 rounded-xl transition-colors duration-200`}
               >
                 <MapPin
-                  className={`w-5 h-5 ${COLORS.TEXT.PRIMARY} transition-colors duration-200`}
+                  className={`w-5 h-5 text-white transition-colors duration-200`}
                 />
                 <span>
                   {destination.country ||
@@ -472,25 +458,25 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
               </div>
 
               <div
-                className={`bg-amber-50 dark:bg-amber-900/20 rounded-2xl p-6 border border-amber-100 dark:border-amber-800 shadow-inner transition-colors duration-300 ${ANIMATIONS.PULSE.GENTLE}`}
+                className={`bg-white/20 rounded-2xl p-6 border border-white/30 shadow-inner transition-colors duration-300 ${ANIMATIONS.PULSE.GENTLE}`}
               >
                 <div className="flex items-center gap-5">
                   <PulseGlow
                     variant="glow"
-                    className={`flex items-center justify-center w-16 h-16 ${COLORS.BACKGROUND.CARD} rounded-2xl shadow-lg ring-4 ring-amber-100 dark:ring-amber-800 transition-all duration-200`}
+                    className={`flex items-center justify-center w-16 h-16 bg-white rounded-2xl shadow-lg ring-4 ring-white/40 transition-all duration-200`}
                   >
                     <Star
-                      className={`w-8 h-8 text-amber-500 dark:text-amber-400 fill-amber-500 dark:fill-amber-400 transition-colors duration-200 ${ANIMATIONS.ROTATE.SLOW}`}
+                      className={`w-8 h-8 text-amber-500 fill-amber-500 transition-colors duration-200 ${ANIMATIONS.ROTATE.SLOW}`}
                     />
                   </PulseGlow>
                   <div>
                     <div
-                      className={`text-4xl font-black ${COLORS.TEXT.DEFAULT} leading-none mb-1 transition-colors duration-200`}
+                      className={`text-4xl font-black text-white leading-none mb-1 transition-colors duration-200`}
                     >
                       {currentRating}
                     </div>
                     <div
-                      className={`text-xs ${COLORS.TEXT.MUTED} font-bold uppercase tracking-tight opacity-70 transition-colors duration-200`}
+                      className={`text-xs text-white/85 font-bold uppercase tracking-tight transition-colors duration-200`}
                     >
                       {totalReviews > 0
                         ? `${totalReviews} Reviews`
@@ -506,7 +492,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
               {user && (
                 <button
                   onClick={() => setShowReviewModal(true)}
-                  className={`w-full flex items-center justify-center gap-2 ${COLORS.PRIMARY.DEFAULT} ${COLORS.PRIMARY.HOVER} rounded-2xl py-4 font-black transition-all duration-200 shadow-lg hover:scale-[1.02]`}
+                  className={`w-full flex items-center justify-center gap-2 bg-linear-to-r from-blue-600 to-violet-600 text-white rounded-2xl py-4 font-black transition-all duration-200 shadow-lg hover:scale-[1.02]`}
                 >
                   <MessageSquare className="w-5 h-5 transition-colors duration-200" />
                   <span>Write a Review</span>
@@ -524,7 +510,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
 
             {/* Quick Facts */}
             <div
-              className={`${COLORS.BACKGROUND.CARD} p-8 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300 ${ANIMATIONS.FADE.IN_UP}`}
+              className={`${COLORS.BACKGROUND.CARD} p-8 rounded-3xl shadow-xl ${COLORS.BORDER.DEFAULT} transition-all duration-300 ${ANIMATIONS.FADE.IN_UP} bg-linear-to-br from-white via-violet-50/40 to-blue-50/40 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800`}
               style={{ animationDelay: "0.4s" }}
             >
               <h3
@@ -590,10 +576,7 @@ export const DestinationDetail: React.FC<DestinationDetailProps> = ({
             </div>
 
             {/* Share */}
-            <div
-              className={`bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-800 dark:to-slate-900 p-8 rounded-3xl shadow-2xl text-white transition-colors duration-300 ${ANIMATIONS.FADE.IN_UP}`}
-              style={{ animationDelay: "0.5s" }}
-            >
+            <div className={`bg-linear-to-br from-violet-600 to-fuchsia-600 p-8 rounded-3xl shadow-2xl text-white transition-colors duration-300 ${ANIMATIONS.FADE.IN_UP}`} style={{ animationDelay: "0.5s" }}>
               <div className="flex items-center gap-3 mb-6">
                 <PulseGlow variant="glow">
                   <Share2
