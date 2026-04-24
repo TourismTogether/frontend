@@ -265,8 +265,10 @@ export const Dashboard: React.FC = () => {
     setAiRecLoading(true);
     (async () => {
       try {
+        // top_k=8 matches Destinations page so the shared client + server cache dedupes
+        // requests when users navigate between Home and Điểm đến; UI still shows 6.
         const [d, t] = await Promise.all([
-          recommendDestinationsForUser(user.id, 6).catch(() => ({
+          recommendDestinationsForUser(user.id, 8).catch(() => ({
             results: [] as SemanticDestinationHit[],
           })),
           recommendTripsForUser(user.id, 6).catch(() => ({
@@ -274,7 +276,7 @@ export const Dashboard: React.FC = () => {
           })),
         ]);
         if (cancelled) return;
-        setAiRecDestinations(d.results || []);
+        setAiRecDestinations((d.results || []).slice(0, 6));
         setAiRecTrips(t.results || []);
       } finally {
         if (!cancelled) setAiRecLoading(false);

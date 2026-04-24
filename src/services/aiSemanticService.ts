@@ -43,6 +43,32 @@ async function getJson<T>(url: string): Promise<T> {
   return res.json() as Promise<T>;
 }
 
+/** Dedupe concurrent calls + short client TTL (React Strict Mode / multiple pages). */
+const recommendClientTtlMs = 90_000;
+const recommendDataCache = new Map<
+  string,
+  { storedAt: number; data: unknown }
+>();
+const recommendInFlight = new Map<string, Promise<unknown>>();
+
+async function getRecommendCached<T>(cacheKey: string, url: string): Promise<T> {
+  const now = Date.now();
+  const hit = recommendDataCache.get(cacheKey);
+  if (hit && now - hit.storedAt < recommendClientTtlMs) {
+    return hit.data as T;
+  }
+  const pending = recommendInFlight.get(cacheKey) as Promise<T> | undefined;
+  if (pending) return pending;
+
+  const p = getJson<T>(url).finally(() => {
+    recommendInFlight.delete(cacheKey);
+  });
+  recommendInFlight.set(cacheKey, p);
+  const data = await p;
+  recommendDataCache.set(cacheKey, { storedAt: Date.now(), data });
+  return data;
+}
+
 function withParams(
   base: string,
   params: Record<string, string | number | undefined>
@@ -81,7 +107,9 @@ export async function recommendDestinationsForUser(
   userId: string,
   topK = 5
 ): Promise<{ user_id: string; results: SemanticDestinationHit[] }> {
-  return getJson(
+  const key = `d:${userId}:${topK}`;
+  return getRecommendCached(
+    key,
     withParams(AI_SERVICE.RECOMMEND_DESTINATIONS, { user_id: userId, top_k: topK })
   );
 }
@@ -90,7 +118,9 @@ export async function recommendTripsForUser(
   userId: string,
   topK = 5
 ): Promise<{ user_id: string; results: SemanticTripHit[] }> {
-  return getJson(
+  const key = `t:${userId}:${topK}`;
+  return getRecommendCached(
+    key,
     withParams(AI_SERVICE.RECOMMEND_TRIPS, { user_id: userId, top_k: topK })
   );
 }
@@ -99,7 +129,9 @@ export async function recommendRoutesForUser(
   userId: string,
   topK = 5
 ): Promise<{ user_id: string; results: SemanticRouteHit[] }> {
-  return getJson(
+  const key = `r:${userId}:${topK}`;
+  return getRecommendCached(
+    key,
     withParams(AI_SERVICE.RECOMMEND_ROUTES, { user_id: userId, top_k: topK })
   );
 }
