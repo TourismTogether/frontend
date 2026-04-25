@@ -17,6 +17,17 @@ export default function AdminSupportersPage() {
           render: (v) => (v ? "Yes" : "No"),
         },
       ]}
+      formFields={[
+        {
+          key: "user_id",
+          label: "User",
+          required: true,
+          optionsEndpoint: API_ENDPOINTS.USERS.BASE,
+          optionsValueKey: "id",
+          optionsLabelKey: "full_name",
+        },
+        { key: "is_available", label: "Available", type: "boolean" },
+      ]}
     />
   );
 }

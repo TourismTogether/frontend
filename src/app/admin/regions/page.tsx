@@ -15,6 +15,7 @@ export default function AdminRegionsPage() {
         { key: "created_at", label: "Created At", render: (v) => (v ? new Date(String(v)).toLocaleString() : "—") },
         { key: "updated_at", label: "Updated At", render: (v) => (v ? new Date(String(v)).toLocaleString() : "—") },
       ]}
+      formFields={[{ key: "address", label: "Address", required: true }]}
     />
   );
 }

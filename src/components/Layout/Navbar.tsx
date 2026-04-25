@@ -41,6 +41,7 @@ export const Navbar: React.FC = () => {
   const navLinks = isAdmin
     ? [
         { path: "/admin/dashboard", icon: Mountain, label: "Dashboard" },
+        { path: "/admin/accounts", icon: Users, label: "Manage Account" },
         { path: "/admin/users", icon: Users, label: "Manage User" },
         { path: "/admin/supporters", icon: Shield, label: "Manage Supporter" },
         { path: "/admin/regions", icon: Map, label: "Manage Region" },

@@ -17,6 +17,25 @@ export default function AdminDestinationsPage() {
         { key: "category", label: "Category" },
         { key: "rating", label: "Rating" },
       ]}
+      formFields={[
+        {
+          key: "region_id",
+          label: "Region",
+          required: true,
+          optionsEndpoint: API_ENDPOINTS.REGIONS.BASE,
+          optionsValueKey: "id",
+          optionsLabelKey: "address",
+        },
+        { key: "name", label: "Name", required: true },
+        { key: "country", label: "Country", required: true },
+        { key: "description", label: "Description", type: "textarea" },
+        { key: "latitude", label: "Latitude", type: "number" },
+        { key: "longitude", label: "Longitude", type: "number" },
+        { key: "category", label: "Category" },
+        { key: "best_season", label: "Best Season" },
+        { key: "rating", label: "Rating", type: "number" },
+        { key: "images", label: "Images (JSON string)" },
+      ]}
     />
   );
 }

@@ -21,6 +21,11 @@ export function AdminDashboard() {
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [hoveredSlice, setHoveredSlice] = useState<{
+    label: string;
+    value: number;
+    percent: number;
+  } | null>(null);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -71,6 +76,26 @@ export function AdminDashboard() {
 
   const maxValue = Math.max(...cards.map((c) => c.value), 1);
   const total = cards.reduce((sum, c) => sum + c.value, 0);
+  const pieEntries = [
+    { label: "Users", color: "#F2673C", value: stats.users },
+    { label: "Supporters", color: "#8B5CF6", value: stats.supporters },
+    { label: "Regions", color: "#16A34A", value: stats.regions },
+    { label: "Destinations", color: "#D97706", value: stats.destinations },
+  ];
+
+  const toRad = (deg: number) => ((deg - 90) * Math.PI) / 180;
+  const createArcPath = (
+    cx: number,
+    cy: number,
+    r: number,
+    startDeg: number,
+    endDeg: number
+  ) => {
+    const start = { x: cx + r * Math.cos(toRad(startDeg)), y: cy + r * Math.sin(toRad(startDeg)) };
+    const end = { x: cx + r * Math.cos(toRad(endDeg)), y: cy + r * Math.sin(toRad(endDeg)) };
+    const largeArc = endDeg - startDeg > 180 ? 1 : 0;
+    return `M ${cx} ${cy} L ${start.x} ${start.y} A ${r} ${r} 0 ${largeArc} 1 ${end.x} ${end.y} Z`;
+  };
 
   return (
     <div className={ADMIN_DS.page}>
@@ -135,25 +160,44 @@ export function AdminDashboard() {
             Proportion Chart
           </h2>
           <div className="flex flex-col md:flex-row items-center gap-6">
-            <div
-              className="w-44 h-44 rounded-full border border-[#e5e7eb]"
-              style={{
-                background: `conic-gradient(
-                  #F2673C 0deg ${total ? (stats.users / total) * 360 : 0}deg,
-                  #8B5CF6 ${total ? (stats.users / total) * 360 : 0}deg ${total ? ((stats.users + stats.supporters) / total) * 360 : 0}deg,
-                  #16A34A ${total ? ((stats.users + stats.supporters) / total) * 360 : 0}deg ${total ? ((stats.users + stats.supporters + stats.regions) / total) * 360 : 0}deg,
-                  #D97706 ${total ? ((stats.users + stats.supporters + stats.regions) / total) * 360 : 0}deg 360deg
-                )`,
-              }}
-              aria-label="Admin entity proportion chart"
-            />
+            <div className="relative w-44 h-44 min-w-44 min-h-44 aspect-square shrink-0">
+              <svg viewBox="0 0 100 100" className="w-full h-full" aria-label="Admin entity proportion chart">
+                {(() => {
+                  let startAngle = 0;
+                  return pieEntries.map((entry) => {
+                    const percent = total ? (entry.value / total) * 100 : 0;
+                    const sweep = total ? (entry.value / total) * 360 : 0;
+                    const endAngle = startAngle + sweep;
+                    const path = createArcPath(50, 50, 48, startAngle, endAngle);
+                    const slice = (
+                      <path
+                        key={entry.label}
+                        d={path}
+                        fill={entry.color}
+                        onMouseEnter={() =>
+                          setHoveredSlice({
+                            label: entry.label,
+                            value: entry.value,
+                            percent,
+                          })
+                        }
+                        onMouseLeave={() => setHoveredSlice(null)}
+                      />
+                    );
+                    startAngle = endAngle;
+                    return slice;
+                  });
+                })()}
+                <circle cx="50" cy="50" r="23" fill="#FFFFFF" />
+              </svg>
+              {hoveredSlice && (
+                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-[#111827] text-white text-[12px] px-2 py-1 rounded whitespace-nowrap pointer-events-none">
+                  {hoveredSlice.label}: {hoveredSlice.value} ({hoveredSlice.percent.toFixed(1)}%)
+                </div>
+              )}
+            </div>
             <div className="space-y-2 w-full">
-              {[
-                { label: "Users", color: "#F2673C", value: stats.users },
-                { label: "Supporters", color: "#8B5CF6", value: stats.supporters },
-                { label: "Regions", color: "#16A34A", value: stats.regions },
-                { label: "Destinations", color: "#D97706", value: stats.destinations },
-              ].map((entry) => (
+              {pieEntries.map((entry) => (
                 <div key={entry.label} className="flex items-center justify-between text-[14px]">
                   <div className="flex items-center gap-2">
                     <span
