@@ -6,17 +6,17 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function HomePage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
 
   useEffect(() => {
     if (!loading) {
       if (user) {
-        router.push('/dashboard');
+        router.push(isAdmin ? "/admin/dashboard" : "/dashboard");
       } else {
         router.push('/auth');
       }
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isAdmin]);
 
   return (
     <div className="flex flex-col justify-center items-center gap-6 h-screen bg-background">

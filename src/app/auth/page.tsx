@@ -7,13 +7,13 @@ import { useAuth } from '@/contexts/AuthContext';
 
 export default function AuthPage() {
   const router = useRouter();
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
 
   useEffect(() => {
     if (!loading && user) {
-      router.push('/dashboard');
+      router.push(isAdmin ? "/admin/dashboard" : "/dashboard");
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isAdmin]);
 
   if (loading) {
     return (
