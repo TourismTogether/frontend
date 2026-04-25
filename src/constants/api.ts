@@ -164,6 +164,15 @@ export const API_ENDPOINTS = {
     WITH_USER_INFO: `${API_BASE_URL}/supporters/with-user-info`,
   },
 
+  // Admins
+  ADMINS: {
+    BASE: `${API_BASE_URL}/admins`,
+    BY_ID: (userId: string | number) => `${API_BASE_URL}/admins/${userId}`,
+    CREATE: `${API_BASE_URL}/admins`,
+    UPDATE: (userId: string | number) => `${API_BASE_URL}/admins/${userId}`,
+    DELETE: (userId: string | number) => `${API_BASE_URL}/admins/${userId}`,
+  },
+
   // Travellers
   TRAVELLERS: {
     BASE: `${API_BASE_URL}/travellers`,

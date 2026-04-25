@@ -7,14 +7,18 @@ import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, isAdmin } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
+    if (!loading && user && isAdmin) {
+      router.push("/admin/dashboard");
+      return;
+    }
     if (!loading && !user) {
       router.push('/auth');
     }
-  }, [user, loading, router]);
+  }, [user, loading, router, isAdmin]);
 
   if (loading) {
     return (

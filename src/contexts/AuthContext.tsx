@@ -12,6 +12,7 @@ interface AuthContextType {
   profile: Profile | null;
   loading: boolean;
   isSupporter: boolean;
+  isAdmin: boolean;
   signUp: (
     email: string,
     password: string,
@@ -30,14 +31,25 @@ type ApiErrorDetail = {
   message?: string;
 };
 
-const getAuthErrorMessage = (result: any, fallback: string): string => {
+type ApiResultLike = {
+  message?: string;
+  details?: ApiErrorDetail[];
+};
+
+type RoleListResultRow = {
+  user_id?: string;
+  key?: string;
+};
+
+const getAuthErrorMessage = (result: ApiResultLike | null | undefined, fallback: string): string => {
   const baseMessage =
     typeof result?.message === "string" && result.message.trim()
       ? result.message.trim()
       : fallback;
 
-  if (Array.isArray(result?.details) && result.details.length > 0) {
-    const detailsText = (result.details as ApiErrorDetail[])
+  const details = result?.details;
+  if (Array.isArray(details) && details.length > 0) {
+    const detailsText = details
       .map((d) => (d?.field && d?.message ? `${d.field}: ${d.message}` : d?.message))
       .filter((text): text is string => Boolean(text))
       .join("; ");
@@ -97,6 +109,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [isSupporter, setIsSupporter] = useState<boolean>(false);
+  const [isAdmin, setIsAdmin] = useState<boolean>(false);
 
   useEffect(() => {
     fetchUser();
@@ -123,29 +136,70 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         setAccount(null);
         setProfile(null);
         setIsSupporter(false);
+        setIsAdmin(false);
         return;
       }
 
       setUser(data.user);
       setAccount(data.account ?? null);
 
+      const userId = String(data.user?.id ?? "");
+      const accountId = String(data.account?.id ?? "");
+      const accountEmail = String(data.account?.email ?? "").toLowerCase();
+      const accountUsername = String(data.account?.username ?? "").toLowerCase();
+      console.log("[AuthContext] userId:", userId);
+      const roleKeys = new Set(
+        [userId, accountId, accountEmail, accountUsername]
+          .map((v) => v.trim().toLowerCase())
+          .filter((v) => v && v !== "nan" && v !== "undefined")
+      );
+
       // Check if user is supporter
       try {
-        if (!data.user.id || data.user.id === "NaN" || data.user.id === "undefined") {
+        const supporterRes = await fetch(API_ENDPOINTS.SUPPORTERS.BASE, {
+          credentials: "include",
+        });
+        if (!supporterRes.ok) {
           setIsSupporter(false);
         } else {
-          const supporterRes = await fetch(API_ENDPOINTS.SUPPORTERS.BY_ID(String(data.user.id)), {
-            credentials: "include",
-          });
-          if (supporterRes.ok) {
-            const supporterResult = await supporterRes.json();
-            setIsSupporter(supporterResult.status === 200 && supporterResult.data !== null);
-          } else {
-            setIsSupporter(false);
-          }
+          const supporterResult = await supporterRes.json();
+          const supporterRows: RoleListResultRow[] = Array.isArray(supporterResult?.data)
+            ? supporterResult.data
+            : [];
+          const hasSupporterRole = supporterRows.some((row) =>
+            roleKeys.has(String(row?.user_id ?? "").trim().toLowerCase())
+          );
+          setIsSupporter(hasSupporterRole);
         }
       } catch {
         setIsSupporter(false);
+      }
+
+      // Check if user is admin
+      try {
+        if (roleKeys.size === 0) {
+          setIsAdmin(false);
+        } else {
+          const adminListRes = await fetch(API_ENDPOINTS.ADMINS.BASE, {
+            credentials: "include",
+          });
+          if (!adminListRes.ok) {
+            setIsAdmin(false);
+          } else {
+            const adminListResult = await adminListRes.json();
+            const adminRows: RoleListResultRow[] = Array.isArray(adminListResult?.data)
+              ? adminListResult.data
+              : [];
+            const foundAdmin = adminRows.some((row) => {
+              const userIdMatch = String(row?.user_id ?? "").trim().toLowerCase();
+              const keyMatch = String(row?.key ?? "").trim().toLowerCase();
+              return roleKeys.has(userIdMatch) || roleKeys.has(keyMatch);
+            });
+            setIsAdmin(foundAdmin);
+          }
+        }
+      } catch {
+        setIsAdmin(false);
       }
 
       const email = data.account?.email;
@@ -266,6 +320,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setAccount(null);
       setProfile(null);
       setIsSupporter(false);
+      setIsAdmin(false);
     } finally {
       setLoading(false);
     }
@@ -371,6 +426,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       setAccount(null);
       setProfile(null);
       setIsSupporter(false);
+      setIsAdmin(false);
     } catch {
       // Logout failed silently
     } finally {
@@ -384,6 +440,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     profile,
     loading,
     isSupporter,
+    isAdmin,
     signUp,
     signIn,
     signOut,

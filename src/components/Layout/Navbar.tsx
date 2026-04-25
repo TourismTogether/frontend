@@ -6,13 +6,11 @@ import { usePathname } from "next/navigation";
 import { useTheme } from "next-themes";
 import {
   Mountain,
-  Map,
   Users,
+  Map,
   Wallet,
   BookOpen,
   MessageCircle,
-  Trophy,
-  User,
   LogOut,
   AlertTriangle,
   Menu,
@@ -30,7 +28,7 @@ import { SOSNotification } from "../Emergency/SOSNotification";
 
 export const Navbar: React.FC = () => {
   const pathname = usePathname();
-  const { user, profile, account, signOut, isSupporter } = useAuth(); // Lấy user, profile, account, signOut, isSupporter từ useAuth
+  const { user, profile, account, signOut, isSupporter, isAdmin } = useAuth(); // Lấy user, profile, account, signOut, isSupporter từ useAuth
   const { theme, setTheme } = useTheme();
   const [isMenuOpen, setIsMenuOpen] = useState(false); // State cho Mobile Menu
   const [showEmergency, setShowEmergency] = useState(false); // State cho Emergency Modal
@@ -40,7 +38,16 @@ export const Navbar: React.FC = () => {
   const isActive = (path: string) => pathname === path;
 
   // Supporter: chỉ hiện 1 trang Supporter Dashboard. Traveller: hiện các trang thường
-  const navLinks = isSupporter
+  const navLinks = isAdmin
+    ? [
+        { path: "/admin/dashboard", icon: Mountain, label: "Dashboard" },
+        { path: "/admin/accounts", icon: Users, label: "Manage Account" },
+        { path: "/admin/users", icon: Users, label: "Manage User" },
+        { path: "/admin/supporters", icon: Shield, label: "Manage Supporter" },
+        { path: "/admin/regions", icon: Map, label: "Manage Region" },
+        { path: "/admin/destinations", icon: BookOpen, label: "Manage Destination" },
+      ]
+    : isSupporter
     ? [{ path: "/supporter", icon: Shield, label: "Supporter Dashboard" }]
     : [
         { path: "/dashboard", icon: Mountain, label: "Dashboard" },
@@ -92,7 +99,7 @@ export const Navbar: React.FC = () => {
         <div className="flex justify-between items-center h-16">
           {/* Logo và Tên Ứng dụng */}
           <Link
-            href="/dashboard"
+            href={isAdmin ? "/admin/dashboard" : "/dashboard"}
             className="flex items-center gap-2 transition-all duration-200 hover:opacity-90 z-50"
           >
             <div className="rounded-xl bg-linear-to-r from-primary to-accent p-1.5 shadow-md">
@@ -206,13 +213,15 @@ export const Navbar: React.FC = () => {
             )}
 
             {/* Weather Icon Button */}
-            <Link
-              href="/weather"
-              className="flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
-              title="Weather"
-            >
-              <Cloud className="w-5 h-5 transition-colors duration-200" />
-            </Link>
+            {!isAdmin && (
+              <Link
+                href="/weather"
+                className="flex items-center justify-center p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-all duration-200"
+                title="Weather"
+              >
+                <Cloud className="w-5 h-5 transition-colors duration-200" />
+              </Link>
+            )}
 
             {/* SOS Notification for Supporters */}
             {isSupporter && (
@@ -223,17 +232,19 @@ export const Navbar: React.FC = () => {
             )}
 
             {/* Nút Khẩn cấp/SOS (Thêm từ phiên bản 1) */}
-            <button
-              onClick={() => setShowEmergency(true)}
-              className="relative flex items-center gap-1.5 px-3 py-2 bg-linear-to-r from-red-500 to-orange-500 hover:brightness-110 text-white rounded-xl transition-all duration-200 shadow-md hover:shadow-lg group"
-              title="Emergency SOS"
-            >
-              <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-ping"></div>
-              <AlertTriangle className="w-4 h-4 group-hover:animate-pulse transition-transform duration-200" />
-              <span className="text-sm font-bold hidden sm:inline transition-colors duration-200">
-                SOS
-              </span>
-            </button>
+            {!isAdmin && (
+              <button
+                onClick={() => setShowEmergency(true)}
+                className="relative flex items-center gap-1.5 px-3 py-2 bg-linear-to-r from-red-500 to-orange-500 hover:brightness-110 text-white rounded-xl transition-all duration-200 shadow-md hover:shadow-lg group"
+                title="Emergency SOS"
+              >
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-400 rounded-full animate-ping"></div>
+                <AlertTriangle className="w-4 h-4 group-hover:animate-pulse transition-transform duration-200" />
+                <span className="text-sm font-bold hidden sm:inline transition-colors duration-200">
+                  SOS
+                </span>
+              </button>
+            )}
 
             {user && (
               <div className="flex items-center gap-3">
